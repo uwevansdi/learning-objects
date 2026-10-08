@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evans Learning Objects</title>
+<meta name="description" content="Interactive learning objects built by Evans Digital for embedding in Canvas courses.">
+<style>
+  :root {
+    color-scheme: light;
+    --surface: #ffffff;
+    --surface-2: #f6f5f2;
+    --border: #d9d7d0;
+    --ink: #1b1b1a;
+    --ink-2: #4a4945;
+    --ink-3: #6a6964;
+    --accent: #4b2e83;   /* UW purple */
+    --good: #1d6b3a;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--surface); color: var(--ink); font-size: 16px; line-height: 1.5; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 32px 16px 48px; }
+  .eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); margin: 0 0 4px; }
+  h1 { font-size: 28px; line-height: 1.2; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 0 0 4px; }
+  p { margin: 0 0 10px; }
+  .lede { color: var(--ink-2); max-width: 65ch; }
+  .list { display: grid; gap: 16px; margin: 24px 0 0; padding: 0; list-style: none; }
+  .item { border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+  .meta { font-size: 14px; color: var(--ink-3); margin-bottom: 8px; }
+  .item p { color: var(--ink-2); }
+  .links { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 12px 0; }
+  a { color: var(--accent); font-weight: 600; }
+  .addr { font-family: ui-monospace, Consolas, monospace; font-size: 14px; color: var(--ink-2); word-break: break-all; }
+  label { display: block; font-size: 14px; font-weight: 600; margin: 12px 0 4px; }
+  textarea {
+    width: 100%; font: 13px/1.45 ui-monospace, Consolas, monospace; color: var(--ink);
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px; resize: vertical; min-height: 72px;
+  }
+  .row { display: flex; gap: 10px; align-items: center; margin-top: 8px; }
+  button {
+    font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 8px;
+    padding: 7px 14px; border: 1px solid var(--accent); background: var(--accent); color: #fff;
+  }
+  button:hover { filter: brightness(0.95); }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .copied { font-size: 14px; color: var(--good); font-weight: 600; }
+  .how { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 15px; color: var(--ink-2); }
+  .how ol { padding-left: 20px; margin: 8px 0; }
+  .how li { margin-bottom: 4px; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: 14px; background: var(--surface-2); padding: 1px 4px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <p class="eyebrow">Evans School · Digital</p>
+  <h1>Learning objects</h1>
+  <p class="lede">Interactive pieces built for Evans courses. Open one to try it, or copy its embed code into a Canvas page.</p>
+
+  <ul class="list" id="list"></ul>
+
+  <section class="how" aria-labelledby="howTitle">
+    <h2 id="howTitle">Adding one to Canvas</h2>
+    <ol>
+      <li>In a Canvas Page, click <strong>Edit</strong>.</li>
+      <li>Click the <code>&lt;/&gt;</code> icon (bottom right of the editor) to open the HTML editor.</li>
+      <li>Paste the embed code where the object should appear, then <strong>Save</strong>.</li>
+      <li>Check it in <strong>Student View</strong>.</li>
+    </ol>
+    <p>These pages collect no student data. Questions or fixes: Evans Digital.</p>
+  </section>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  // To add a learning object: put it in its own folder with an index.html, then add an entry here.
+  var OBJECTS = [
+    {
+      folder: "tax-incidence",
+      title: "Who really pays a tax on soda?",
+      course: "Microeconomics / public finance",
+      summary: "Students adjust a tax and buyer and seller price sensitivity to see how the burden splits and how much deadweight loss results, framed around Seattle's sweetened-drink tax. Includes four predict-then-check questions.",
+      embedTitle: "Interactive model: who pays a tax on soda",
+      height: 1500,
+      status: "Pilot. Awaiting faculty content review."
+    }
+  ];
+
+  var base = location.href.replace(/[#?].*$/, "").replace(/index\.html$/, "");
+  if (base.slice(-1) !== "/") base += "/";
+
+  var list = document.getElementById("list");
+  OBJECTS.forEach(function (o, i) {
+    var url = base + o.folder + "/";
+    var embed = '<iframe src="' + url + '" title="' + o.embedTitle + '" width="100%" height="' + o.height +
+      '" style="border:0;" loading="lazy"></iframe>';
+    var li = document.createElement("li");
+    li.className = "item";
+    li.innerHTML =
+      '<h2>' + o.title + '</h2>' +
+      '<div class="meta">' + o.course + ' · ' + o.status + '</div>' +
+      '<p>' + o.summary + '</p>' +
+      '<div class="links"><a href="' + url + '">Open it</a><span class="addr">' + url + '</span></div>' +
+      '<label for="embed' + i + '">Canvas embed code</label>' +
+      '<textarea id="embed' + i + '" readonly rows="3"></textarea>' +
+      '<div class="row"><button type="button" data-copy="embed' + i + '">Copy embed code</button>' +
+      '<span class="copied" role="status" aria-live="polite" id="status' + i + '"></span></div>';
+    li.querySelector("textarea").value = embed;
+    list.appendChild(li);
+  });
+
+  list.addEventListener("click", function (e) {
+    var btn = e.target.closest("button[data-copy]");
+    if (!btn) return;
+    var ta = document.getElementById(btn.getAttribute("data-copy"));
+    var status = document.getElementById(btn.getAttribute("data-copy").replace("embed", "status"));
+    function done() { status.textContent = "Copied"; setTimeout(function () { status.textContent = ""; }, 2500); }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(ta.value).then(done, function () { ta.select(); status.textContent = "Press Ctrl+C to copy"; });
+    } else {
+      ta.select();
+      try { document.execCommand("copy"); done(); } catch (err) { status.textContent = "Press Ctrl+C to copy"; }
+    }
+  });
+})();
+</script>
+</body>
+</html>
