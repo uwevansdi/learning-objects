@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Closing the Gap</title>
+<meta name="description" content="Case simulation: as a county budget director under Washington's 1% levy limit, make four decisions over three years and see the consequences. Evans School learning object pilot.">
+<style>
+  :root {
+    color-scheme: light;
+    --surface: #ffffff;
+    --surface-2: #f6f5f2;
+    --border: #d9d7d0;
+    --ink: #1b1b1a;
+    --ink-2: #4a4945;
+    --ink-3: #6a6964;
+    --accent: #4b2e83;       /* UW purple */
+    --accent-soft: #efeaf7;
+    --good: #1d6b3a;
+    --good-soft: #e7f3eb;
+    --warn: #8a4b00;
+    --warn-soft: #fbf0e1;
+    --focus: #4b2e83;
+    --radius: 10px;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--surface); color: var(--ink); font-size: 16px; line-height: 1.55; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 20px 16px 32px; }
+  .eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); margin: 0 0 4px; }
+  h1 { font-size: 26px; line-height: 1.2; margin: 0 0 8px; }
+  h2 { font-size: 21px; line-height: 1.25; margin: 0 0 8px; }
+  h3 { font-size: 16px; margin: 0 0 6px; }
+  p { margin: 0 0 12px; }
+  .lede { color: var(--ink-2); max-width: 70ch; }
+
+  /* dashboard */
+  .dash { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin: 16px 0; }
+  @media (max-width: 760px) { .dash { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .tile { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; min-height: 92px; }
+  .tile .k { font-size: 13px; color: var(--ink-3); line-height: 1.3; }
+  .tile .v { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.25; }
+  .tile .s { font-size: 12px; color: var(--ink-3); }
+  .tile .d { font-size: 13px; font-weight: 600; color: var(--ink-2); min-height: 1.2em; }
+  .tile.flag { box-shadow: inset 0 0 0 2px var(--warn); }
+  .tile.flag .s { color: var(--warn); font-weight: 600; }
+  .meter { height: 6px; background: var(--border); border-radius: 3px; margin-top: 4px; overflow: hidden; }
+  .meter div { height: 100%; background: var(--accent); border-radius: 3px; transition: width .3s; }
+
+  .progress { display: flex; gap: 6px; align-items: center; font-size: 13px; color: var(--ink-3); margin-bottom: 8px; }
+  .progress .dot { width: 28px; height: 6px; border-radius: 3px; background: var(--border); }
+  .progress .dot.on { background: var(--accent); }
+
+  .scene { border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .year { font-size: 13px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+  .memo { background: var(--surface-2); border-left: 4px solid var(--ink-3); border-radius: 6px; padding: 10px 14px; margin: 12px 0; font-size: 15px; color: var(--ink-2); }
+  .memo strong { color: var(--ink); }
+
+  .choices { display: grid; gap: 10px; margin-top: 14px; }
+  .choice { text-align: left; width: 100%; display: block; font: inherit; cursor: pointer; background: var(--surface); color: var(--ink);
+    border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+  .choice:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-soft); }
+  .choice .t { font-weight: 700; display: block; }
+  .choice .x { font-size: 14px; color: var(--ink-2); display: block; margin-top: 2px; }
+  .choice:disabled { cursor: not-allowed; opacity: .6; }
+  .choice .why { font-size: 13px; color: var(--warn); font-weight: 600; display: block; margin-top: 4px; }
+
+  .outcome { margin-top: 16px; padding: 14px 16px; border-radius: 8px; background: var(--accent-soft); }
+  .outcome h3 { font-size: 17px; }
+  .changes { list-style: none; padding: 0; margin: 10px 0 0; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 14px; }
+  .changes li { font-weight: 600; }
+  .vote { display: flex; height: 22px; border-radius: 4px; overflow: hidden; margin: 8px 0 4px; gap: 2px; max-width: 420px; }
+  .vote div { display: flex; align-items: center; padding: 0 8px; font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; }
+  .vote .yes { background: var(--accent); }
+  .vote .no { background: var(--ink-3); }
+
+  button.primary, button.secondary { font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; border-radius: 8px; padding: 9px 16px; border: 1px solid var(--accent); }
+  button.primary { background: var(--accent); color: #fff; }
+  button.secondary { background: var(--surface); color: var(--accent); }
+  button:hover { filter: brightness(0.96); }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+
+  .timeline { list-style: none; padding: 0; margin: 10px 0 0; counter-reset: step; }
+  .timeline li { position: relative; padding: 0 0 12px 34px; }
+  .timeline li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--accent); color: #fff; font-size: 13px; font-weight: 700; display: grid; place-items: center; }
+  .verdicts { display: grid; gap: 8px; margin: 12px 0; }
+  .verdict { display: flex; gap: 10px; align-items: baseline; padding: 8px 12px; border-radius: 8px; background: var(--surface-2); font-size: 15px; }
+  .verdict .ic { font-weight: 700; width: 1.4em; flex: none; }
+  .verdict.ok .ic { color: var(--good); }
+  .verdict.bad .ic { color: var(--warn); }
+  .debrief ol { padding-left: 22px; }
+  .debrief li { margin-bottom: 8px; }
+
+  details { margin-top: 24px; border-top: 1px solid var(--border); padding-top: 12px; font-size: 14px; color: var(--ink-2); }
+  summary { cursor: pointer; font-weight: 600; color: var(--ink); }
+  details ul { padding-left: 20px; margin: 8px 0; }
+  details li { margin-bottom: 4px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <p class="eyebrow">Evans School · Budgeting and finance · Case simulation</p>
+  <h1>Closing the gap: a county budget simulation</h1>
+  <p class="lede">
+    You are the new budget director for <strong>Cedar County</strong>, a fictional Washington county with an $80 million general fund. Make four decisions over three budget years. Each choice changes the county's reserves, services, public trust, and tax bills, and early choices limit later ones. There is no single right answer.
+  </p>
+
+  <section aria-labelledby="dashTitle">
+    <h2 id="dashTitle" class="sr-only">County dashboard</h2>
+    <div class="dash" id="dash"></div>
+  </section>
+
+  <div class="progress" id="progress" aria-hidden="true"></div>
+  <section class="scene" id="scene" aria-live="off"></section>
+  <div class="sr-only" aria-live="polite" id="live"></div>
+
+  <details>
+    <summary>About this simulation</summary>
+    <ul>
+      <li><strong>The real constraint:</strong> Washington counties can raise their regular property tax levy by at most 1% a year without voter approval. A <em>levy lid lift</em> asks voters to allow more and passes with a simple majority. When costs grow faster than 1%, a structural gap opens.</li>
+      <li><strong>Fictional county, simplified rules.</strong> Cedar County's numbers, and how trust turns into votes, are teaching assumptions, not predictions. Real budgets involve labor contracts, state mandates, and many more choices.</li>
+      <li><strong>Privacy.</strong> This page collects no data. It sets no cookies, uses no storage, and makes no network requests after it loads. Reloading starts over.</li>
+      <li><strong>Accessibility.</strong> Every choice is a keyboard-operable button. After each decision, focus moves to the outcome, and the dashboard changes are listed in text.</li>
+      <li><strong>Content review:</strong> <em>[faculty reviewer and date]</em> · <strong>Maintained by:</strong> Evans Digital · Pilot version 0.1</li>
+    </ul>
+  </details>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var START = { reserves: 6, gap: 4, services: 100, trust: 55, bill: 600 };
+  var RESERVE_MIN = 2;          // county policy minimum, $M
+  var HOUSEHOLDS_PER_M = 50;    // $1M of levy ≈ $50 on the median household bill (teaching value)
+  var state, step, history;
+
+  var $ = function (id) { return document.getElementById(id); };
+  function m(v) { return "$" + v.toFixed(1) + "M"; }
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+  // ---- Dashboard -------------------------------------------------------
+  var TILES = [
+    { key: "reserves", label: "Reserves", fmt: function (v) { return m(v); }, sub: function (v) { return v < RESERVE_MIN ? "Below $2.0M policy minimum" : "Policy minimum $2.0M"; }, flag: function (v) { return v < RESERVE_MIN; }, dfmt: function (d) { return m(Math.abs(d)); } },
+    { key: "gap", label: "Ongoing budget gap", fmt: function (v) { return v > 0.05 ? m(v) + "/yr" : "None"; }, sub: function () { return "Costs minus revenue, each year"; }, dfmt: function (d) { return m(Math.abs(d)) + "/yr"; } },
+    { key: "services", label: "Service level", fmt: function (v) { return Math.round(v); }, sub: function () { return "Index, 100 = today"; }, dfmt: function (d) { return Math.round(Math.abs(d)) + " pts"; } },
+    { key: "trust", label: "Public trust", fmt: function (v) { return Math.round(v) + "/100"; }, meter: true, dfmt: function (d) { return Math.round(Math.abs(d)) + " pts"; } },
+    { key: "bill", label: "Median county tax bill", fmt: function (v) { return "$" + Math.round(v) + "/yr"; }, sub: function () { return "County share of property tax"; }, dfmt: function (d) { return "$" + Math.round(Math.abs(d)); } }
+  ];
+
+  function renderDash(prev) {
+    $("dash").innerHTML = TILES.map(function (t) {
+      var v = state[t.key], d = prev ? v - prev[t.key] : 0;
+      var dtxt = Math.abs(d) > 0.04 ? (d > 0 ? "▲ up " : "▼ down ") + t.dfmt(d) : "";
+      return '<div class="tile' + (t.flag && t.flag(v) ? " flag" : "") + '">' +
+        '<div class="k">' + t.label + '</div><div class="v">' + t.fmt(v) + '</div>' +
+        (t.meter ? '<div class="meter" aria-hidden="true"><div style="width:' + clamp(v, 0, 100) + '%"></div></div>' : '<div class="s">' + t.sub(v) + '</div>') +
+        '<div class="d">' + dtxt + '</div></div>';
+    }).join("");
+  }
+
+  function changeList(prev) {
+    var items = [];
+    TILES.forEach(function (t) {
+      var d = state[t.key] - prev[t.key];
+      if (Math.abs(d) > 0.04) items.push(t.label + ": " + (d > 0 ? "up " : "down ") + t.dfmt(d));
+    });
+    return items.length ? items : ["No change to the dashboard"];
+  }
+
+  // Close the remaining ongoing gap with service cuts: 3 index points per $1M.
+  function cutTo(gapToClose) { state.services -= gapToClose * 3; state.gap -= gapToClose; }
+
+  // ---- Scenes -----------------------------------------------------------
+  var SCENES = [
+    {
+      year: "Year 1 · Decision 1 of 4",
+      title: "A $4 million hole",
+      body: function () {
+        return '<p>Your first week on the job, the finance team brings bad news. Wages, health benefits, and jail medical contracts are growing about 3.5% a year. Property tax, the county\'s largest revenue source, can grow only 1% a year without a public vote.</p>' +
+          '<div class="memo"><strong>Memo from Finance:</strong> Next year\'s budget is <strong>$4.0M short</strong>, and the gap will recur every year unless something changes. State law requires a balanced budget. Reserves stand at $6.0M; county policy says not to drop below $2.0M.</div>' +
+          '<p>How do you balance Year 1?</p>';
+      },
+      options: [
+        { id: "cuts", t: "Cut $4M in ongoing spending", x: "Reduce library hours, close two park facilities, and leave 30 vacant positions unfilled.",
+          apply: function () { cutTo(4); state.trust -= 6;
+            return "<p>The budget balances, and the gap is closed for good. But residents notice: library hours drop by a third, and a parks advocacy group packs the next council meeting. A local paper runs the headline “County cuts first, asks questions later.”</p>"; } },
+        { id: "reserves", t: "Cover the gap from reserves", x: "Use $4M of savings this year and keep services whole while you study the problem.",
+          apply: function () { state.reserves -= 4;
+            return "<p>Services continue without interruption, and most residents never hear there was a problem. But reserves fall to the $2.0M policy minimum, and the $4M gap is still there next year. You've bought time, not a solution: you used one-time money for an ongoing cost.</p>"; } },
+        { id: "mix", t: "Split it: $2M in cuts, $2M from reserves", x: "Trim lower-priority programs and draw down part of the reserve.",
+          apply: function () { cutTo(2); state.reserves -= 2; state.trust -= 3;
+            return "<p>The cuts are noticeable but targeted, and reserves stay at $4.0M. Half the structural gap, $2M a year, remains, so you'll face it again next year. Council members praise the “balanced approach,” though nobody is enthusiastic.</p>"; } }
+      ]
+    },
+    {
+      year: "Year 1 · Decision 2 of 4",
+      title: "Who gets a say?",
+      body: function () {
+        var g = state.gap > 0.05 ? "a " + m(state.gap) + " ongoing gap still to solve" : "services residents want restored";
+        return '<p>The county executive asks you to prepare for next year, when you will face ' + g + '. One option on the table is a levy lid lift, which would need a public vote. Before anything goes to voters, how do you engage the public?</p>';
+      },
+      options: [
+        { id: "townhall", t: "Open the books", x: "Publish a plain-language budget dashboard and hold town halls in every council district. Costs about $0.3M in staff time and outreach.",
+          apply: function () { state.trust += 12; state.reserves -= 0.3;
+            return "<p>Attendance is uneven, but the meetings change the conversation. Residents push back hard on some cuts and accept others. A retired teacher's question at one town hall, “What exactly would $50 a year buy us?”, gets quoted widely. People feel heard, even those who disagree.</p>"; } },
+        { id: "survey", t: "Run a resident survey", x: "A statistically valid survey of priorities, plus an online comment form. Costs about $0.1M.",
+          apply: function () { state.trust += 5; state.reserves -= 0.1;
+            return "<p>The survey shows that residents rank libraries, parks, and road maintenance highest, and that a majority are open to a modest tax increase if it is tied to specific services. Useful data, but few residents feel personally involved.</p>"; } },
+        { id: "council", t: "Brief the council only", x: "Keep it inside government: work through the budget committee and save time and money.",
+          apply: function () {
+            return "<p>The process moves quickly and costs nothing extra. But when the budget is published, many residents first hear about the shortfall from the evening news, and a council member complains publicly that “the public was an afterthought.”</p>"; } }
+      ]
+    },
+    {
+      year: "Year 2 · Decision 3 of 4",
+      title: "Go to the voters?",
+      body: function () {
+        var need = state.gap > 0.05
+          ? "You still face a <strong>" + m(state.gap) + " ongoing gap</strong>. Whatever voters don't fund must be cut."
+          : "You closed the gap with cuts, but residents want services back. A lid lift could restore them.";
+        return '<p>' + need + ' You can put a levy lid lift on the ballot. It passes with a simple majority.</p>' +
+          '<div class="memo"><strong>Rule of thumb from Finance:</strong> each $1M of levy adds about <strong>$50 a year</strong> to the median household\'s county tax bill. Public trust is now <strong>' + Math.round(state.trust) + '/100</strong>, and trust tends to move votes.</div>';
+      },
+      options: [
+        { id: "full", t: "Ask for a $4M lid lift", x: "About +$200 a year for the median household. Closes any remaining gap; anything left over restores services that were cut.",
+          apply: function () { return ballot(4, 3); } },
+        { id: "partial", t: "Ask for a $2M lid lift", x: "A smaller request, about +$100 a year, that may be easier to pass. Any gap it doesn't cover must be cut.",
+          apply: function () { return ballot(2, 0); } },
+        { id: "none", t: "Don't go to the ballot", x: "Close any remaining gap with more cuts.",
+          apply: function () {
+            var g = state.gap;
+            if (g > 0.05) { cutTo(g); state.trust -= 2;
+              return "<p>You cut another " + m(g) + " in ongoing spending. The budget balances, but the cuts reach core services: a sheriff's patrol shift is eliminated, and road maintenance slips to an eight-year cycle.</p>"; }
+            return "<p>You hold the line. The budget is balanced at the reduced service level, and no new taxes are proposed. Some residents are relieved; others are frustrated that the library cuts are now permanent.</p>"; } }
+      ]
+    },
+    {
+      year: "Year 3 · Decision 4 of 4",
+      title: "The storm",
+      body: function () {
+        return '<p>In January, an ice storm brings down trees and power lines across the county. Emergency response, overtime, and debris removal cost <strong>$3.0M</strong> that is not in the budget. Federal disaster reimbursement, if it comes, will take years.</p>' +
+          '<div class="memo">Reserves stand at <strong>' + m(state.reserves) + '</strong>.</div><p>How do you pay for it?</p>';
+      },
+      options: [
+        { id: "pay", t: "Pay from reserves", x: "This is what reserves are for.",
+          disabled: function () { return state.reserves < 3 ? "Not possible: reserves are below $3.0M." : null; },
+          apply: function () { state.reserves -= 3;
+            return "<p>You cover the cost without new debt or cuts. The rating agency notes the county's “prudent reserve management.” Rebuilding reserves becomes a priority for next year.</p>"; } },
+        { id: "borrow", t: "Borrow with a short-term bond", x: "Spread the cost over 10 years. Debt service adds about $0.4M a year.",
+          apply: function () { state.gap += 0.4;
+            return "<p>The cleanup is paid for, but the county now owes about $0.4M a year for a decade. A new ongoing gap has opened, and a rating agency revises the county's outlook to “negative,” which will raise future borrowing costs.</p>"; } },
+        { id: "defer", t: "Defer road and facility repairs", x: "Move this year's maintenance money to storm cleanup.",
+          apply: function () { state.services -= 6; state.gap += 0.2;
+            return "<p>The budget balances on paper. But potholes multiply, and engineers warn that deferred repairs will cost more later, adding about $0.2M a year as roads deteriorate. Deferred maintenance is a hidden form of borrowing.</p>"; } }
+      ]
+    }
+  ];
+
+  function ballot(amount, sizePenalty) {
+    var yes = clamp(30 + 0.35 * state.trust - sizePenalty, 30, 70);
+    var pass = yes > 50;
+    var html = '<div class="vote" role="img" aria-label="Yes ' + yes.toFixed(1) + ' percent, No ' + (100 - yes).toFixed(1) + ' percent">' +
+      '<div class="yes" style="width:' + yes + '%">Yes ' + yes.toFixed(1) + '%</div><div class="no" style="width:' + (100 - yes) + '%">No ' + (100 - yes).toFixed(1) + '%</div></div>';
+    if (pass) {
+      var toGap = Math.min(amount, state.gap), extra = amount - toGap;
+      state.gap -= toGap; state.services += extra * 3; state.bill += amount * HOUSEHOLDS_PER_M; state.trust += 3;
+      html += "<p><strong>The measure passes.</strong> " + (toGap > 0 ? m(toGap) + " closes the remaining gap. " : "") +
+        (extra > 0 ? m(extra) + " restores services that were cut. " : "") +
+        "The median household's county bill rises by $" + (amount * HOUSEHOLDS_PER_M) + " a year. Supporters credit the campaign's clear list of what the money buys.</p>";
+      if (state.gap > 0.05) { var rest = state.gap; cutTo(rest); html += "<p>The measure doesn't cover everything: you still cut " + m(rest) + " in ongoing spending to balance the budget.</p>"; }
+    } else {
+      var g = state.gap; state.trust -= 3;
+      html += "<p><strong>The measure fails.</strong> ";
+      if (g > 0.05) { cutTo(g); html += "You must cut " + m(g) + " in ongoing spending, and voters' rejection makes the cuts feel like a mandate to some residents and a punishment to others.</p>"; }
+      else { html += "Services stay at the reduced level. Opponents argue the county “already showed it can live with less.”</p>"; }
+    }
+    return html;
+  }
+
+  // ---- Flow ------------------------------------------------------------
+  function renderProgress() {
+    var h = "";
+    for (var i = 0; i < SCENES.length; i++) h += '<span class="dot' + (i <= step ? " on" : "") + '"></span>';
+    $("progress").innerHTML = h + '<span>' + (step < SCENES.length ? "Decision " + (step + 1) + " of " + SCENES.length : "Debrief") + '</span>';
+  }
+
+  function renderScene() {
+    renderProgress();
+    var sc = SCENES[step];
+    var html = '<div class="year">' + sc.year + '</div><h2 id="sceneTitle" tabindex="-1">' + sc.title + '</h2>' + sc.body() + '<div class="choices" role="group" aria-labelledby="sceneTitle">';
+    sc.options.forEach(function (o, i) {
+      var why = o.disabled ? o.disabled() : null;
+      html += '<button class="choice" data-i="' + i + '"' + (why ? " disabled" : "") + '><span class="t">' + o.t + '</span><span class="x">' + o.x + '</span>' +
+        (why ? '<span class="why">' + why + '</span>' : "") + '</button>';
+    });
+    html += '</div><div id="outcome"></div>';
+    $("scene").innerHTML = html;
+  }
+
+  function choose(i) {
+    var sc = SCENES[step], o = sc.options[i];
+    var prev = Object.assign({}, state);
+    var narrative = o.apply();
+    state.trust = clamp(state.trust, 0, 100);
+    state.gap = Math.max(0, Math.round(state.gap * 10) / 10);
+    history.push({ title: sc.title, choice: o.t });
+    renderDash(prev);
+
+    $("scene").querySelectorAll(".choice").forEach(function (b, bi) {
+      b.disabled = true;
+      if (bi === i) { b.style.borderColor = "var(--accent)"; b.style.background = "var(--accent-soft)"; b.style.opacity = "1"; b.setAttribute("aria-label", "Your choice: " + o.t); }
+    });
+    var last = step === SCENES.length - 1;
+    $("outcome").innerHTML = '<div class="outcome"><h3 id="outTitle" tabindex="-1">What happened</h3>' + narrative +
+      '<ul class="changes">' + changeList(prev).map(function (c) { return "<li>" + c + "</li>"; }).join("") + '</ul>' +
+      '<div class="btn-row"><button class="primary" id="nextBtn">' + (last ? "See your results" : "Continue to next decision") + '</button></div></div>';
+    $("outTitle").focus();
+    $("nextBtn").addEventListener("click", function () {
+      step++;
+      if (step < SCENES.length) { renderScene(); } else { renderDebrief(); }
+      renderDash(null);
+      var t = $("sceneTitle"); if (t) { t.focus(); t.scrollIntoView({ behavior: "smooth", block: "start" }); }
+    });
+  }
+
+  function renderDebrief() {
+    renderProgress();
+    var v = [];
+    v.push(state.reserves >= RESERVE_MIN
+      ? { ok: true, t: "Reserves end at " + m(state.reserves) + ", at or above the $2.0M policy minimum." }
+      : { ok: false, t: "Reserves end at " + m(state.reserves) + ", below the $2.0M policy minimum. The next emergency will be harder." });
+    v.push(state.gap < 0.05
+      ? { ok: true, t: "No ongoing gap: recurring costs are matched by recurring revenue." }
+      : { ok: false, t: "An ongoing gap of " + m(state.gap) + " a year remains. Next year's director inherits it." });
+    v.push(state.services >= 95
+      ? { ok: true, t: "Services are at " + Math.round(state.services) + ", close to or above where you started." }
+      : { ok: false, t: "Services are at " + Math.round(state.services) + ", down " + Math.round(100 - state.services) + " points from where you started." });
+    v.push(state.trust >= 60
+      ? { ok: true, t: "Public trust ends at " + Math.round(state.trust) + "/100, a good base for future decisions." }
+      : { ok: false, t: "Public trust ends at " + Math.round(state.trust) + "/100. Future asks of voters will be harder." });
+    v.push({ ok: true, neutral: true, t: "The median county tax bill is $" + Math.round(state.bill) + " a year" + (state.bill > START.bill ? ", up $" + Math.round(state.bill - START.bill) + "." : ", unchanged.") });
+
+    $("scene").innerHTML =
+      '<div class="year">Debrief</div><h2 id="sceneTitle" tabindex="-1">Your three years in office</h2>' +
+      '<h3>The path you took</h3><ol class="timeline">' + history.map(function (h) { return "<li><strong>" + h.title + (/[?!.]$/.test(h.title) ? "" : ".") + "</strong> " + h.choice + "</li>"; }).join("") + '</ol>' +
+      '<h3>Where Cedar County ends up</h3><div class="verdicts">' + v.map(function (x) {
+        return '<div class="verdict ' + (x.neutral ? "" : (x.ok ? "ok" : "bad")) + '"><span class="ic" aria-hidden="true">' + (x.neutral ? "•" : (x.ok ? "✓" : "!")) + '</span><span>' + x.t + '</span></div>';
+      }).join("") + '</div>' +
+      '<div class="debrief"><h3>For discussion</h3><ol>' +
+      '<li><strong>One-time versus ongoing money.</strong> Where did you use one-time resources (reserves, deferred maintenance, borrowing) for an ongoing cost? What did that cost you later?</li>' +
+      '<li><strong>Legitimacy.</strong> How did your engagement choice in Decision 2 shape what was possible in Decision 3? Is public trust a budget resource?</li>' +
+      '<li><strong>The 1% limit.</strong> Washington\'s levy limit makes a structural gap almost automatic when costs grow faster than 1%. Is that a feature (voter control) or a bug (forced recurring votes)? Who benefits from each view?</li>' +
+      '<li><strong>Your counterfactual.</strong> Which single decision would you change, and what would you be trading away?</li>' +
+      '</ol></div>' +
+      '<div class="btn-row"><button class="primary" id="againBtn">Play again with different choices</button></div>';
+    $("againBtn").addEventListener("click", function () { start(); $("sceneTitle").focus(); });
+    $("live").textContent = "Simulation complete. Your results are shown.";
+  }
+
+  $("scene").addEventListener("click", function (e) {
+    var b = e.target.closest(".choice");
+    if (b && !b.disabled) choose(+b.getAttribute("data-i"));
+  });
+
+  function start() {
+    state = Object.assign({}, START); step = 0; history = [];
+    renderDash(null); renderScene();
+  }
+  start();
+})();
+</script>
+</body>
+</html>
