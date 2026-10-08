@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Who Pays the Tax?</title>
+<meta name="description" content="Interactive supply-and-demand model of tax incidence and deadweight loss, framed around a city tax on sweetened drinks. Evans School learning object pilot.">
+<style>
+  :root {
+    color-scheme: light;
+    --surface: #ffffff;
+    --surface-2: #f6f5f2;
+    --border: #d9d7d0;
+    --ink: #1b1b1a;
+    --ink-2: #4a4945;
+    --ink-3: #6a6964;
+    --grid: #ebeae6;
+    --axis: #8a8984;
+    --demand: #2a78d6;
+    --demand-fill: rgba(42, 120, 214, 0.26);
+    --supply: #eb6834;
+    --supply-fill: rgba(235, 104, 52, 0.28);
+    --dwl-fill: #e4e2dc;
+    --dwl-line: #77756f;
+    --accent: #4b2e83;       /* UW purple, used for chrome only */
+    --accent-soft: #efeaf7;
+    --good: #1d6b3a;
+    --good-soft: #e7f3eb;
+    --warn: #8a4b00;
+    --warn-soft: #fbf0e1;
+    --focus: #4b2e83;
+    --radius: 10px;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 20px 16px 32px; }
+  .eyebrow {
+    font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 4px;
+  }
+  h1 { font-size: 26px; line-height: 1.2; margin: 0 0 8px; }
+  h2 { font-size: 19px; margin: 0 0 10px; }
+  h3 { font-size: 16px; margin: 0 0 6px; }
+  p { margin: 0 0 10px; }
+  .lede { color: var(--ink-2); max-width: 70ch; }
+  .lede strong { color: var(--ink); }
+
+  .grid {
+    display: grid; gap: 20px; margin-top: 16px;
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+    align-items: start;
+  }
+  @media (max-width: 780px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px;
+  }
+  .card.soft { background: var(--surface-2); }
+
+  /* chart */
+  .chart-card { padding: 12px 12px 8px; position: relative; }
+  .chart-head { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; justify-content: space-between; padding: 4px 4px 0; }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--ink-2); list-style: none; margin: 0; padding: 0; }
+  .legend li { display: flex; align-items: center; gap: 6px; }
+  .sw { width: 14px; height: 14px; border-radius: 3px; display: inline-block; flex: none; }
+  .sw.line { height: 3px; border-radius: 2px; }
+  .sw.dash { height: 0; border-top: 2px dashed currentColor; width: 16px; border-radius: 0; }
+  svg { display: block; width: 100%; height: auto; }
+  svg text { font-family: inherit; fill: var(--ink-2); }
+  .tick { font-size: 12px; fill: var(--ink-3); }
+  .axis-title { font-size: 13px; fill: var(--ink-2); }
+  .curve-label { font-size: 13px; font-weight: 700; fill: var(--ink); }
+  .ref-label { font-size: 12px; font-weight: 600; fill: var(--ink); }
+  .region-label { font-size: 12px; font-weight: 600; fill: var(--ink); pointer-events: none; }
+  .region { cursor: default; }
+  .region:hover { filter: brightness(0.94); }
+
+  .tooltip {
+    position: absolute; pointer-events: none; z-index: 5;
+    background: var(--ink); color: #fff; font-size: 13px; line-height: 1.35;
+    padding: 6px 9px; border-radius: 6px; max-width: 240px;
+    opacity: 0; transition: opacity .12s;
+  }
+  .tooltip.show { opacity: 1; }
+
+  .summary {
+    margin: 8px 4px 4px; padding: 10px 12px; border-radius: 8px;
+    background: var(--accent-soft); color: var(--ink); font-size: 15px;
+  }
+
+  /* controls */
+  .control { margin-bottom: 16px; }
+  .control:last-of-type { margin-bottom: 8px; }
+  .control-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .control label, .control .label { font-weight: 600; font-size: 15px; }
+  .val { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .val small { font-weight: 500; color: var(--ink-3); font-size: 13px; }
+  .hint { font-size: 13px; color: var(--ink-3); margin: 2px 0 0; }
+  .scale-ends { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-3); margin-top: -2px; }
+
+  input[type=range] {
+    width: 100%; margin: 6px 0 2px; height: 28px; background: transparent;
+    -webkit-appearance: none; appearance: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-runnable-track { height: 6px; background: var(--border); border-radius: 3px; }
+  input[type=range]::-moz-range-track { height: 6px; background: var(--border); border-radius: 3px; }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%;
+    background: var(--accent); border: 3px solid #fff; box-shadow: 0 0 0 1px var(--accent); margin-top: -8px;
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--accent); border: 3px solid #fff; box-shadow: 0 0 0 1px var(--accent);
+  }
+  input[type=range].demand::-webkit-slider-thumb { background: var(--demand); box-shadow: 0 0 0 1px var(--demand); }
+  input[type=range].demand::-moz-range-thumb { background: var(--demand); box-shadow: 0 0 0 1px var(--demand); }
+  input[type=range].supply::-webkit-slider-thumb { background: var(--supply); box-shadow: 0 0 0 1px #b8481b; }
+  input[type=range].supply::-moz-range-thumb { background: var(--supply); box-shadow: 0 0 0 1px #b8481b; }
+
+  .seg { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-top: 6px; }
+  .seg label { flex: 1; position: relative; font-weight: 500; font-size: 14px; }
+  .seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .seg span { display: block; text-align: center; padding: 8px 6px; }
+  .seg input:checked + span { background: var(--accent); color: #fff; font-weight: 600; }
+  .seg label + label span { border-left: 1px solid var(--border); }
+  .seg input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: -3px; }
+
+  button {
+    font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+    border-radius: 8px; padding: 8px 14px; border: 1px solid var(--accent);
+    background: var(--surface); color: var(--accent);
+  }
+  button.primary { background: var(--accent); color: #fff; }
+  button:hover { filter: brightness(0.95); }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+
+  /* results table */
+  table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  caption { text-align: left; font-weight: 700; font-size: 15px; padding-bottom: 6px; }
+  th, td { padding: 6px 4px; border-bottom: 1px solid var(--grid); text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { font-size: 12px; color: var(--ink-3); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+  tbody th { font-weight: 500; }
+  tr.key td, tr.key th { font-weight: 700; }
+  .split-bar { display: flex; height: 12px; border-radius: 4px; overflow: hidden; margin: 8px 0 4px; gap: 2px; background: var(--surface); }
+  .split-bar div { height: 100%; }
+  .split-legend { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-2); }
+
+  /* learning check */
+  .check { margin-top: 24px; }
+  .q-list { display: grid; gap: 14px; margin-top: 10px; }
+  fieldset { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px 16px; margin: 0; }
+  legend { font-weight: 700; padding: 0 4px; font-size: 15px; }
+  .q-prompt { margin: 2px 0 10px; color: var(--ink-2); }
+  .opt { display: flex; gap: 10px; align-items: flex-start; padding: 6px 4px; border-radius: 6px; }
+  .opt:hover { background: var(--surface-2); }
+  .opt input { margin-top: 4px; width: 18px; height: 18px; flex: none; accent-color: var(--accent); }
+  .feedback { margin-top: 10px; padding: 10px 12px; border-radius: 8px; font-size: 15px; display: none; }
+  .feedback.show { display: block; }
+  .feedback.right { background: var(--good-soft); border-left: 4px solid var(--good); }
+  .feedback.wrong { background: var(--warn-soft); border-left: 4px solid var(--warn); }
+  .feedback .tag { font-weight: 700; }
+  .feedback.right .tag { color: var(--good); }
+  .feedback.wrong .tag { color: var(--warn); }
+
+  details { margin-top: 24px; border-top: 1px solid var(--border); padding-top: 12px; font-size: 14px; color: var(--ink-2); }
+  summary { cursor: pointer; font-weight: 600; color: var(--ink); }
+  details ul { padding-left: 20px; margin: 8px 0; }
+  details li { margin-bottom: 4px; }
+
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+  /* SVG text scales with the chart, so enlarge it on narrow screens */
+  @media (max-width: 520px) {
+    .tick, .ref-label, .region-label { font-size: 17px; }
+    .axis-title, .curve-label { font-size: 18px; }
+    .y-title { display: none; }  /* the $ tick labels carry the unit */
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  @media (forced-colors: active) {
+    .sw, .split-bar div { forced-color-adjust: none; }
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <p class="eyebrow">Evans School · Public finance · Interactive model</p>
+  <h1>Who really pays a tax on soda?</h1>
+  <p class="lede">
+    In 2018 Seattle began taxing sweetened drinks at <strong>1.75¢ per ounce</strong>, or about <strong>$0.21 on a 12-oz drink</strong>. The law collects the tax from distributors. But who the law bills (<em>statutory incidence</em>) is not the same as who ends up worse off (<em>economic incidence</em>). Move the sliders to see how the burden splits between buyers and sellers, and how much activity the tax prevents.
+  </p>
+
+  <div class="grid">
+    <!-- Chart -->
+    <section class="card chart-card" aria-labelledby="chartTitle">
+      <div class="chart-head">
+        <h2 id="chartTitle" style="margin:0;font-size:16px;">Market for sweetened drinks in the city</h2>
+        <ul class="legend" aria-label="Chart legend">
+          <li><span class="sw line" style="background:var(--demand)"></span>Demand</li>
+          <li><span class="sw line" style="background:var(--supply)"></span>Supply</li>
+          <li style="color:var(--ink-3)"><span class="sw dash"></span><span style="color:var(--ink-2)">With tax</span></li>
+        </ul>
+      </div>
+      <ul class="legend" aria-hidden="true" style="padding:6px 4px 0;">
+        <li><span class="sw" style="background:var(--demand-fill);outline:1px solid var(--demand)"></span>Tax paid by buyers</li>
+        <li><span class="sw" style="background:var(--supply-fill);outline:1px solid var(--supply)"></span>Tax paid by sellers</li>
+        <li><span class="sw" style="background-color:var(--dwl-fill);outline:1px solid var(--dwl-line);background-image:repeating-linear-gradient(45deg,var(--dwl-line) 0 1px,transparent 1px 5px)"></span>Deadweight loss</li>
+      </ul>
+      <svg id="chart" viewBox="0 0 600 480" role="img" aria-labelledby="chartTitle summaryText">
+        <defs>
+          <clipPath id="plotClip"><rect x="60" y="16" width="516" height="412"></rect></clipPath>
+          <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <rect width="6" height="6" fill="var(--dwl-fill)"></rect>
+            <line x1="0" y1="0" x2="0" y2="6" stroke="var(--dwl-line)" stroke-width="1.2"></line>
+          </pattern>
+        </defs>
+        <g id="gridLayer"></g>
+        <g id="regionLayer" clip-path="url(#plotClip)"></g>
+        <g id="curveLayer" clip-path="url(#plotClip)"></g>
+        <g id="refLayer"></g>
+        <g id="labelLayer"></g>
+      </svg>
+      <div class="tooltip" id="tooltip" role="presentation"></div>
+      <p class="summary" id="summaryText"></p>
+      <div class="sr-only" aria-live="polite" id="liveRegion"></div>
+    </section>
+
+    <!-- Controls + results -->
+    <div style="display:grid;gap:16px;">
+      <section class="card soft" aria-labelledby="controlsTitle">
+        <h2 id="controlsTitle">Adjust the market</h2>
+
+        <div class="control">
+          <div class="control-top">
+            <label for="tax">Tax per drink</label>
+            <span class="val" id="taxVal"></span>
+          </div>
+          <input type="range" id="tax" min="0" max="0.60" step="0.01" value="0.21">
+          <p class="hint">Seattle's rate is about $0.21 per 12 oz.</p>
+        </div>
+
+        <div class="control">
+          <div class="control-top">
+            <label for="eD">How price-sensitive are buyers?</label>
+            <span class="val" id="eDVal"></span>
+          </div>
+          <input type="range" class="demand" id="eD" min="0.2" max="3" step="0.1" value="0.8">
+          <div class="scale-ends" aria-hidden="true"><span>Inelastic (stuck)</span><span>Elastic (switch easily)</span></div>
+        </div>
+
+        <div class="control">
+          <div class="control-top">
+            <label for="eS">How price-sensitive are sellers?</label>
+            <span class="val" id="eSVal"></span>
+          </div>
+          <input type="range" class="supply" id="eS" min="0.2" max="3" step="0.1" value="1.5">
+          <div class="scale-ends" aria-hidden="true"><span>Inelastic</span><span>Elastic</span></div>
+        </div>
+
+        <div class="control" role="radiogroup" aria-labelledby="whoLabel">
+          <span class="label" id="whoLabel">Who sends the tax to the city?</span>
+          <div class="seg">
+            <label><input type="radio" name="who" value="sellers" checked><span>Distributors</span></label>
+            <label><input type="radio" name="who" value="buyers"><span>Shoppers at checkout</span></label>
+          </div>
+          <p class="hint" id="whoHint"></p>
+        </div>
+
+        <div class="btn-row">
+          <button type="button" id="resetBtn">Reset to Seattle example</button>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="resultsCaption">
+        <table>
+          <caption id="resultsCaption">Results, per month</caption>
+          <thead><tr><th scope="col">Measure</th><th scope="col">No tax</th><th scope="col">With tax</th></tr></thead>
+          <tbody id="resultsBody"></tbody>
+        </table>
+        <h3 style="margin-top:14px;">Who bears the tax</h3>
+        <div class="split-bar" aria-hidden="true">
+          <div id="barBuyer" style="background:var(--demand)"></div>
+          <div id="barSeller" style="background:var(--supply)"></div>
+        </div>
+        <div class="split-legend"><span id="buyerShareTxt"></span><span id="sellerShareTxt"></span></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Learning check -->
+  <section class="check" aria-labelledby="checkTitle">
+    <h2 id="checkTitle">Check your understanding</h2>
+    <p class="lede">Make a prediction first, then use the buttons to test it on the graph. Nothing you choose here is saved or sent anywhere.</p>
+    <div class="q-list" id="questions"></div>
+  </section>
+
+  <details>
+    <summary>About this model</summary>
+    <ul>
+      <li><strong>Illustrative, not estimated.</strong> The market starts at $1.50 per drink and 10 million drinks per month. Those numbers, and the elasticities, are teaching values, not estimates of Seattle's market.</li>
+      <li><strong>Linear curves.</strong> Both curves pass through the no-tax equilibrium, and the sliders set each curve's price elasticity at that point. With linear curves, buyers bear ε<sub>S</sub> / (ε<sub>S</sub> + ε<sub>D</sub>) of the tax, and deadweight loss is ½ × tax × drop in quantity.</li>
+      <li><strong>What it leaves out:</strong> cross-border shopping as a separate market, substitution to untaxed drinks, market power, and the health benefits that motivate the tax. Those are good questions for class discussion.</li>
+      <li><strong>Privacy.</strong> This page collects no data. It sets no cookies, uses no storage, and makes no network requests after it loads.</li>
+      <li><strong>Accessibility.</strong> Every control works by keyboard. The results table and the summary sentence give the same information as the graph.</li>
+      <li><strong>Content review:</strong> <em>[faculty reviewer and date]</em> · <strong>Maintained by:</strong> Evans Digital · Pilot version 0.1</li>
+    </ul>
+  </details>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---- Model -----------------------------------------------------------
+  var P0 = 1.50, Q0 = 10;               // no-tax equilibrium
+  var DEFAULTS = { tax: 0.21, eD: 0.8, eS: 1.5, who: "sellers" };
+
+  function solve(s) {
+    var b = P0 / (Q0 * s.eD);           // |slope| of inverse demand
+    var d = P0 / (Q0 * s.eS);           // slope of inverse supply
+    var t = s.tax;
+    var Q1 = Q0 - t / (b + d);
+    var Pb = P0 + b * t / (b + d);      // price buyers pay, tax included
+    var Ps = Pb - t;                    // price sellers keep
+    return {
+      b: b, d: d, t: t, Q1: Q1, Pb: Pb, Ps: Ps,
+      buyerShare: t > 0 ? (Pb - P0) / t : b / (b + d),
+      revenue: t * Q1,
+      dwl: 0.5 * t * (Q0 - Q1),
+      demand: function (q) { return P0 + b * (Q0 - q); },
+      supply: function (q) { return P0 + d * (q - Q0); }
+    };
+  }
+
+  // ---- Chart geometry ----------------------------------------------------
+  var ML = 60, MT = 16, PW = 516, PH = 412;
+  var QMAX = 20, PMAX = 3;
+  function x(q) { return ML + (q / QMAX) * PW; }
+  function y(p) { return MT + (1 - p / PMAX) * PH; }
+  function r(n) { return Math.round(n * 10) / 10; }
+
+  var $ = function (id) { return document.getElementById(id); };
+  var money = function (v) { return "$" + v.toFixed(2); };
+  var moneyM = function (v) { return "$" + v.toFixed(2) + "M"; };
+  var pct = function (v) { return Math.round(v * 100) + "%"; };
+
+  function elasticityWord(e) {
+    if (e < 0.95) return "inelastic";
+    if (e <= 1.05) return "unit elastic";
+    return "elastic";
+  }
+
+  function drawGrid() {
+    var g = "";
+    for (var p = 0; p <= PMAX; p += 0.5) {
+      g += '<line x1="' + ML + '" x2="' + (ML + PW) + '" y1="' + y(p) + '" y2="' + y(p) + '" stroke="var(--grid)" stroke-width="1"/>';
+    }
+    for (var q = 0; q <= QMAX; q += 5) {
+      g += '<text class="tick" x="' + x(q) + '" y="' + (MT + PH + 18) + '" text-anchor="middle">' + q + '</text>';
+    }
+    g += '<line x1="' + ML + '" x2="' + (ML + PW) + '" y1="' + y(0) + '" y2="' + y(0) + '" stroke="var(--axis)" stroke-width="1"/>';
+    g += '<line x1="' + ML + '" x2="' + ML + '" y1="' + MT + '" y2="' + y(0) + '" stroke="var(--axis)" stroke-width="1"/>';
+    g += '<text class="axis-title" x="' + (ML + PW / 2) + '" y="' + (MT + PH + 42) + '" text-anchor="middle">Quantity (millions of drinks per month)</text>';
+    g += '<text class="axis-title y-title" transform="translate(16,' + (MT + PH / 2) + ') rotate(-90)" text-anchor="middle">Price per drink</text>';
+    $("gridLayer").innerHTML = g;
+  }
+
+  function line(fn, color, dashed) {
+    return '<line x1="' + x(0) + '" y1="' + y(fn(0)) + '" x2="' + x(QMAX) + '" y2="' + y(fn(QMAX)) +
+      '" stroke="' + color + '" stroke-width="' + (dashed ? 2 : 2.5) + '"' +
+      (dashed ? ' stroke-dasharray="7 5"' : '') + ' stroke-linecap="round"/>';
+  }
+
+  // Place a curve label just inside the plot where the line exits it.
+  function curveLabelPos(fn, slopeSign) {
+    // slopeSign: -1 for downward (demand), +1 for upward (supply)
+    var target = slopeSign < 0 ? 0.25 : PMAX - 0.25;
+    var slope = (fn(1) - fn(0));
+    var qAt = (target - fn(0)) / slope;
+    var q = Math.min(QMAX - 0.6, Math.max(0.6, qAt));
+    return { q: q, p: fn(q) };
+  }
+
+  function spreadLabels(items, minGap) {
+    // items: [{y}], sort by y and push apart vertically
+    items.sort(function (a, b) { return a.y - b.y; });
+    for (var i = 1; i < items.length; i++) {
+      if (items[i].y - items[i - 1].y < minGap) items[i].y = items[i - 1].y + minGap;
+    }
+    return items;
+  }
+
+  function render(s) {
+    var m = solve(s);
+    var withTaxIsSupply = s.who === "sellers";
+
+    // regions
+    var reg = "";
+    if (m.t > 0) {
+      reg += '<rect class="region" data-tip="buyer" x="' + x(0) + '" y="' + y(m.Pb) + '" width="' + (x(m.Q1) - x(0)) +
+        '" height="' + Math.max(0, y(P0) - y(m.Pb)) + '" fill="var(--demand-fill)"/>';
+      reg += '<rect class="region" data-tip="seller" x="' + x(0) + '" y="' + y(P0) + '" width="' + (x(m.Q1) - x(0)) +
+        '" height="' + Math.max(0, y(m.Ps) - y(P0)) + '" fill="var(--supply-fill)"/>';
+      // 2px surface gap between the two fills
+      reg += '<line x1="' + x(0) + '" x2="' + x(m.Q1) + '" y1="' + y(P0) + '" y2="' + y(P0) + '" stroke="var(--surface)" stroke-width="2"/>';
+      reg += '<polygon class="region" data-tip="dwl" points="' + x(m.Q1) + ',' + y(m.Pb) + ' ' + x(m.Q1) + ',' + y(m.Ps) + ' ' + x(Q0) + ',' + y(P0) +
+        '" fill="url(#hatch)" stroke="var(--dwl-line)" stroke-width="1"/>';
+    }
+    $("regionLayer").innerHTML = reg;
+
+    // curves
+    var cur = line(m.demand, "var(--demand)", false) + line(m.supply, "var(--supply)", false);
+    var shifted;
+    if (m.t > 0) {
+      shifted = withTaxIsSupply
+        ? function (q) { return m.supply(q) + m.t; }
+        : function (q) { return m.demand(q) - m.t; };
+      cur += line(shifted, withTaxIsSupply ? "var(--supply)" : "var(--demand)", true);
+    }
+    $("curveLayer").innerHTML = cur;
+
+    // reference lines + points
+    var ref = "";
+    function guide(q, p) {
+      ref += '<line x1="' + ML + '" x2="' + x(q) + '" y1="' + y(p) + '" y2="' + y(p) + '" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="2 3"/>';
+      ref += '<line x1="' + x(q) + '" x2="' + x(q) + '" y1="' + y(p) + '" y2="' + y(0) + '" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="2 3"/>';
+    }
+    guide(Q0, P0);
+    if (m.t > 0) { guide(m.Q1, m.Pb); guide(m.Q1, m.Ps); }
+    ref += '<circle cx="' + x(Q0) + '" cy="' + y(P0) + '" r="5" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/>';
+    if (m.t > 0) {
+      ref += '<circle cx="' + x(m.Q1) + '" cy="' + y(m.Pb) + '" r="5" fill="var(--demand)" stroke="var(--surface)" stroke-width="2"/>';
+      ref += '<circle cx="' + x(m.Q1) + '" cy="' + y(m.Ps) + '" r="5" fill="var(--supply)" stroke="var(--surface)" stroke-width="2"/>';
+    }
+    $("refLayer").innerHTML = ref;
+
+    // labels
+    var lab = "";
+    // key prices sit in the axis margin (de-collided); regular ticks give way to them
+    var pl = [{ y: y(P0), text: money(P0), dot: "var(--surface)" }];
+    if (m.t > 0) {
+      pl.push({ y: y(m.Pb), text: money(m.Pb), dot: "var(--demand)" });
+      pl.push({ y: y(m.Ps), text: money(m.Ps), dot: "var(--supply)" });
+    }
+    for (var p = 0; p <= PMAX; p += 0.5) {
+      var clash = pl.some(function (o) { return Math.abs(o.y - y(p)) < (window.innerWidth <= 520 ? 19 : 14); });
+      if (!clash) lab += '<text class="tick" x="' + (ML - 8) + '" y="' + (y(p) + 4) + '" text-anchor="end">$' + p.toFixed(2) + '</text>';
+    }
+    spreadLabels(pl, window.innerWidth <= 520 ? 19 : 14).forEach(function (o) {
+      lab += '<text class="ref-label" x="' + (ML - 8) + '" y="' + (o.y + 4) + '" text-anchor="end">' + o.text + '</text>';
+    });
+    // in-plot tags for the buyer and seller price points
+    if (m.t > 0) {
+      lab += '<text class="ref-label" x="' + (x(m.Q1) - 8) + '" y="' + (y(m.Pb) - 7) + '" text-anchor="end" style="paint-order:stroke;stroke:var(--surface);stroke-width:3px">Buyers pay</text>';
+      lab += '<text class="ref-label" x="' + (x(m.Q1) - 8) + '" y="' + (y(m.Ps) + 15) + '" text-anchor="end" style="paint-order:stroke;stroke:var(--surface);stroke-width:3px">Sellers keep</text>';
+    }
+    // quantity labels below the axis line, inside the plot
+    if (m.t > 0 && x(Q0) - x(m.Q1) > 26) {
+      lab += '<text class="ref-label" x="' + (x(m.Q1) - 4) + '" y="' + (y(0) - 6) + '" text-anchor="end" style="paint-order:stroke;stroke:var(--surface);stroke-width:3px">Q₁ ' + r(m.Q1) + '</text>';
+      lab += '<text class="ref-label" x="' + (x(Q0) + 4) + '" y="' + (y(0) - 6) + '" style="paint-order:stroke;stroke:var(--surface);stroke-width:3px">Q₀ ' + Q0 + '</text>';
+    } else {
+      lab += '<text class="ref-label" x="' + (x(Q0) + 4) + '" y="' + (y(0) - 6) + '" style="paint-order:stroke;stroke:var(--surface);stroke-width:3px">Q₀ ' + Q0 + (m.t > 0 ? " → " + r(m.Q1) : "") + '</text>';
+    }
+    // curve labels
+    var dl = curveLabelPos(m.demand, -1), sl = curveLabelPos(m.supply, 1);
+    lab += '<text class="curve-label" x="' + (x(dl.q) + 6) + '" y="' + (y(dl.p) - 6) + '">D</text>';
+    lab += '<text class="curve-label" x="' + (x(sl.q) + 6) + '" y="' + (y(sl.p) + 14) + '">S</text>';
+    if (m.t > 0) {
+      var tl = curveLabelPos(shifted, withTaxIsSupply ? 1 : -1);
+      lab += withTaxIsSupply
+        ? '<text class="curve-label" x="' + (x(tl.q) - 6) + '" y="' + (y(tl.p) + 4) + '" text-anchor="end">S + tax</text>'
+        : '<text class="curve-label" x="' + (x(tl.q) - 6) + '" y="' + (y(tl.p) - 4) + '" text-anchor="end">D − tax</text>';
+    }
+    // labels inside the tax wedge, only if there's room
+    var wedgeW = x(m.Q1) - x(0);
+    if (m.t > 0 && wedgeW > 150) {
+      var hB = y(P0) - y(m.Pb), hS = y(m.Ps) - y(P0);
+      var cx = ML + wedgeW * 0.62;
+      if (hB >= 16) lab += '<text class="region-label" x="' + cx + '" y="' + (y(m.Pb) + hB / 2 + 4) + '" text-anchor="middle">Buyers’ share ' + pct(m.buyerShare) + '</text>';
+      if (hS >= 16) lab += '<text class="region-label" x="' + cx + '" y="' + (y(P0) + hS / 2 + 4) + '" text-anchor="middle">Sellers’ share ' + pct(1 - m.buyerShare) + '</text>';
+    }
+    $("labelLayer").innerHTML = lab;
+
+    // values next to sliders
+    $("taxVal").textContent = money(s.tax);
+    $("eDVal").innerHTML = "ε<sub>D</sub> = " + s.eD.toFixed(1) + " <small>" + elasticityWord(s.eD) + "</small>";
+    $("eSVal").innerHTML = "ε<sub>S</sub> = " + s.eS.toFixed(1) + " <small>" + elasticityWord(s.eS) + "</small>";
+    $("tax").setAttribute("aria-valuetext", money(s.tax) + " per drink");
+    $("eD").setAttribute("aria-valuetext", s.eD.toFixed(1) + ", " + elasticityWord(s.eD));
+    $("eS").setAttribute("aria-valuetext", s.eS.toFixed(1) + ", " + elasticityWord(s.eS));
+    $("whoHint").textContent = withTaxIsSupply
+      ? "Seattle's design. Sellers see their costs rise by the tax, so the supply curve shifts up."
+      : "Shelf price " + money(m.Ps) + " + " + money(m.t) + " tax at the register = " + money(m.Pb) + ". Demand shifts down, and the result is the same.";
+
+    // results table
+    var rows = [
+      ["Price buyers pay", money(P0), money(m.Pb), false],
+      ["Price sellers keep", money(P0), money(m.Ps), false],
+      ["Drinks sold", Q0.toFixed(1) + "M", m.Q1.toFixed(1) + "M", false],
+      ["Tax revenue", "$0.00M", moneyM(m.revenue), true],
+      ["Deadweight loss", "$0.00M", moneyM(m.dwl), true],
+      ["Loss per $1 raised", "–", m.revenue > 0 ? "$" + (m.dwl / m.revenue).toFixed(3) : "–", false]
+    ];
+    $("resultsBody").innerHTML = rows.map(function (row) {
+      return '<tr' + (row[3] ? ' class="key"' : '') + '><th scope="row">' + row[0] + '</th><td>' + row[1] + '</td><td>' + row[2] + '</td></tr>';
+    }).join("");
+
+    var bs = m.buyerShare;
+    $("barBuyer").style.width = (bs * 100) + "%";
+    $("barSeller").style.width = ((1 - bs) * 100) + "%";
+    $("buyerShareTxt").textContent = "Buyers " + pct(bs) + (m.t > 0 ? " (" + money(m.Pb - P0) + ")" : "");
+    $("sellerShareTxt").textContent = "Sellers " + pct(1 - bs) + (m.t > 0 ? " (" + money(P0 - m.Ps) + ")" : "");
+
+    // summary sentence (visible) + debounced live announcement
+    var sum;
+    if (m.t === 0) {
+      sum = "With no tax, drinks sell for $1.50 and 10 million are sold each month. Add a tax to see how the burden splits.";
+    } else {
+      sum = "Buyers bear " + pct(bs) + " of the " + money(m.t) + " tax: they now pay " + money(m.Pb) +
+        ", and sellers keep " + money(m.Ps) + ". Sales fall from 10.0 to " + m.Q1.toFixed(1) +
+        " million drinks. The city raises " + moneyM(m.revenue) + " a month; the lost sales cost " + moneyM(m.dwl) + " in deadweight loss.";
+    }
+    $("summaryText").textContent = sum;
+    clearTimeout(render._t);
+    render._t = setTimeout(function () { $("liveRegion").textContent = sum; }, 600);
+
+    render.last = m;
+  }
+
+  // ---- State & controls ------------------------------------------------
+  var state = Object.assign({}, DEFAULTS);
+  function readControls() {
+    state.tax = parseFloat($("tax").value);
+    state.eD = parseFloat($("eD").value);
+    state.eS = parseFloat($("eS").value);
+    state.who = document.querySelector('input[name=who]:checked').value;
+    render(state);
+  }
+  function setControls(s) {
+    if (s.tax != null) $("tax").value = s.tax;
+    if (s.eD != null) $("eD").value = s.eD;
+    if (s.eS != null) $("eS").value = s.eS;
+    if (s.who) document.querySelector('input[name=who][value=' + s.who + ']').checked = true;
+    readControls();
+  }
+  ["tax", "eD", "eS"].forEach(function (id) { $(id).addEventListener("input", readControls); });
+  document.querySelectorAll("input[name=who]").forEach(function (el) { el.addEventListener("change", readControls); });
+  $("resetBtn").addEventListener("click", function () { setControls(DEFAULTS); });
+
+  // ---- Tooltip on regions ---------------------------------------------
+  var tip = $("tooltip"), card = document.querySelector(".chart-card");
+  $("regionLayer").addEventListener("mousemove", function (e) {
+    var k = e.target.getAttribute && e.target.getAttribute("data-tip");
+    if (!k) { tip.classList.remove("show"); return; }
+    var m = render.last, html;
+    if (k === "buyer") html = "<strong>Paid by buyers</strong><br>" + money(m.Pb - P0) + " per drink × " + m.Q1.toFixed(1) + "M = " + moneyM((m.Pb - P0) * m.Q1);
+    else if (k === "seller") html = "<strong>Paid by sellers</strong><br>" + money(P0 - m.Ps) + " per drink × " + m.Q1.toFixed(1) + "M = " + moneyM((P0 - m.Ps) * m.Q1);
+    else html = "<strong>Deadweight loss</strong><br>" + (Q0 - m.Q1).toFixed(1) + "M drinks no longer sold that buyers valued above their cost: " + moneyM(m.dwl);
+    tip.innerHTML = html;
+    var b = card.getBoundingClientRect();
+    var left = Math.min(e.clientX - b.left + 14, b.width - 250);
+    tip.style.left = Math.max(4, left) + "px";
+    tip.style.top = (e.clientY - b.top + 14) + "px";
+    tip.classList.add("show");
+  });
+  $("regionLayer").addEventListener("mouseleave", function () { tip.classList.remove("show"); });
+
+  // ---- Learning check --------------------------------------------------
+  var QUESTIONS = [
+    {
+      title: "1. Predict the split",
+      prompt: "Suppose buyers barely respond to price (ε<sub>D</sub> = 0.3) but sellers can easily shift drinks to other markets (ε<sub>S</sub> = 2.0). Who bears most of a $0.21 tax?",
+      options: ["Mostly sellers", "Mostly buyers", "It splits about evenly", "Whoever the law bills"],
+      answer: 1,
+      right: "The less price-sensitive side bears more of the tax, because it has fewer ways to avoid it. Here buyers bear 2.0 / (2.0 + 0.3) ≈ 87%.",
+      wrong: "Look at which side can get away. Sellers here can move drinks elsewhere, so buyers, who can't easily switch, absorb most of the price change: about 87%.",
+      actions: [{ label: "Show this on the graph", set: { tax: 0.21, eD: 0.3, eS: 2.0 } }]
+    },
+    {
+      title: "2. Does it matter who writes the check?",
+      prompt: "Seattle collects the tax from distributors. If the council instead collected it from shoppers at checkout, what would change in this model?",
+      options: ["Shoppers would bear more of the tax", "Distributors would bear more of the tax", "The final burden split would not change", "Revenue would double"],
+      answer: 2,
+      right: "Statutory incidence doesn't decide economic incidence. Either way, the wedge between what buyers pay and what sellers keep equals the tax, and the elasticities decide where the market settles. Real-world details such as how visible the tax is can matter, which is worth discussing.",
+      wrong: "Try switching “Who sends the tax to the city?” and watch the results table. The prices buyers pay and sellers keep stay the same. Only the shelf-price label changes.",
+      actions: [{ label: "Switch to shoppers", set: { who: "buyers" } }, { label: "Switch to distributors", set: { who: "sellers" } }]
+    },
+    {
+      title: "3. Shopping across the city line",
+      prompt: "Within the city, many shoppers can buy drinks just outside city limits. How does that likely change the in-city market?",
+      options: [
+        "Demand becomes more elastic, so sellers bear more and in-city sales fall more",
+        "Demand becomes less elastic, so buyers bear more",
+        "Nothing changes, because the tax rate is the same",
+        "Supply becomes perfectly inelastic"
+      ],
+      answer: 0,
+      right: "Easy substitutes, including the same product a few miles away, make in-city demand more elastic. More of the burden shifts to sellers, sales in the city drop further, and deadweight loss per dollar raised grows. That's a reason local taxes are harder to design than state or national ones.",
+      wrong: "Having an easy alternative makes buyers more price-sensitive. Set ε<sub>D</sub> high and watch the buyer share, the quantity, and the loss per $1 raised.",
+      actions: [{ label: "Show elastic in-city demand", set: { tax: 0.21, eD: 2.5, eS: 1.5 } }]
+    },
+    {
+      title: "4. Doubling the rate",
+      prompt: "If the tax doubles from $0.20 to $0.40 per drink, roughly what happens to deadweight loss?",
+      options: ["It stays about the same", "It roughly doubles", "It roughly quadruples", "It falls"],
+      answer: 2,
+      right: "Deadweight loss grows with the square of the tax, because both the height (the tax) and the width (lost sales) of the triangle double. Revenue rises by less than double. That's why economists favor broad bases with low rates.",
+      wrong: "The deadweight loss triangle has height equal to the tax and width equal to the drop in sales. Doubling the tax doubles both. Compare the two settings below.",
+      actions: [{ label: "Set $0.20", set: { tax: 0.20, eD: 0.8, eS: 1.5 } }, { label: "Set $0.40", set: { tax: 0.40, eD: 0.8, eS: 1.5 } }]
+    }
+  ];
+
+  var qWrap = $("questions");
+  QUESTIONS.forEach(function (q, qi) {
+    var fs = document.createElement("fieldset");
+    var html = '<legend>' + q.title + '</legend><p class="q-prompt" id="qp' + qi + '">' + q.prompt + '</p>';
+    q.options.forEach(function (o, oi) {
+      var id = "q" + qi + "o" + oi;
+      html += '<label class="opt" for="' + id + '"><input type="radio" name="q' + qi + '" id="' + id + '" value="' + oi + '" aria-describedby="qp' + qi + '"><span>' + o + '</span></label>';
+    });
+    html += '<div class="btn-row"><button type="button" class="primary" data-check="' + qi + '">Check answer</button></div>';
+    html += '<div class="feedback" id="fb' + qi + '" role="status" aria-live="polite"></div>';
+    fs.innerHTML = html;
+    qWrap.appendChild(fs);
+  });
+
+  qWrap.addEventListener("click", function (e) {
+    var btn = e.target.closest("button");
+    if (!btn) return;
+    if (btn.hasAttribute("data-check")) {
+      var qi = +btn.getAttribute("data-check"), q = QUESTIONS[qi];
+      var sel = document.querySelector('input[name=q' + qi + ']:checked');
+      var fb = $("fb" + qi);
+      if (!sel) {
+        fb.className = "feedback show wrong";
+        fb.innerHTML = '<span class="tag">Pick an answer first.</span> Make your prediction, then check it.';
+        return;
+      }
+      var ok = +sel.value === q.answer;
+      fb.className = "feedback show " + (ok ? "right" : "wrong");
+      var acts = '<div class="btn-row">' + q.actions.map(function (a, ai) {
+        return '<button type="button" data-q="' + qi + '" data-a="' + ai + '">' + a.label + '</button>';
+      }).join("") + '</div>';
+      fb.innerHTML = '<span class="tag">' + (ok ? "Correct." : "Not quite.") + '</span> ' + (ok ? q.right : q.wrong) + acts;
+    } else if (btn.hasAttribute("data-a")) {
+      var a = QUESTIONS[+btn.getAttribute("data-q")].actions[+btn.getAttribute("data-a")];
+      setControls(a.set);
+      var chart = document.querySelector(".chart-card");
+      if (chart.getBoundingClientRect().top < 0) chart.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+
+  window.addEventListener("resize", function () { render(state); });
+  drawGrid();
+  readControls();
+})();
+</script>
+</body>
+</html>

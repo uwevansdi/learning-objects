@@ -1,0 +1,7 @@
+# Keep internal documents out of the public repo
+*.docx
+*.doc
+*.pdf
+*.pptx
+*.xlsx
+~$*
