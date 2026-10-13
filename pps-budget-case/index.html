@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Can That Was Kicked</title>
+<meta name="description" content="Staged case on Portland Public Schools' budget gaps, 2022 to 2026: commit to a decision at each stage, then see what the district actually did. Evans School learning object pilot.">
+<style>
+  :root {
+    color-scheme: light;
+    --surface: #ffffff;
+    --surface-2: #f6f5f2;
+    --border: #d9d7d0;
+    --ink: #1b1b1a;
+    --ink-2: #4a4945;
+    --ink-3: #6a6964;
+    --grid: #ebeae6;
+    --bar: #2a78d6;
+    --bar-2: #86b6ef;
+    --accent: #4b2e83;       /* UW purple */
+    --accent-soft: #efeaf7;
+    --good: #1d6b3a;
+    --focus: #4b2e83;
+    --radius: 10px;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--surface); color: var(--ink); font-size: 16px; line-height: 1.6; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 20px 16px 32px; }
+  .eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); margin: 0 0 4px; }
+  h1 { font-size: 27px; line-height: 1.2; margin: 0 0 8px; }
+  h2 { font-size: 21px; line-height: 1.25; margin: 0 0 6px; }
+  h3 { font-size: 16px; margin: 16px 0 6px; }
+  p { margin: 0 0 12px; }
+  .lede { color: var(--ink-2); }
+  a { color: var(--accent); }
+
+  .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 18px 0 14px; padding: 0; list-style: none; }
+  .tabs button { font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 999px; padding: 6px 14px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--ink-2); }
+  .tabs button[aria-current="step"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tabs button:disabled { cursor: not-allowed; opacity: .5; }
+  .tabs .done::after { content: " ✓"; }
+
+  .stage { border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .when { font-size: 13px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin: 14px 0; }
+  .fact { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; }
+  .fact .v { font-size: 22px; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
+  .fact .k { font-size: 13px; color: var(--ink-2); line-height: 1.35; }
+  blockquote { margin: 12px 0; padding: 8px 14px; border-left: 4px solid var(--accent); background: var(--accent-soft); border-radius: 6px; color: var(--ink); }
+  blockquote cite { display: block; font-style: normal; font-size: 13px; color: var(--ink-2); margin-top: 2px; }
+
+  fieldset { border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px 14px; margin: 16px 0 0; }
+  legend { font-weight: 700; padding: 0 4px; }
+  .opt { display: flex; gap: 10px; align-items: flex-start; padding: 7px 4px; border-radius: 6px; }
+  .opt:hover { background: var(--surface-2); }
+  .opt input { margin-top: 5px; width: 18px; height: 18px; flex: none; accent-color: var(--accent); }
+  label.note { display: block; font-size: 14px; font-weight: 600; margin: 12px 0 4px; }
+  textarea { width: 100%; font: inherit; font-size: 15px; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; min-height: 64px; resize: vertical; }
+  .hint { font-size: 13px; color: var(--ink-3); margin: 4px 0 0; }
+
+  button.primary, button.secondary { font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; border-radius: 8px; padding: 9px 16px; border: 1px solid var(--accent); }
+  button.primary { background: var(--accent); color: #fff; }
+  button.secondary { background: var(--surface); color: var(--accent); }
+  button.primary:disabled { opacity: .45; cursor: not-allowed; }
+  button:hover:not(:disabled) { filter: brightness(0.96); }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+
+  .reveal { margin-top: 18px; border-top: 2px solid var(--accent); padding-top: 14px; }
+  .reveal h3 { margin-top: 0; font-size: 18px; }
+  .yours { font-size: 14px; background: var(--surface-2); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; color: var(--ink-2); }
+  .yours strong { color: var(--ink); }
+  .consider { background: var(--surface-2); border-radius: 8px; padding: 10px 14px 4px; margin-top: 12px; }
+  .consider h4 { margin: 0 0 6px; font-size: 15px; }
+  .consider ul { margin: 0 0 8px; padding-left: 20px; }
+  .src { font-size: 13px; color: var(--ink-3); margin-top: 10px; }
+
+  /* chart */
+  .chart { margin: 14px 0 6px; }
+  .chart-title { font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+  svg { display: block; width: 100%; height: auto; }
+  svg text { font-family: inherit; }
+
+  .compare { list-style: none; padding: 0; margin: 10px 0; }
+  .compare li { padding: 10px 12px; border-radius: 8px; background: var(--surface-2); margin-bottom: 8px; font-size: 15px; }
+  .compare .tag { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-3); display: block; }
+
+  details { margin-top: 24px; border-top: 1px solid var(--border); padding-top: 12px; font-size: 14px; color: var(--ink-2); }
+  summary { cursor: pointer; font-weight: 600; color: var(--ink); }
+  details ul { padding-left: 20px; margin: 8px 0; }
+  details li { margin-bottom: 4px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <p class="eyebrow">Evans School · Education finance · Staged case</p>
+  <h1>The can that was kicked: Portland Public Schools' budget gaps, 2022–2026</h1>
+  <p class="lede">
+    Portland Public Schools (PPS), Oregon's largest district, has faced a budget shortfall five years running. This case moves through three moments when district leaders made choices. At each one, decide what you would do and why, then see what actually happened. The epilogue covers what comes next.
+  </p>
+
+  <ol class="tabs" id="tabs" aria-label="Case stages"></ol>
+  <section class="stage" id="stage" aria-live="off"></section>
+  <div class="sr-only" aria-live="polite" id="live"></div>
+
+  <details>
+    <summary>About this case and its sources</summary>
+    <ul>
+      <li><strong>A real case.</strong> Facts are drawn from news reporting and district materials through June 2026 and linked at each stage. Where sources differ, for example $13.1M versus $13.2M for the staffing amendment, the case uses a round figure. Check for later developments before teaching.</li>
+      <li><strong>Neutral framing.</strong> Quotes from district leaders, board members, and others are taken from published reporting. The case is meant to support debate, not to assign blame.</li>
+      <li><strong>Privacy.</strong> Your choices and notes stay in this browser tab. Nothing is saved or sent, and reloading clears them.</li>
+      <li><strong>Accessibility.</strong> Every control works by keyboard. The chart's values are also listed in the text.</li>
+      <li><strong>Content review:</strong> <em>[faculty reviewer and date]</em> · <strong>Maintained by:</strong> Evans Digital · Pilot version 0.1</li>
+    </ul>
+    <p><strong>Sources</strong></p>
+    <ul id="allSources"></ul>
+  </details>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var SRC = {
+    wwOneTime: ["Willamette Week, May 6, 2026: “PPS Spent Years Looking to One-Time Dollars for Budget Relief. It Now Faces a Reckoning”", "https://www.wweek.com/news/schools/2026/05/06/pps-spent-years-looking-to-one-time-dollars-for-budget-relief-it-now-faces-a-reckoning/"],
+    opbDeal: ["OPB, Nov. 26, 2023: “Teachers reach tentative deal with Portland Public Schools”", "https://www.opb.org/article/2023/11/26/portland-public-schools-teachers-strike/"],
+    opbRatify: ["OPB, Nov. 28, 2023: “Portland teachers ratify contract with nearly 95% approval, school board passes unanimously”", "https://www.opb.org/article/2023/11/28/portland-teachers-ratify-contract/"],
+    opbFaq: ["OPB, Nov. 29, 2023: “What did Portland teachers get from their strike?”", "https://www.opb.org/article/2023/11/29/portland-teachers-get-from-strike-faq/"],
+    k12dive: ["K-12 Dive: “Portland schools resume classes as teachers union reaches tentative deal”", "https://www.k12dive.com/news/portland-schools-strike-tentative-agreement/700707/"],
+    opbProposed: ["OPB, Apr. 29, 2026: “Another year of cuts: Portland Public Schools presents $2.77 billion budget”", "https://www.opb.org/article/2026/04/29/portland-public-schools-budget-gap-deep-cuts/"],
+    opbAdopted: ["OPB, June 25, 2026: “Portland Public Schools board passes painful $2.77 billion budget”", "https://www.opb.org/article/2026/06/25/portland-public-schools-budget-painful-layoffs/"],
+    wwVote: ["Willamette Week, June 30, 2026: “A Tense PPS Budget Approval Has Divided the District—and Could Alter the School Board”", "https://www.wweek.com/news/schools/2026/06/30/a-tense-pps-budget-approval-has-divided-the-districtand-could-alter-the-school-board/"],
+    ppsFaq: ["Portland Public Schools: 2026–27 Budget Process, Frequently Asked Questions", "https://www.pps.net/about/2026-27-budget-process/frequently-asked-questions"]
+  };
+  function srcLine(keys) {
+    return '<p class="src">Sources: ' + keys.map(function (k) {
+      return '<a href="' + SRC[k][1] + '" target="_blank" rel="noopener">' + SRC[k][0] + '</a>';
+    }).join("; ") + '</p>';
+  }
+
+  function barChart() {
+    var rows = [
+      ["2026–27 budget gap", 56.3, "var(--bar)"],
+      ["Projected 2027–28 gap", 65.2, "var(--bar)"],
+      ["All reserves (5% floor)", 41.0, "var(--bar-2)"],
+      ["Staffing amendment", 13.0, "var(--bar-2)"]
+    ];
+    var W = 600, LW = 250, RW = 60, BH = 26, GAP = 14, max = 70;
+    var H = rows.length * (BH + GAP) + 8;
+    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="In millions of dollars: 2026–27 gap 56.3; projected 2027–28 gap 65.2; all reserves 41.0; staffing amendment about 13.">';
+    rows.forEach(function (r, i) {
+      var y = 4 + i * (BH + GAP), w = (r[1] / max) * (W - LW - RW);
+      s += '<text x="' + (LW - 10) + '" y="' + (y + BH / 2 + 5) + '" text-anchor="end" font-size="14" fill="var(--ink-2)">' + r[0] + '</text>';
+      s += '<path d="M' + LW + ',' + y + 'H' + (LW + w - 4) + 'Q' + (LW + w) + ',' + y + ' ' + (LW + w) + ',' + (y + 4) + 'V' + (y + BH - 4) + 'Q' + (LW + w) + ',' + (y + BH) + ' ' + (LW + w - 4) + ',' + (y + BH) + 'H' + LW + 'Z" fill="' + r[2] + '"/>';
+      s += '<text x="' + (LW + w + 8) + '" y="' + (y + BH / 2 + 5) + '" font-size="14" font-weight="700" fill="var(--ink)">$' + r[1].toFixed(1).replace(".0", "") + 'M</text>';
+    });
+    return s + '</svg>';
+  }
+
+  // ---- Stages ------------------------------------------------------------
+  var STAGES = [
+    {
+      tab: "A · 2022",
+      when: "Part A · Spring 2022",
+      title: "Federal money is flowing. Enrollment is not.",
+      body:
+        '<p>Two years into the pandemic, PPS, like districts nationwide, has received a large infusion of federal relief money, known as ESSER. The money is temporary. Meanwhile, enrollment is sliding. Because Oregon distributes state school funding per student, fewer students means less money.</p>' +
+        '<p>Building next year\'s budget, the district faces a choice about staff positions that its ongoing revenue no longer fully supports.</p>',
+      question: "As a member of the budget team, what do you recommend?",
+      options: [
+        "Use one-time money, including federal relief, to keep the positions while enrollment stabilizes",
+        "Cut the positions now to match ongoing revenue, even though the money is available",
+        "Keep some positions with one-time money, and publish a plan to phase them out as the money ends"
+      ],
+      reveal:
+        '<p>PPS used at least <strong>$7 million in one-time funding</strong> to keep staff positions in spring 2022, and in later years it used federal relief dollars, at times, to fund full-time positions. Andrew Scott, then a school board member, warned at the time that the approach “puts cuts off until later.”</p>' +
+        '<p>Four years later, district leaders looked back on that pattern. The district had also kept its general fund reserve at the 5% minimum and, by 2025–26, had drained a separate reserve for pension (PERS) costs.</p>' +
+        '<blockquote>One-time funding “is not the answer to a structural deficit.”<cite>Deborah Kafoury, PPS chief of staff, 2026 (Willamette Week)</cite></blockquote>' +
+        '<blockquote>“It’s like using your tax return to pay your rent.”<cite>Andrew Scott, former board member, on the use of one-time money (Willamette Week)</cite></blockquote>',
+      consider: [
+        "Keeping positions protected students in the short run, during a hard period. When is using one-time money for ongoing costs defensible?",
+        "What would a credible “phase-out plan” need to include for a board to hold itself to it?"
+      ],
+      sources: ["wwOneTime"]
+    },
+    {
+      tab: "B · 2023",
+      when: "Part B · November 2023",
+      title: "The first strike",
+      body:
+        '<p>On November 1, 2023, the Portland Association of Teachers began the first teachers\' strike in the district\'s history. Teachers struck over pay, class sizes, planning time, building conditions, and special education support. On pay, the district had offered about 11% over three years; the union sought 23%.</p>' +
+        '<p>After 11 lost school days, the two sides reach a tentative three-year agreement:</p>' +
+        '<div class="facts">' +
+          '<div class="fact"><div class="v">$175M</div><div class="k">Cost of the three-year agreement</div></div>' +
+          '<div class="fact"><div class="v">14.4%</div><div class="k">Compounded cost-of-living raise over three years</div></div>' +
+          '<div class="fact"><div class="v">~$130M</div><div class="k">Cuts the district projected over the life of the contract</div></div>' +
+        '</div>',
+      question: "You are on the school board. The tentative agreement comes to you for a vote. What do you do?",
+      options: [
+        "Ratify it: end the strike and get students back in class",
+        "Reject it and send negotiators back for a less costly deal, even if the strike continues",
+        "Ratify it, and pair the vote with a public plan for the cuts it will require"
+      ],
+      reveal:
+        '<p>Teachers ratified the contract with <strong>nearly 95% approval</strong>, and the school board <strong>passed it unanimously</strong> on November 28, 2023. Students returned to class on November 27, after the tentative deal was announced.</p>' +
+        '<p>District officials had projected roughly $130 million in cuts over the life of the contract, rising each year. Board members also said the root problem was state funding: in their view, the governor and legislature had not funded Oregon schools adequately. Union supporters noted that the settlement still fell short of the raises teachers had sought.</p>',
+      consider: [
+        "A contract can be both fair to employees and unaffordable for the employer at the same time. How should a board weigh the two?",
+        "Who should bear the cost of a settlement the district says it can't afford: students (through cuts), taxpayers (through the state), or employees (through smaller raises)?"
+      ],
+      sources: ["opbDeal", "opbRatify", "opbFaq", "k12dive"]
+    },
+    {
+      tab: "C · 2026",
+      when: "Part C · June 2026",
+      title: "Into the bone",
+      body:
+        '<p>By spring 2026, PPS has cut about $115.5 million since 2023–24, including a midyear gap closed with furlough days and 31 position cuts. It still faces its largest gap yet.</p>' +
+        '<div class="facts">' +
+          '<div class="fact"><div class="v">$56.3M</div><div class="k">Gap for 2026–27, in an $868.6M general fund</div></div>' +
+          '<div class="fact"><div class="v">−12.5%</div><div class="k">Enrollment: 48,708 (2018–19) to 42,622 (2025–26)</div></div>' +
+          '<div class="fact"><div class="v">~4% → ~20%</div><div class="k">PERS pension employer rate over recent years</div></div>' +
+          '<div class="fact"><div class="v">−$6.5M</div><div class="k">Property tax revenue, as local option levy dollars fall</div></div>' +
+        '</div>' +
+        '<p>The superintendent proposes cutting about 322 full-time positions: 112 in schools, 101 in specialized programs, 74 in the central office, and 48 in transportation and facilities. In April, Governor Tina Kotek barred districts from using furlough days to cut costs, and state leaders have declined requests to tap Oregon\'s $1 billion Education Stability Fund.</p>' +
+        '<div class="chart"><div class="chart-title">The numbers in front of the board (millions of dollars)</div>' + barChart() + '</div>' +
+        '<p>Before the final vote on June 23, board members bring several last-minute proposals.</p>',
+      question: "You are on the board. Which do you support?",
+      options: [
+        "Adopt the superintendent's budget as proposed",
+        "Amend it to restore about $13 million for student-facing staff, without naming a funding source",
+        "Tap the $41 million reserve to soften the cuts, even though that drops below the 5% reserve floor",
+        "Delay the vote a week to keep looking for alternatives (the legal deadline is June 30)"
+      ],
+      reveal:
+        '<p>The board <strong>adopted the budget</strong> in a session that ran past midnight, with one abstention. The other proposals failed:</p>' +
+        '<ul><li>The amendment to restore about $13 million in student-facing staff failed <strong>1–6</strong>. Its sponsor, Stephanie Engelsman, said: “We cannot balance another budget on the backs of our students.”</li>' +
+        '<li>A proposal to tap reserves failed because it would drop the district below its reserve goal.</li>' +
+        '<li>A request to delay the vote a week failed.</li></ul>' +
+        '<p>Superintendent Kimberlee Armstrong wrote that some proposals offered short-term relief but “do not reduce ongoing expenses.” Board chair Eddie Wang noted that enrollment had fallen faster than teacher layoffs, and that the final count of 87 laid-off student-facing staff was below earlier estimates of close to 150.</p>' +
+        '<blockquote>The district is “beyond the meat” and “into the bone.”<cite>Eddie Wang, board chair, 2026 (Willamette Week)</cite></blockquote>',
+      consider: [
+        "Look at the chart. All of the district's reserves would not cover a single year's gap. What is a reserve for, if not a crisis like this one?",
+        "The staffing amendment named no funding source. Should board members be expected to say where money comes from when they propose spending it?"
+      ],
+      sources: ["opbProposed", "opbAdopted", "wwVote", "wwOneTime", "ppsFaq"]
+    }
+  ];
+
+  var EPILOGUE = {
+    tab: "Epilogue",
+    when: "Epilogue · What comes next",
+    title: "The next gap is already on the books",
+    body:
+      '<ul>' +
+        '<li><strong>A bigger gap ahead.</strong> PPS projects a <strong>$65.2 million</strong> gap for 2027–28.</li>' +
+        '<li><strong>School closures.</strong> The superintendent said she would present a school closure plan, with boundary changes, in fall 2026.</li>' +
+        '<li><strong>Politics.</strong> The teachers\' union is recruiting volunteers and donors to back challengers for four school board seats on the ballot in May 2027.</li>' +
+        '<li><strong>The state.</strong> Districts across Oregon are cutting too. Education officials have asked for changes to the state funding formula, and the Secretary of State plans an audit of district funding allocations.</li>' +
+      '</ul>' +
+      '<blockquote>The district has “arrived at the can that has been kicked.”<cite>Kimberlee Armstrong, PPS superintendent, 2026 (Willamette Week)</cite></blockquote>',
+    sources: ["wwOneTime", "opbProposed", "opbAdopted", "wwVote"]
+  };
+
+  // ---- State & rendering -------------------------------------------------
+  var picks = [], notes = [], revealed = [], current = 0;
+  var $ = function (id) { return document.getElementById(id); };
+
+  function maxUnlocked() { var n = 0; while (n < STAGES.length && revealed[n]) n++; return n; } // index of furthest open stage
+
+  function renderTabs() {
+    var all = STAGES.concat([EPILOGUE]), open = maxUnlocked();
+    $("tabs").innerHTML = all.map(function (s, i) {
+      var locked = i > open;
+      return '<li><button type="button" data-t="' + i + '"' + (i === current ? ' aria-current="step"' : '') + (locked ? ' disabled' : '') +
+        ' class="' + (revealed[i] ? "done" : "") + '">' + s.tab + (locked ? '<span class="sr-only"> (locked until you finish the earlier part)</span>' : '') + '</button></li>';
+    }).join("");
+  }
+
+  function renderStage() {
+    renderTabs();
+    if (current === STAGES.length) { renderEpilogue(); return; }
+    var s = STAGES[current], i = current;
+    var html = '<div class="when">' + s.when + '</div><h2 id="stageTitle" tabindex="-1">' + s.title + '</h2>' + s.body;
+    html += '<fieldset' + (revealed[i] ? ' disabled' : '') + '><legend>' + s.question + '</legend>' +
+      s.options.map(function (o, oi) {
+        return '<label class="opt"><input type="radio" name="pick" value="' + oi + '"' + (picks[i] === oi ? " checked" : "") + '><span>' + o + '</span></label>';
+      }).join("") +
+      '<label class="note" for="note">Your reasoning, in a sentence or two</label>' +
+      '<textarea id="note" placeholder="Optional. Useful for class discussion."></textarea>' +
+      '<p class="hint">Stays in this tab only. Nothing is saved or sent.</p></fieldset>';
+    html += revealed[i] ? revealHtml(i) : '<div class="btn-row"><button type="button" class="primary" id="revealBtn"' + (picks[i] == null ? " disabled" : "") + '>Commit and see what happened</button></div>';
+    $("stage").innerHTML = html;
+    $("note").value = notes[i] || "";
+  }
+
+  function revealHtml(i) {
+    var s = STAGES[i];
+    var next = i + 1 < STAGES.length ? "Continue to Part " + "ABC"[i + 1] : "Continue to the epilogue";
+    return '<div class="reveal"><h3 id="revealTitle" tabindex="-1">What actually happened</h3>' +
+      '<div class="yours"><strong>You chose:</strong> ' + s.options[picks[i]] + (notes[i] ? '<br><strong>Your reasoning:</strong> ' + escapeHtml(notes[i]) : '') + '</div>' +
+      s.reveal +
+      '<div class="consider"><h4>Consider</h4><ul>' + s.consider.map(function (c) { return "<li>" + c + "</li>"; }).join("") + '</ul></div>' +
+      srcLine(s.sources) +
+      '<div class="btn-row"><button type="button" class="primary" id="nextBtn">' + next + '</button></div></div>';
+  }
+
+  function renderEpilogue() {
+    var e = EPILOGUE;
+    var html = '<div class="when">' + e.when + '</div><h2 id="stageTitle" tabindex="-1">' + e.title + '</h2>' + e.body;
+    html += '<h3>Your choices, side by side</h3><ul class="compare">' + STAGES.map(function (s, i) {
+      return '<li><span class="tag">' + s.when + '</span><strong>You:</strong> ' + s.options[picks[i]] + '</li>';
+    }).join("") + '</ul>';
+    html += '<h3>For discussion</h3><ol>' +
+      '<li><strong>Structural versus one-time.</strong> Trace how each stage either closed the structural gap or postponed it. Where was the point of no return, if there was one?</li>' +
+      '<li><strong>Who is responsible?</strong> District leaders, the teachers\' union, and board members have pointed to the state funding system. How much of PPS\'s situation is a local management problem, and how much is a state policy problem? What evidence would settle it?</li>' +
+      '<li><strong>Enrollment decline.</strong> When a district shrinks faster than its costs, closing schools is one of the few large, ongoing savings. Why do districts so often delay it, and what does delay cost?</li>' +
+      '<li><strong>Accountability.</strong> The teachers\' union is backing challengers in the 2027 board elections. Is an election the right accountability mechanism for budget decisions like these?</li>' +
+      '</ol>' + srcLine(e.sources) +
+      '<div class="btn-row"><button type="button" class="secondary" id="restartBtn">Start the case over</button></div>';
+    $("stage").innerHTML = html;
+  }
+
+  function escapeHtml(t) { return t.replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function go(i, focusId) {
+    current = i; renderStage();
+    var el = $(focusId || "stageTitle"); if (el) { el.focus(); el.scrollIntoView({ behavior: "smooth", block: "start" }); }
+  }
+
+  $("stage").addEventListener("change", function (e) {
+    if (e.target.name === "pick") { picks[current] = +e.target.value; var b = $("revealBtn"); if (b) b.disabled = false; }
+  });
+  $("stage").addEventListener("input", function (e) { if (e.target.id === "note") notes[current] = e.target.value; });
+  $("stage").addEventListener("click", function (e) {
+    var t = e.target.closest("button"); if (!t) return;
+    if (t.id === "revealBtn") { revealed[current] = true; go(current, "revealTitle"); $("live").textContent = "Revealed what actually happened."; }
+    else if (t.id === "nextBtn") { go(current + 1); }
+    else if (t.id === "restartBtn") { picks = []; notes = []; revealed = []; go(0); }
+  });
+  $("tabs").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-t]"); if (b && !b.disabled) go(+b.getAttribute("data-t"));
+  });
+
+  $("allSources").innerHTML = Object.keys(SRC).map(function (k) {
+    return '<li><a href="' + SRC[k][1] + '" target="_blank" rel="noopener">' + SRC[k][0] + '</a></li>';
+  }).join("");
+  renderStage();
+})();
+</script>
+</body>
+</html>
