@@ -15,10 +15,10 @@
     --ink: #1b1b1a;
     --ink-2: #4a4945;
     --ink-3: #6a6964;
-    --mark: #fde7a6;          /* student highlight */
-    --mark-edge: #c99400;
-    --sel: #cde2fb;           /* currently selected sentence */
-    --sel-edge: #2a78d6;
+    --mark: #e8e3d3;          /* student highlight */
+    --mark-edge: #85754d;
+    --sel: #e6def3;           /* currently selected sentence */
+    --sel-edge: #4b2e83;
     --accent: #4b2e83;        /* UW purple */
     --accent-soft: #efeaf7;
     --good: #1d6b3a; --good-soft: #e7f3eb;
@@ -61,7 +61,7 @@
 
   .seg { font: inherit; color: inherit; background: none; border: 0; padding: 1px 2px; margin: 0 -2px; text-align: left; cursor: pointer; border-radius: 3px;
     display: inline; line-height: inherit; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
-  .seg:hover { background: rgba(42,120,214,.08); }
+  .seg:hover { background: rgba(75,46,131,.08); }
   .seg.flagged { background: var(--mark); box-shadow: inset 0 -2px 0 var(--mark-edge); }
   .seg.selected { background: var(--sel); box-shadow: inset 0 -2px 0 var(--sel-edge); }
   .seg .tag { font-family: system-ui, sans-serif; font-size: 11px; font-weight: 700; color: var(--ink); background: #fff; border: 1px solid var(--mark-edge);
@@ -104,7 +104,7 @@
   .score .k { font-size: 13px; color: var(--ink-2); }
   .result { border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; border-left: 4px solid; font-size: 14.5px; }
   .result.match { background: var(--good-soft); border-color: var(--good); }
-  .result.partial { background: var(--part-soft); border-color: #c99400; }
+  .result.partial { background: var(--part-soft); border-color: #85754d; }
   .result.missed { background: var(--warn-soft); border-color: var(--warn); }
   .result.extra { background: var(--surface-2); border-color: var(--ink-3); }
   .result .lbl { font-weight: 700; display: block; margin-bottom: 2px; }
@@ -117,10 +117,12 @@
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
   [hidden] { display: none !important; }
 </style>
+<link rel="stylesheet" href="../assets/brand.css">
 </head>
 <body>
+<header class="brandbar"><div class="brandbar-inner"><img class="sig-h" src="../assets/evans-signature-horizontal.png" alt="Evans School of Public Policy and Governance, University of Washington" width="1156" height="200"><span class="unit">Learning objects</span></div></header>
 <main class="wrap">
-  <p class="eyebrow">Evans School · Policy analysis and writing · Memo critique</p>
+  <p class="eyebrow">Policy analysis and writing · Memo critique</p>
   <h1>Mark up the memo</h1>
   <p class="lede">A staff analyst wrote this memo to a city council member who has five minutes to read it before a vote. It has problems. Find them: click any sentence and tag what's wrong, then check what the memo leaves out. When you're done, compare your markup with an expert editor's and read a revised version.</p>
 

@@ -52,10 +52,19 @@
   .how li { margin-bottom: 4px; }
   code { font-family: ui-monospace, Consolas, monospace; font-size: 14px; background: var(--surface-2); padding: 1px 4px; border-radius: 4px; }
 </style>
+<link rel="stylesheet" href="assets/brand.css">
+<style>
+  .hero { background: #fff; border-bottom: 3px solid var(--uw-spirit-purple); box-shadow: 0 3px 0 var(--uw-gold-web); margin-bottom: 3px; }
+  .hero-inner { max-width: 860px; margin: 0 auto; padding: 28px 16px 22px; text-align: center; }
+  .hero img { height: 104px; width: auto; max-width: 100%; }
+  @media (max-width: 520px) { .hero img { height: 72px; } }
+  .item { border-top: 4px solid var(--uw-spirit-purple); }
+</style>
 </head>
 <body>
+<header class="hero"><div class="hero-inner"><img src="assets/evans-signature-stacked.png" alt="Evans School of Public Policy and Governance, University of Washington" width="947" height="320"></div></header>
 <main class="wrap">
-  <p class="eyebrow">Evans School · Digital</p>
+  <p class="eyebrow">Evans Digital · Pilot collection</p>
   <h1>Learning objects</h1>
   <p class="lede">Interactive pieces built for Evans courses. Open one to try it, or copy its embed code into a Canvas page.</p>
 
@@ -139,6 +148,15 @@
       summary: "Students mark up a flawed policy memo (a fictional city's youth transit pass) by tagging problems such as causal overreach, buried recommendations, and missing costs, then compare with an expert's markup and read a revised memo.",
       embedTitle: "Memo critique: mark up a flawed policy memo",
       height: 1500,
+      status: "Pilot. Awaiting faculty content review."
+    },
+    {
+      folder: "cost-benefit",
+      title: "Seawall or buyouts? How the discount rate decides",
+      course: "Policy analysis / cost-benefit analysis",
+      summary: "Cost-benefit model for a fictional flood-prone neighborhood. Students change the discount rate (including OMB's 2%, 3%, and 7% guidance), sea-level rise, time horizon, and non-market benefits, and see the recommendation flip. Five set-it-up questions.",
+      embedTitle: "Cost-benefit model: seawall or buyouts",
+      height: 1700,
       status: "Pilot. Awaiting faculty content review."
     }
   ];

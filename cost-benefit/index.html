@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seawall or Buyouts?</title>
+<meta name="description" content="Cost-benefit analysis and discounting: compare a seawall with home buyouts for a flood-prone neighborhood and see how the discount rate, sea-level rise, time horizon, and non-market benefits change the answer. Evans School learning object pilot.">
+<style>
+  :root {
+    color-scheme: light;
+    --surface: #ffffff;
+    --surface-2: #f6f5f2;
+    --border: #d9d7d0;
+    --ink: #1b1b1a;
+    --ink-2: #4a4945;
+    --ink-3: #6a6964;
+    --grid: #ebeae6;
+    --axis: #8a8984;
+    --wall: #4b2e83;
+    --buy: #e93cac;
+    --accent: #4b2e83;       /* UW purple, chrome only */
+    --accent-soft: #efeaf7;
+    --good: #1d6b3a; --good-soft: #e7f3eb;
+    --warn: #8a4b00; --warn-soft: #fbf0e1;
+    --focus: #4b2e83;
+    --radius: 10px;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--surface); color: var(--ink); font-size: 16px; line-height: 1.5; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 20px 16px 32px; }
+  .eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); margin: 0 0 4px; }
+  h1 { font-size: 26px; line-height: 1.2; margin: 0 0 8px; }
+  h2 { font-size: 18px; margin: 0 0 6px; }
+  h3 { font-size: 15px; margin: 0 0 4px; }
+  p { margin: 0 0 10px; }
+  .lede { color: var(--ink-2); max-width: 75ch; }
+  a { color: var(--accent); }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  .options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
+  @media (max-width: 700px) { .options { grid-template-columns: 1fr; } }
+  .opt { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; border-top: 5px solid; }
+  .opt.wall { border-top-color: var(--wall); }
+  .opt.buy { border-top-color: var(--buy); }
+  .opt ul { margin: 4px 0 0; padding-left: 18px; font-size: 14px; color: var(--ink-2); }
+
+  .grid { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); align-items: start; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+  .card { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; position: relative; }
+  .card.soft { background: var(--surface-2); }
+  .control { margin-bottom: 14px; }
+  .control-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .control label, .control .label { font-weight: 600; font-size: 15px; }
+  .val { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 15px; }
+  .hint { font-size: 13px; color: var(--ink-3); margin: 2px 0 0; }
+  input[type=range] { width: 100%; accent-color: var(--accent); margin: 6px 0 2px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .chips button { font: inherit; font-size: 13px; font-weight: 600; border-radius: 999px; padding: 4px 10px; border: 1px solid var(--accent); background: var(--surface); color: var(--accent); cursor: pointer; }
+  .chips button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+  .seg { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface); margin-top: 4px; }
+  .seg label { position: relative; flex: 1; font-size: 14px; }
+  .seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .seg span { display: block; text-align: center; padding: 7px 6px; }
+  .seg input:checked + span { background: var(--accent); color: #fff; font-weight: 600; }
+  .seg label + label span { border-left: 1px solid var(--border); }
+  .seg input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: -3px; }
+  .check { display: flex; gap: 8px; align-items: center; font-weight: 600; font-size: 15px; }
+  .check input { width: 18px; height: 18px; accent-color: var(--accent); }
+
+  .verdict { border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; background: var(--accent-soft); font-size: 15px; }
+  .verdict strong { font-size: 17px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  caption { text-align: left; font-weight: 700; padding-bottom: 6px; }
+  th, td { padding: 6px 8px; border-bottom: 1px solid var(--grid); text-align: right; white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { font-size: 12px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .03em; }
+  .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+  .sw.line { height: 3px; width: 16px; vertical-align: 3px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--ink-2); list-style: none; padding: 0; margin: 0 0 6px; }
+  svg { display: block; width: 100%; height: auto; }
+  svg text { font-family: inherit; }
+  .chart-sub { font-size: 13px; color: var(--ink-3); margin: 0 0 6px; }
+  .pv-note { font-size: 14px; background: var(--surface-2); border-radius: 8px; padding: 8px 12px; margin-top: 12px; }
+  .tooltip { position: absolute; pointer-events: none; z-index: 5; background: var(--ink); color: #fff; font-size: 13px; line-height: 1.4; padding: 6px 9px; border-radius: 6px; opacity: 0; transition: opacity .12s; white-space: nowrap; }
+  .tooltip.show { opacity: 1; }
+
+  .qs { margin-top: 26px; }
+  .q-list { display: grid; gap: 14px; margin-top: 10px; }
+  fieldset { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px 16px; margin: 0; }
+  legend { font-weight: 700; padding: 0 4px; font-size: 15px; }
+  .q-prompt { margin: 2px 0 8px; color: var(--ink-2); }
+  .opt-r { display: flex; gap: 10px; align-items: flex-start; padding: 6px 4px; border-radius: 6px; }
+  .opt-r:hover { background: var(--surface-2); }
+  .opt-r input { margin-top: 4px; width: 18px; height: 18px; flex: none; accent-color: var(--accent); }
+  button.btn { font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 8px; padding: 7px 14px; border: 1px solid var(--accent); background: var(--surface); color: var(--accent); }
+  button.btn.primary { background: var(--accent); color: #fff; }
+  button.btn:hover { filter: brightness(0.95); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .feedback { margin-top: 10px; padding: 10px 12px; border-radius: 8px; font-size: 15px; display: none; }
+  .feedback.show { display: block; }
+  .feedback.right { background: var(--good-soft); border-left: 4px solid var(--good); }
+  .feedback.wrong { background: var(--warn-soft); border-left: 4px solid var(--warn); }
+  .feedback .tag { font-weight: 700; }
+  .feedback.right .tag { color: var(--good); }
+  .feedback.wrong .tag { color: var(--warn); }
+
+  details { margin-top: 22px; border-top: 1px solid var(--border); padding-top: 12px; font-size: 14px; color: var(--ink-2); }
+  summary { cursor: pointer; font-weight: 600; color: var(--ink); }
+  details ul { padding-left: 20px; }
+  details li { margin-bottom: 4px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+<link rel="stylesheet" href="../assets/brand.css">
+</head>
+<body>
+<header class="brandbar"><div class="brandbar-inner"><img class="sig-h" src="../assets/evans-signature-horizontal.png" alt="Evans School of Public Policy and Governance, University of Washington" width="1156" height="200"><span class="unit">Learning objects</span></div></header>
+<main class="wrap">
+  <p class="eyebrow">Policy analysis · Cost-benefit model</p>
+  <h1>Seawall or buyouts? How the discount rate decides</h1>
+  <p class="lede">
+    Shoreline, a low-lying neighborhood in the fictional Puget Sound city of Port Halden, floods more often each decade. Expected flood damage is about <strong>$5 million a year</strong> today and rising with the sea. The city is weighing two responses with very different timing. Change the assumptions and watch the recommendation move.
+  </p>
+
+  <div class="options">
+    <div class="opt wall"><h3>Seawall</h3><ul>
+      <li>Build: $40M a year for 3 years ($120M)</li>
+      <li>Upkeep: $1.5M a year once built</li>
+      <li>Must be raised in year 50: $60M</li>
+      <li>Prevents 90% of flood damage from year 3</li></ul></div>
+    <div class="opt buy"><h3>Buyouts and wetland restoration</h3><ul>
+      <li>Buy 300 homes: $18M a year for 5 years ($90M)</li>
+      <li>Restore wetland in year 5: $10M</li>
+      <li>Lost property tax: $0.8M a year</li>
+      <li>Prevents damage gradually, reaching 70% by year 5, permanently</li>
+      <li>Optional: wetland benefits (habitat, recreation, carbon)</li></ul></div>
+  </div>
+
+  <div class="grid">
+    <section class="card soft" aria-labelledby="ctlTitle">
+      <h2 id="ctlTitle">Assumptions</h2>
+      <div class="control">
+        <div class="control-top"><label for="rate">Discount rate</label><span class="val" id="rateVal"></span></div>
+        <input type="range" id="rate" min="0" max="10" step="0.5" value="3">
+        <div class="chips" role="group" aria-label="Federal guidance rates">
+          <button data-r="2">2% · OMB 2023 (rescinded)</button>
+          <button data-r="3">3% · OMB 2003</button>
+          <button data-r="7">7% · OMB 2003</button>
+        </div>
+        <p class="hint">Federal guidance (OMB Circular A-4) set a 2% default in 2023. It was rescinded in February 2025, restoring the 2003 version's 3% and 7%.</p>
+      </div>
+      <div class="control" role="radiogroup" aria-labelledby="slrLabel">
+        <span class="label" id="slrLabel">Sea-level rise scenario</span>
+        <div class="seg">
+          <label><input type="radio" name="slr" value="0.02"><span>Low</span></label>
+          <label><input type="radio" name="slr" value="0.03" checked><span>Medium</span></label>
+          <label><input type="radio" name="slr" value="0.04"><span>High</span></label>
+        </div>
+        <p class="hint" id="slrHint"></p>
+      </div>
+      <div class="control">
+        <div class="control-top"><label for="horizon">Time horizon</label><span class="val" id="horizonVal"></span></div>
+        <input type="range" id="horizon" min="20" max="100" step="5" value="75">
+      </div>
+      <div class="control">
+        <label class="check"><input type="checkbox" id="eco"> Count wetland benefits</label>
+        <div id="ecoBox">
+          <div class="control-top" style="margin-top:6px;"><label for="ecoVal" style="font-weight:500;font-size:14px;">Value per year, from year 6</label><span class="val" id="ecoValOut"></span></div>
+          <input type="range" id="ecoVal" min="0" max="4" step="0.25" value="1.5">
+        </div>
+        <p class="hint">Non-market benefits are real but hard to price. Analysts often estimate them from surveys or comparable markets.</p>
+      </div>
+      <div class="row"><button class="btn" id="resetBtn">Reset assumptions</button></div>
+    </section>
+
+    <section aria-labelledby="resTitle">
+      <h2 id="resTitle" class="sr-only">Results</h2>
+      <div class="verdict" id="verdict" aria-live="polite"></div>
+      <div class="card">
+        <table>
+          <caption>Present value, millions of dollars</caption>
+          <thead><tr><th scope="col">Option</th><th scope="col">Costs</th><th scope="col">Benefits</th><th scope="col">Net present value</th><th scope="col">Benefit–cost ratio</th></tr></thead>
+          <tbody id="pvBody"></tbody>
+        </table>
+        <p class="pv-note" id="pvNote"></p>
+      </div>
+      <div class="card" style="margin-top:14px;">
+        <h3 id="c1Title">Net present value at every discount rate</h3>
+        <p class="chart-sub">Where the lines cross, the ranking flips. Below zero, doing nothing beats the project. Below 2%, both lines rise off the top of the chart.</p>
+        <ul class="legend"><li><span class="sw line" style="background:var(--wall)"></span>Seawall</li><li><span class="sw line" style="background:var(--buy)"></span>Buyouts</li></ul>
+        <svg id="c1" viewBox="0 0 600 270" role="img" aria-labelledby="c1Title c1Desc"></svg>
+        <p class="sr-only" id="c1Desc"></p>
+        <div class="tooltip" id="tip1"></div>
+      </div>
+      <div class="card" style="margin-top:14px;">
+        <h3 id="c2Title">Cumulative net present value over time</h3>
+        <p class="chart-sub">Each line adds up discounted benefits minus discounted costs, year by year. Where a line crosses zero, the option has paid for itself.</p>
+        <ul class="legend"><li><span class="sw line" style="background:var(--wall)"></span>Seawall</li><li><span class="sw line" style="background:var(--buy)"></span>Buyouts</li></ul>
+        <svg id="c2" viewBox="0 0 600 260" role="img" aria-labelledby="c2Title c2Desc"></svg>
+        <p class="sr-only" id="c2Desc"></p>
+        <div class="tooltip" id="tip2"></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="qs" aria-labelledby="qTitle">
+    <h2 id="qTitle" style="font-size:20px;">Work through it</h2>
+    <p class="lede">Use <strong>Set it up</strong> to load each scenario, predict the answer, then check it. Nothing you choose here is saved or sent anywhere.</p>
+    <div class="q-list" id="questions"></div>
+  </section>
+
+  <details>
+    <summary>About this model</summary>
+    <ul>
+      <li><strong>Fictional and simplified.</strong> Port Halden and every cost and benefit are invented for teaching. Real flood analyses model storm probabilities, uncertainty, and many more options.</li>
+      <li><strong>How it works.</strong> Each year's benefits minus costs are divided by (1 + r)<sup>t</sup>, where r is the discount rate and t the year, then summed. Expected damage grows each year at the rate set by the sea-level rise scenario.</li>
+      <li><strong>Discount rate guidance.</strong> <a href="https://bidenwhitehouse.archives.gov/wp-content/uploads/2023/11/CircularA-4.pdf" target="_blank" rel="noopener">OMB Circular A-4 (2023)</a> set a 2% default. <a href="https://www.whitehouse.gov/wp-content/uploads/2025/03/M-25-15-Recission-and-Reinstatement-of-Circular-A-4.pdf" target="_blank" rel="noopener">OMB memo M-25-15 (February 2025)</a> rescinded it and reinstated the 2003 Circular, which uses 3% and 7%.</li>
+      <li><strong>Left out on purpose</strong>, as questions for discussion: who bears the costs and who gets the benefits, what happens to the 300 displaced households, and the risk of a seawall failing in a storm bigger than it was built for.</li>
+      <li><strong>Privacy.</strong> This page collects no data. It sets no cookies, uses no storage, and makes no network requests after it loads.</li>
+      <li><strong>Accessibility.</strong> Every control works by keyboard. The present-value table gives the same results as the charts.</li>
+      <li><strong>Content review:</strong> <em>[faculty reviewer and date]</em> · <strong>Maintained by:</strong> Evans Digital · Pilot version 0.1</li>
+    </ul>
+  </details>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var BASE = 5; // expected flood damage today, $M/yr
+  var DEFAULTS = { r: 3, g: 0.03, H: 75, eco: false, ecoVal: 1.5 };
+  var s = Object.assign({}, DEFAULTS);
+  var $ = function (id) { return document.getElementById(id); };
+
+  // ---- Model ----------------------------------------------------------------------
+  function flows(p) {
+    var wall = [], buy = [];
+    for (var t = 0; t <= p.H; t++) {
+      var dmg = BASE * Math.pow(1 + p.g, t);
+      wall.push({ c: (t <= 2 ? 40 : 1.5) + (t === 50 ? 60 : 0), b: t >= 3 ? 0.9 * dmg : 0 });
+      var share = Math.min(t, 5) / 5 * 0.7;
+      buy.push({ c: (t <= 4 ? 18 : 0) + (t === 5 ? 10 : 0) + (t >= 1 ? 0.8 : 0), b: share * dmg + (p.eco && t >= 6 ? p.ecoVal : 0) });
+    }
+    return { wall: wall, buy: buy };
+  }
+  function pv(arr, r, key) { return arr.reduce(function (a, x, t) { return a + x[key] / Math.pow(1 + r, t); }, 0); }
+  function npv(arr, r) { return pv(arr, r, "b") - pv(arr, r, "c"); }
+  function switchRate(f) {
+    // find r in [0, 0.15] where NPVs are equal, if the sign of the difference changes
+    var lo = 0, hi = 0.15, d = function (r) { return npv(f.wall, r) - npv(f.buy, r); };
+    if (d(lo) * d(hi) > 0) return null;
+    for (var i = 0; i < 50; i++) { var mid = (lo + hi) / 2; if (d(lo) * d(mid) <= 0) hi = mid; else lo = mid; }
+    return (lo + hi) / 2;
+  }
+  function m(v) { return (v < 0 ? "−$" : "$") + Math.abs(v).toFixed(0) + "M"; }
+
+  // ---- Charts --------------------------------------------------------------------------
+  function niceRange(lo, hi) {
+    var span = hi - lo, step = span > 1200 ? 400 : span > 600 ? 200 : span > 250 ? 100 : span > 120 ? 50 : 25;
+    return { lo: Math.floor(lo / step) * step, hi: Math.ceil(hi / step) * step, step: step };
+  }
+  function lineChart(svgId, xs, series, xFmt, marker, extra) {
+    var W = 600, H = +$(svgId).getAttribute("viewBox").split(" ")[3], ML = 56, MR = 16, MT = 12, MB = 30, PW = W - ML - MR, PH = H - MT - MB;
+    var all = []; series.forEach(function (sr) { all = all.concat(extra.scaleFrom != null ? sr.ys.slice(extra.scaleFrom) : sr.ys); });
+    var R = niceRange(Math.min(0, Math.min.apply(null, all)), Math.max(0, Math.max.apply(null, all)));
+    var x0 = xs[0], x1 = xs[xs.length - 1];
+    function x(v) { return ML + (v - x0) / (x1 - x0) * PW; }
+    function y(v) { return MT + (R.hi - v) / (R.hi - R.lo) * PH; }
+    var h = "";
+    for (var t = R.lo; t <= R.hi + 1e-9; t += R.step) {
+      h += '<line x1="' + ML + '" x2="' + (W - MR) + '" y1="' + y(t) + '" y2="' + y(t) + '" stroke="' + (t === 0 ? "var(--axis)" : "var(--grid)") + '" stroke-width="' + (t === 0 ? 1.5 : 1) + '"/>';
+      h += '<text x="' + (ML - 6) + '" y="' + (y(t) + 4) + '" font-size="12" text-anchor="end" fill="var(--ink-3)">' + m(t) + '</text>';
+    }
+    extra.xTicks.forEach(function (v) { h += '<text x="' + x(v) + '" y="' + (H - 10) + '" font-size="12" text-anchor="middle" fill="var(--ink-3)">' + xFmt(v) + '</text>'; });
+    h += '<clipPath id="' + svgId + 'clip"><rect x="' + ML + '" y="' + (MT - 6) + '" width="' + PW + '" height="' + (PH + 12) + '"/></clipPath>';
+    if (extra.before) h += extra.before(x, y, MT, PH);
+    series.forEach(function (sr) {
+      h += '<polyline clip-path="url(#' + svgId + 'clip)" points="' + xs.map(function (v, i) { return x(v) + "," + y(sr.ys[i]); }).join(" ") + '" fill="none" stroke="' + sr.color + '" stroke-width="2.5" stroke-linejoin="round"/>';
+    });
+    if (marker != null) {
+      h += '<line x1="' + x(marker) + '" x2="' + x(marker) + '" y1="' + MT + '" y2="' + (MT + PH) + '" stroke="var(--ink)" stroke-dasharray="3 3"/>';
+      series.forEach(function (sr) {
+        var i = xs.indexOf(marker); if (i < 0) return;
+        h += '<circle cx="' + x(marker) + '" cy="' + y(sr.ys[i]) + '" r="5" fill="' + sr.color + '" stroke="var(--surface)" stroke-width="2"/>';
+      });
+    }
+    if (extra.after) h += extra.after(x, y, MT, PH);
+    h += '<g class="xh"></g><rect class="hit" x="' + ML + '" y="' + MT + '" width="' + PW + '" height="' + PH + '" fill="transparent"/>';
+    $(svgId).innerHTML = h;
+    $(svgId)._geo = { x: x, y: y, xs: xs, series: series, ML: ML, PW: PW, MT: MT, PH: PH, x0: x0, x1: x1, xFmt: xFmt };
+  }
+  function attachHover(svgId, tipId, label) {
+    var svg = $(svgId);
+    svg.addEventListener("mousemove", function (e) {
+      var g = svg._geo; if (!g || !e.target.classList.contains("hit")) return;
+      var pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; var p = pt.matrixTransform(svg.getScreenCTM().inverse());
+      var v = g.x0 + (p.x - g.ML) / g.PW * (g.x1 - g.x0), i = 0, best = 1e9;
+      g.xs.forEach(function (xv, k) { if (Math.abs(xv - v) < best) { best = Math.abs(xv - v); i = k; } });
+      var cx = g.x(g.xs[i]), ch = '<line x1="' + cx + '" x2="' + cx + '" y1="' + g.MT + '" y2="' + (g.MT + g.PH) + '" stroke="var(--ink-3)"/>', html = "<strong>" + label(g.xs[i]) + "</strong>";
+      g.series.forEach(function (sr) { if (g.y(sr.ys[i]) >= g.MT - 6) ch += '<circle cx="' + cx + '" cy="' + g.y(sr.ys[i]) + '" r="4" fill="' + sr.color + '" stroke="var(--surface)" stroke-width="1.5"/>'; html += "<br>" + sr.name + ": " + m(sr.ys[i]); });
+      svg.querySelector(".xh").innerHTML = ch;
+      var tip = $(tipId), b = svg.parentNode.getBoundingClientRect();
+      tip.innerHTML = html; tip.classList.add("show");
+      tip.style.left = Math.min(e.clientX - b.left + 12, b.width - 170) + "px"; tip.style.top = (e.clientY - b.top + 12) + "px";
+    });
+    svg.addEventListener("mouseleave", function () { $(tipId).classList.remove("show"); var x = svg.querySelector(".xh"); if (x) x.innerHTML = ""; });
+  }
+  attachHover("c1", "tip1", function (v) { return "Discount rate " + v.toFixed(1) + "%"; });
+  attachHover("c2", "tip2", function (v) { return "Year " + v; });
+
+  // ---- Render ---------------------------------------------------------------------------
+  function render() {
+    var r = s.r / 100, f = flows(s);
+    var W = { c: pv(f.wall, r, "c"), b: pv(f.wall, r, "b") }, B = { c: pv(f.buy, r, "c"), b: pv(f.buy, r, "b") };
+    W.n = W.b - W.c; B.n = B.b - B.c;
+    $("rateVal").textContent = s.r.toFixed(1) + "%";
+    $("rate").setAttribute("aria-valuetext", s.r.toFixed(1) + " percent");
+    $("horizonVal").textContent = s.H + " years";
+    $("horizon").setAttribute("aria-valuetext", s.H + " years");
+    $("ecoValOut").textContent = "$" + s.ecoVal.toFixed(2) + "M";
+    $("ecoBox").style.opacity = s.eco ? 1 : .45; $("ecoVal").disabled = !s.eco;
+    $("slrHint").textContent = "Expected flood damage grows " + (s.g * 100).toFixed(0) + "% a year: $5.0M today, $" + (BASE * Math.pow(1 + s.g, 50)).toFixed(1) + "M a year in year 50.";
+    document.querySelectorAll(".chips button").forEach(function (b) { b.setAttribute("aria-pressed", +b.getAttribute("data-r") === s.r ? "true" : "false"); });
+
+    var best = W.n >= B.n ? ["Seawall", W.n] : ["Buyouts", B.n], sw = switchRate(f);
+    $("verdict").innerHTML = best[1] <= 0
+      ? '<strong>Neither project passes.</strong> At ' + s.r.toFixed(1) + '%, both have negative net present value, so on these numbers doing nothing beats either one.'
+      : '<strong>' + best[0] + ' comes out ahead</strong> by ' + m(Math.abs(W.n - B.n)) + ' in net present value at a ' + s.r.toFixed(1) + '% discount rate.' +
+        (W.n > 0 && B.n > 0 ? ' Both options pass a cost-benefit test.' : ' Only ' + best[0].toLowerCase() + ' has positive net present value.');
+    if (sw != null) $("verdict").innerHTML += ' The ranking flips at about <strong>' + (sw * 100).toFixed(1) + '%</strong>.';
+
+    function rowHtml(name, color, o) {
+      return '<tr><th scope="row"><span class="sw" style="background:' + color + '"></span>' + name + '</th><td>' + m(o.c) + '</td><td>' + m(o.b) + '</td><td><strong>' + m(o.n) + '</strong></td><td>' + (o.b / o.c).toFixed(2) + '</td></tr>';
+    }
+    $("pvBody").innerHTML = rowHtml("Seawall", "var(--wall)", W) + rowHtml("Buyouts", "var(--buy)", B);
+    var d50 = 1 / Math.pow(1 + r, 50);
+    $("pvNote").innerHTML = 'At ' + s.r.toFixed(1) + '%, <strong>$1 million</strong> of flood damage avoided 50 years from now is worth <strong>$' + (d50 * 1e6).toLocaleString("en-US", { maximumFractionDigits: 0 }) + '</strong> today.';
+
+    // chart 1: NPV vs rate
+    var rates = []; for (var k = 0; k <= 20; k++) rates.push(k / 2);
+    var ws = rates.map(function (rr) { return npv(f.wall, rr / 100); }), bs = rates.map(function (rr) { return npv(f.buy, rr / 100); });
+    lineChart("c1", rates, [{ name: "Seawall", color: "var(--wall)", ys: ws }, { name: "Buyouts", color: "var(--buy)", ys: bs }], function (v) { return v + "%"; }, s.r,
+      { xTicks: [0, 2, 3, 4, 6, 7, 8, 10], scaleFrom: 4, before: function (x, y, MT, PH) {
+          var h = ""; [2, 3, 7].forEach(function (v) { h += '<line x1="' + x(v) + '" x2="' + x(v) + '" y1="' + MT + '" y2="' + (MT + PH) + '" stroke="var(--grid)" stroke-width="6" opacity=".7"/>'; });
+          return h; },
+        after: function (x, y, MT) {
+          if (sw == null) return "";
+          var sx = x(sw * 100), sy = y(npv(f.wall, sw));
+          return '<circle cx="' + sx + '" cy="' + sy + '" r="4" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/>' +
+            '<text x="' + (sx + 8) + '" y="' + (sy - 8) + '" font-size="12" font-weight="700" fill="var(--ink)" style="paint-order:stroke;stroke:var(--surface);stroke-width:4px">Flips at ' + (sw * 100).toFixed(1) + '%</text>'; } });
+    $("c1Desc").textContent = "At " + s.r.toFixed(1) + "%: seawall " + m(W.n) + ", buyouts " + m(B.n) + ". " + (sw != null ? "The lines cross at about " + (sw * 100).toFixed(1) + "%." : "The lines do not cross between 0% and 15%.");
+
+    // chart 2: cumulative NPV over time
+    var years = [], cw = [], cb = [], aw = 0, ab = 0;
+    for (var t = 0; t <= s.H; t++) {
+      var df = 1 / Math.pow(1 + r, t);
+      aw += (f.wall[t].b - f.wall[t].c) * df; ab += (f.buy[t].b - f.buy[t].c) * df;
+      years.push(t); cw.push(aw); cb.push(ab);
+    }
+    var ticks = []; for (var yv = 0; yv <= s.H; yv += (s.H > 60 ? 25 : 10)) ticks.push(yv);
+    function payback(arr) { for (var i = 1; i < arr.length; i++) if (arr[i] >= 0 && arr[i - 1] < 0) return i; return null; }
+    var pw = payback(cw), pb = payback(cb);
+    lineChart("c2", years, [{ name: "Seawall", color: "var(--wall)", ys: cw }, { name: "Buyouts", color: "var(--buy)", ys: cb }], function (v) { return "Yr " + v; }, null,
+      { xTicks: ticks, after: function (x, y) {
+          var h = "";
+          if (pw != null && pb != null && Math.abs(pw - pb) <= 8) {
+            return '<circle cx="' + x(pw) + '" cy="' + y(0) + '" r="5" fill="var(--wall)" stroke="var(--surface)" stroke-width="2"/><circle cx="' + x(pb) + '" cy="' + y(0) + '" r="5" fill="var(--buy)" stroke="var(--surface)" stroke-width="2"/>' +
+              '<text x="' + x((pw + pb) / 2) + '" y="' + (y(0) - 12) + '" font-size="12" font-weight="700" text-anchor="middle" fill="var(--ink)" style="paint-order:stroke;stroke:var(--surface);stroke-width:4px">Both pay off: seawall year ' + pw + ', buyouts year ' + pb + '</text>';
+          }
+          [[pw, "var(--wall)", "Seawall pays off"], [pb, "var(--buy)", "Buyouts pay off"]].forEach(function (p, i) {
+            if (p[0] == null) return;
+            h += '<circle cx="' + x(p[0]) + '" cy="' + y(0) + '" r="5" fill="' + p[1] + '" stroke="var(--surface)" stroke-width="2"/>' +
+              '<text x="' + x(p[0]) + '" y="' + (y(0) + (i ? 20 : -10)) + '" font-size="12" font-weight="700" text-anchor="middle" fill="var(--ink)" style="paint-order:stroke;stroke:var(--surface);stroke-width:4px">' + p[2] + ', year ' + p[0] + '</text>';
+          });
+          return h; } });
+    $("c2Desc").textContent = "Over " + s.H + " years at " + s.r.toFixed(1) + "%: " + (pw != null ? "the seawall pays for itself in year " + pw : "the seawall never pays for itself") + "; " +
+      (pb != null ? "buyouts pay for themselves in year " + pb : "buyouts never pay for themselves") + ".";
+  }
+
+  // ---- Controls --------------------------------------------------------------------------
+  function sync() {
+    $("rate").value = s.r; $("horizon").value = s.H; $("eco").checked = s.eco; $("ecoVal").value = s.ecoVal;
+    document.querySelectorAll("input[name=slr]").forEach(function (el) { el.checked = +el.value === s.g; });
+    render();
+  }
+  $("rate").addEventListener("input", function () { s.r = +this.value; render(); });
+  $("horizon").addEventListener("input", function () { s.H = +this.value; render(); });
+  $("eco").addEventListener("change", function () { s.eco = this.checked; render(); });
+  $("ecoVal").addEventListener("input", function () { s.ecoVal = +this.value; render(); });
+  document.querySelectorAll("input[name=slr]").forEach(function (el) { el.addEventListener("change", function () { s.g = +el.value; render(); }); });
+  document.querySelector(".chips").addEventListener("click", function (e) { var b = e.target.closest("button"); if (b) { s.r = +b.getAttribute("data-r"); sync(); } });
+  $("resetBtn").addEventListener("click", function () { s = Object.assign({}, DEFAULTS); sync(); });
+
+  // ---- Questions --------------------------------------------------------------------------
+  var QUESTIONS = [
+    { title: "1. The 3% baseline", set: { r: 3, g: 0.03, H: 75, eco: false },
+      prompt: "With medium sea-level rise, a 75-year horizon, no wetland benefits, and a 3% discount rate, which option has the higher net present value?",
+      options: ["Seawall", "Buyouts", "They're tied", "Neither passes"], answer: 0,
+      right: "The seawall wins, about $157M to $138M. It costs more up front, but it prevents more damage (90% versus 70%), and that advantage grows as damage rises.",
+      wrong: "Check the table after setting it up: the seawall's net present value is about $157M, buyouts about $138M." },
+    { title: "2. Now use 7%", set: { r: 7, g: 0.03, H: 75, eco: false },
+      prompt: "Keep everything else the same and switch to the 2003 guidance's 7% rate. What happens?",
+      options: ["The seawall still wins", "Buyouts now win", "Both projects have negative net present value", "Nothing changes"], answer: 2,
+      right: "At 7%, the seawall's NPV is about −$32M and buyouts about −$19M. Both fail a cost-benefit test, so on paper doing nothing wins, even though flood damage keeps growing. The discount rate alone turned a strong case for action into a case against it.",
+      wrong: "Look at the verdict box after setting it up. At 7%, the big costs in the first few years outweigh decades of benefits that a high rate shrinks." },
+    { title: "3. Why the flip?", set: { r: 4.5, g: 0.03, H: 75, eco: false },
+      prompt: "The ranking flips from the seawall to buyouts at around 4.5%. Why does a higher discount rate hurt the seawall more?",
+      options: [
+        "The seawall's extra benefits over buyouts come mostly in distant years, while its extra costs come early",
+        "The seawall has a shorter life",
+        "Buyouts have no costs after year 5",
+        "Higher rates make construction more expensive"
+      ], answer: 0,
+      right: "The seawall costs more in the first years ($120M to build, against $100M for buyouts and the wetland), and its advantage (preventing 90% of damage instead of 70%) is worth the most decades out, when damage is largest. Discounting shrinks distant benefits much more than near-term costs, so higher rates erode the seawall's edge first.",
+      wrong: "Compare when each option's costs and benefits arrive. Discounting barely touches money spent in year 1 but sharply reduces money saved in year 60." },
+    { title: "4. Pricing the wetland", set: { r: 3, g: 0.03, H: 75, eco: true, ecoVal: 1.5 },
+      prompt: "Back at 3%, count the restored wetland's habitat, recreation, and carbon benefits at $1.5M a year. Which option wins now?",
+      options: ["Seawall, by a wider margin", "Buyouts", "Neither passes", "They tie exactly"], answer: 1,
+      right: "Buyouts now win, about $176M to $157M. A benefit that is easy to leave out because it has no market price was enough to reverse the recommendation. Which benefits get counted, and how they're valued, can matter as much as the discount rate.",
+      wrong: "Set it up and look at the table: adding $1.5M a year in wetland benefits lifts buyouts above the seawall." },
+    { title: "5. The value of the future", set: { r: 7, g: 0.03, H: 75, eco: false },
+      prompt: "At 7%, $1 million of flood damage avoided 50 years from now counts as about $34,000 today. At 2% it counts as about $370,000. What is the strongest objection to using a high rate for a project like this?",
+      options: [
+        "It makes the math harder",
+        "It gives little weight to people who will live with the floods decades from now",
+        "It overstates construction costs",
+        "It assumes sea levels won't rise"
+      ], answer: 1,
+      right: "That's the intergenerational equity objection. A high rate can be defended as reflecting what money could earn elsewhere, but it also means a future resident's losses count for a small fraction of today's. Which view is right is a value judgment, which is one reason federal guidance has changed with administrations.",
+      wrong: "Look at the note under the table: a high rate shrinks the value of avoiding harm in the future. Ask who bears that harm." }
+  ];
+  var qWrap = $("questions");
+  QUESTIONS.forEach(function (q, qi) {
+    var fs = document.createElement("fieldset");
+    var h = '<legend>' + q.title + '</legend><p class="q-prompt" id="qp' + qi + '">' + q.prompt + '</p><p><button class="btn" data-set="' + qi + '">Set it up</button></p>';
+    q.options.forEach(function (o, oi) {
+      h += '<label class="opt-r" for="q' + qi + 'o' + oi + '"><input type="radio" name="q' + qi + '" id="q' + qi + 'o' + oi + '" value="' + oi + '" aria-describedby="qp' + qi + '"><span>' + o + '</span></label>';
+    });
+    h += '<div class="row"><button class="btn primary" data-check="' + qi + '">Check answer</button></div><div class="feedback" id="fb' + qi + '" role="status" aria-live="polite"></div>';
+    fs.innerHTML = h; qWrap.appendChild(fs);
+  });
+  qWrap.addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    if (b.hasAttribute("data-set")) {
+      s = Object.assign({}, DEFAULTS, QUESTIONS[+b.getAttribute("data-set")].set); sync();
+      var g = document.querySelector(".grid"); if (g.getBoundingClientRect().top < 0) g.scrollIntoView({ behavior: "smooth" });
+    } else if (b.hasAttribute("data-check")) {
+      var qi = +b.getAttribute("data-check"), q = QUESTIONS[qi], sel = document.querySelector('input[name=q' + qi + ']:checked'), fb = $("fb" + qi);
+      if (!sel) { fb.className = "feedback show wrong"; fb.innerHTML = '<span class="tag">Pick an answer first.</span> Make your prediction, then check it.'; return; }
+      var ok = +sel.value === q.answer;
+      fb.className = "feedback show " + (ok ? "right" : "wrong");
+      fb.innerHTML = '<span class="tag">' + (ok ? "Correct." : "Not quite.") + '</span> ' + (ok ? q.right : q.wrong);
+    }
+  });
+
+  sync();
+})();
+</script>
+</body>
+</html>

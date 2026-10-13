@@ -1,0 +1,78 @@
+/* Evans School learning objects: shared brand layer.
+   Colors: UW digital palette (washington.edu/brand/brand-elements/colors).
+   Type: Encode Sans for headlines, Open Sans for body text, per UW brand guidance.
+   Fonts are open-licensed (SIL OFL) and served from this site, so pages make no third-party requests. */
+
+@font-face {
+  font-family: "Encode Sans";
+  font-style: normal;
+  font-weight: 500 800;
+  font-display: swap;
+  src: url("fonts/encode-sans-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Open Sans";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("fonts/open-sans-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Open Sans";
+  font-style: italic;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("fonts/open-sans-italic-latin.woff2") format("woff2");
+}
+
+:root {
+  /* UW primary */
+  --uw-husky-purple: #32006e;
+  --uw-spirit-purple: #4b2e83;
+  --uw-gold-web: #e8e3d3;
+  --uw-heritage-gold: #85754d;
+  /* UW accents: charts and small details only (UW caps accents at 15% of a design) */
+  --uw-pink: #e93cac;
+  --uw-lavender: #c5b4e3;
+  --font-head: "Encode Sans", "Arial", system-ui, sans-serif;
+  --font-body: "Open Sans", "Calibri", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+body { font-family: var(--font-body); }
+h1, h2, h3, h4, legend, .eyebrow, .brand-head { font-family: var(--font-head); }
+h1 { color: var(--uw-spirit-purple); font-weight: 700; letter-spacing: -0.005em; }
+.eyebrow { color: var(--uw-heritage-gold) !important; }
+
+/* Signature bar */
+.brandbar {
+  background: #fff;
+  border-bottom: 3px solid var(--uw-spirit-purple);
+  box-shadow: 0 3px 0 var(--uw-gold-web);
+  margin-bottom: 3px;
+}
+.brandbar-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 14px 16px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.brandbar img.sig-h { display: block; height: 40px; width: auto; }
+.brandbar .unit {
+  font-family: var(--font-head);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--uw-spirit-purple);
+  white-space: nowrap;
+}
+@media (max-width: 520px) {
+  .brandbar img.sig-h { height: 30px; }
+  .brandbar .unit { display: none; }
+}
+@media print {
+  .brandbar { box-shadow: none; }
+}
