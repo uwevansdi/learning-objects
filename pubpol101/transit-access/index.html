@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Who Gets a Bus Stop?</title>
+<meta name="description" content="Group exercise on geographic inequality in public service delivery: place bus stops north of Seattle's Ship Canal, see who lives within a 10-minute walk, and revise after a shock. PUBPOL 101, Evans School.">
+<style>
+  :root {
+    color-scheme: light;
+    --surface: #ffffff;
+    --surface-2: #f6f5f2;
+    --border: #d9d7d0;
+    --ink: #1b1b1a;
+    --ink-2: #4a4945;
+    --ink-3: #6a6964;
+    --grid: #ebeae6;
+    --street: #c4c1b8;
+    --arterial: #9d9a91;
+    --cover: #e93cac;          /* Accent Pink: walking coverage */
+    --stop: #4b2e83;           /* Spirit Purple: selected stops */
+    --accent: #4b2e83;
+    --accent-soft: #efeaf7;
+    --good: #1d6b3a; --good-soft: #e7f3eb;
+    --warn: #8a4b00; --warn-soft: #fbf0e1;
+    --focus: #4b2e83;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--surface); color: var(--ink); font-size: 16px; line-height: 1.5; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 20px 16px 32px; }
+  .eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; margin: 0 0 4px; }
+  h1 { font-size: 27px; line-height: 1.2; margin: 0 0 8px; }
+  h2 { font-size: 18px; margin: 0 0 6px; }
+  h3 { font-size: 15px; margin: 0 0 6px; }
+  p { margin: 0 0 10px; }
+  .lede { color: var(--ink-2); max-width: 78ch; }
+  a { color: var(--accent); }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .proto { border: 2px dashed var(--warn); background: var(--warn-soft); border-radius: 8px; padding: 10px 14px; margin: 12px 0; font-size: 14px; }
+  .proto strong { color: var(--warn); }
+
+  .steps { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 12px; padding: 0; list-style: none; }
+  .steps li { font-size: 14px; font-weight: 600; border-radius: 999px; padding: 5px 13px; border: 1px solid var(--border); color: var(--ink-3); background: var(--surface); }
+  .steps li.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .steps li.done { color: var(--accent); border-color: var(--accent); }
+
+  .grid { display: grid; gap: 18px; grid-template-columns: minmax(0, 1.9fr) minmax(300px, 1fr); align-items: start; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  .card { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; position: relative; background: var(--surface); }
+  .card.soft { background: var(--surface-2); }
+
+  /* map */
+  .mapcard { padding: 0; overflow: hidden; }
+  .maptools { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+  .layers { display: flex; flex-wrap: wrap; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface); }
+  .layers label { position: relative; font-size: 13px; }
+  .layers input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .layers span { display: block; padding: 6px 10px; white-space: nowrap; }
+  .layers input:checked + span { background: var(--accent); color: #fff; font-weight: 600; }
+  .layers label + label span { border-left: 1px solid var(--border); }
+  .layers input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: -3px; }
+  .zoom { display: flex; gap: 4px; }
+  .zoom button { font: inherit; font-size: 16px; font-weight: 700; width: 34px; height: 32px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; }
+  #map { display: block; width: 100%; height: auto; aspect-ratio: 9371 / 5343; background: #fbfaf7; touch-action: none; cursor: grab; }
+  #map.dragging { cursor: grabbing; }
+  #map text { font-family: inherit; pointer-events: none; }
+  .stop { cursor: pointer; }
+  .stop:focus { outline: none; }
+  .stop:focus-visible .ring { stroke: var(--focus); stroke-width: 3; }
+  .maplegend { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; padding: 8px 12px; font-size: 13px; color: var(--ink-2); border-top: 1px solid var(--border); }
+  .maplegend .sw { display: inline-block; width: 16px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+  .maplegend .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: -1px; margin-right: 6px; }
+  .ramp { display: inline-flex; vertical-align: middle; margin: 0 6px; }
+  .ramp i { display: block; width: 18px; height: 10px; }
+  .tooltip { position: absolute; pointer-events: none; z-index: 5; background: var(--ink); color: #fff; font-size: 13px; line-height: 1.4; padding: 6px 9px; border-radius: 6px; opacity: 0; transition: opacity .12s; max-width: 260px; }
+  .tooltip.show { opacity: 1; }
+
+  /* panel */
+  .budget { display: flex; gap: 5px; margin: 6px 0 4px; flex-wrap: wrap; }
+  .budget i { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--stop); display: inline-block; }
+  .budget i.used { background: var(--stop); }
+  .budget i.over { background: var(--warn); border-color: var(--warn); }
+  .hint { font-size: 13px; color: var(--ink-3); margin: 0; }
+  .big { font-size: 28px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .metric { margin-top: 12px; }
+  .metric .lbl { font-size: 13px; color: var(--ink-2); display: flex; justify-content: space-between; gap: 8px; }
+  .bar { height: 12px; background: var(--grid); border-radius: 6px; overflow: hidden; margin: 3px 0 2px; }
+  .bar div { height: 100%; border-radius: 6px; }
+  .gapline { font-size: 13px; margin-top: 4px; }
+  button.btn { font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 8px; padding: 8px 14px; border: 1px solid var(--accent); background: var(--surface); color: var(--accent); }
+  button.btn.primary { background: var(--accent); color: #fff; }
+  button.btn:disabled { opacity: .45; cursor: not-allowed; }
+  button.btn:hover:not(:disabled) { filter: brightness(0.95); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
+  .shock { border-left: 4px solid var(--warn); background: var(--warn-soft); border-radius: 8px; padding: 10px 12px; margin-top: 10px; font-size: 14px; }
+  .shock strong { color: var(--warn); }
+  select { font: inherit; font-size: 14px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+  .status { font-size: 14px; color: var(--good); font-weight: 600; }
+  .cmp { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; margin-top: 8px; }
+  .cmp th, .cmp td { padding: 6px 6px; border-bottom: 1px solid var(--grid); text-align: right; }
+  .cmp th:first-child, .cmp td:first-child { text-align: left; }
+  .cmp thead th { font-size: 12px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .03em; }
+
+  /* stop list */
+  .stoplist { max-height: 360px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px; }
+  .stoplist label { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; padding: 6px 10px; font-size: 14px; border-bottom: 1px solid var(--grid); cursor: pointer; }
+  .stoplist label:last-child { border-bottom: 0; }
+  .stoplist label.na { color: var(--ink-3); text-decoration: line-through; cursor: not-allowed; }
+  .stoplist input { width: 17px; height: 17px; accent-color: var(--accent); }
+  .stoplist small { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+  .discuss { border-left: 4px solid var(--accent); background: var(--accent-soft); border-radius: 8px; padding: 12px 14px; margin-top: 18px; }
+  .discuss ol { margin: 6px 0 0; padding-left: 20px; }
+  .discuss li { margin-bottom: 8px; }
+  details { margin-top: 22px; border-top: 1px solid var(--border); padding-top: 12px; font-size: 14px; color: var(--ink-2); }
+  summary { cursor: pointer; font-weight: 600; color: var(--ink); }
+  details ul { padding-left: 20px; }
+  details li { margin-bottom: 4px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  [hidden] { display: none !important; }
+
+  .watermark { position: fixed; inset: 0; z-index: 50; pointer-events: none; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .watermark span { font-family: var(--font-head, sans-serif); font-weight: 800; font-size: clamp(90px, 18vw, 240px); letter-spacing: .08em; color: rgba(138, 75, 0, 0.08); transform: rotate(-28deg); white-space: nowrap; user-select: none; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+<link rel="stylesheet" href="../../assets/brand.css">
+</head>
+<body>
+<div class="watermark" aria-hidden="true"><span>DRAFT</span></div>
+<header class="brandbar"><div class="brandbar-inner"><img class="sig-h" src="../../assets/evans-signature-horizontal.png" alt="Evans School of Public Policy and Governance, University of Washington" width="1156" height="200"><span class="unit">PUBPOL 101 · Week 6</span></div></header>
+<main class="wrap">
+  <p class="eyebrow">Public Administration and Democracy · Public service delivery</p>
+  <h1>Who gets a bus stop? Planning transit access north of the Ship Canal</h1>
+  <p class="lede">
+    Your team is planning a new frequent bus service between Ballard and the University District. You can fund <strong>8 stops</strong> from the candidate locations on the map. Each stop serves the streets within about a 10-minute walk. Decide where to put them, then check who your plan reaches, and who it leaves out.
+  </p>
+  <div class="proto" role="note"><strong>Draft for discussion with Prof. Zhao.</strong> Streets and walking areas are computed from OpenStreetMap; population comes from census tracts and is spread evenly along each tract's residential streets. Candidate stops, the budget, and the shocks are placeholders. Prof. Zhao's block-level data and pedestrian-network analysis will replace these approximations.</div>
+
+  <ol class="steps" id="steps"><li>1 · Plan</li><li>2 · Shock</li><li>3 · Revise</li><li>4 · Compare</li></ol>
+
+  <div class="grid">
+    <section class="card mapcard" aria-labelledby="mapTitle">
+      <h2 id="mapTitle" class="sr-only">Map of candidate stops and walking coverage</h2>
+      <div class="maptools">
+        <div class="layers" role="radiogroup" aria-label="Census layer">
+          <label><input type="radio" name="layer" value="none" checked><span>No layer</span></label>
+          <label><input type="radio" name="layer" value="density"><span>Population density</span></label>
+          <label><input type="radio" name="layer" value="poc"><span>People of color</span></label>
+          <label><input type="radio" name="layer" value="low"><span>Lower income</span></label>
+        </div>
+        <div class="zoom" role="group" aria-label="Zoom">
+          <button type="button" id="zin" aria-label="Zoom in">+</button>
+          <button type="button" id="zout" aria-label="Zoom out">−</button>
+          <button type="button" id="zreset" aria-label="Reset view" style="width:auto;padding:0 8px;font-size:13px;">Reset</button>
+        </div>
+      </div>
+      <svg id="map" role="group" aria-label="Map. Candidate stops are buttons; use Tab to move between them and Enter to add or remove a stop."></svg>
+      <div class="maplegend" id="legend"></div>
+      <div class="tooltip" id="tip"></div>
+    </section>
+
+    <aside id="panel" aria-live="polite"></aside>
+  </div>
+
+  <section class="card" style="margin-top:18px;" aria-labelledby="listTitle">
+    <h2 id="listTitle">Candidate stops</h2>
+    <p class="hint">The same choices as the map, as a list. Residents is how many people live within a 10-minute walk of that stop alone; neighboring stops overlap.</p>
+    <div class="stoplist" id="stoplist"></div>
+  </section>
+
+  <div class="discuss">
+    <h3>Discuss with your group</h3>
+    <ol>
+      <li>Did your team aim to reach the most people, or the people who most depend on transit? How did that choice show up on the map?</li>
+      <li>Which neighborhoods ended up farthest from any stop? Who lives there, and who might speak up for them in a real planning process?</li>
+      <li>When the shock hit, what did you give up first, and why? Did your revised plan become more or less equitable?</li>
+    </ol>
+  </div>
+
+  <details>
+    <summary>About this draft and its data</summary>
+    <ul>
+      <li><strong>Streets:</strong> © OpenStreetMap contributors, available under the Open Database License. Includes streets, stairways, and trails such as the Burke-Gilman; freeways are excluded. Streets south of the Ship Canal are left out.</li>
+      <li><strong>Walking areas:</strong> all streets within 800 meters along the network (about 10 minutes at a typical walking pace) of each candidate stop, precomputed. Hills are not yet accounted for.</li>
+      <li><strong>Population:</strong> City of Seattle, Racial and Social Equity Composite Index (2026 release, American Community Survey 5-year estimates), by census tract: total population, people of color, and people below 200% of the poverty level ("lower income" here). Each tract's residents are spread evenly along its residential streets; trails and stairways carry no residents. Tracts are included when their center lies in the study area.</li>
+      <li><strong>Placeholders to confirm with Prof. Zhao:</strong> candidate stop locations, the 8-stop budget, the two shocks, walking distance and speed, and the move to block-level population.</li>
+      <li><strong>Privacy.</strong> This page collects no data. A group's plan is saved only in the link it copies.</li>
+      <li><strong>Accessibility.</strong> Stops can be chosen from the map or the list above, by keyboard or mouse. The scorecard states results in text.</li>
+      <li><strong>Built with:</strong> Prof. Alex Zhao, PUBPOL 101 · <strong>Maintained by:</strong> Evans Digital · Draft 0.1</li>
+    </ul>
+  </details>
+</main>
+
+<script src="data.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var NS = "http://www.w3.org/2000/svg";
+  var M = DATA.meta, E = DATA.edges, T = DATA.tracts, S = DATA.stops;
+  var NE = E.len.length;
+
+  // ---- Shocks (placeholders) ----------------------------------------------------------------
+  var SHOCKS = {
+    budget: { title: "Budget cut", text: "Sales tax revenue came in low. The service can now fund only 6 stops. Remove at least 2.", budget: 6, closed: [] },
+    market: { title: "Construction closure", text: "A water main replacement will close NW Market St to buses for two years. Market St stops are unavailable; choose replacements.", budget: 8,
+      closed: S.map(function (s, i) { return /^NW Market St/.test(s.name) ? i : -1; }).filter(function (i) { return i >= 0; }) }
+  };
+  var BUDGET = 8;
+
+  // ---- Tract stats -----------------------------------------------------------------------------
+  function ringArea(r) { var a = 0; for (var i = 0, j = r.length - 2; i < r.length; j = i, i += 2) a += (r[j] * r[i + 1] - r[i] * r[j + 1]); return Math.abs(a) / 2; }
+  var TOT = { pop: 0, poc: 0, low: 0 };
+  T.forEach(function (t) {
+    t.area = t.rings.reduce(function (a, r) { return a + ringArea(r); }, 0);
+    t.density = t.pop / (t.area / 4046.86);               // residents per acre
+    t.pocShare = t.pop ? t.poc / t.pop : 0;
+    t.lowShare = t.povBase ? t.low / t.povBase : 0;
+    t.perM = t.streetLen ? t.pop / t.streetLen : 0;        // residents per meter of residential street
+    TOT.pop += t.pop; TOT.poc += t.poc; TOT.low += t.lowShare * t.pop;
+  });
+
+  // ---- Coverage math ----------------------------------------------------------------------------
+  function coverage(sel) {
+    var a = new Float32Array(NE), b = new Float32Array(NE);
+    sel.forEach(function (si) { S[si].cover.forEach(function (c) { if (c[1] > a[c[0]]) a[c[0]] = c[1]; if (c[2] > b[c[0]]) b[c[0]] = c[2]; }); });
+    var pop = 0, poc = 0, low = 0;
+    for (var k = 0; k < NE; k++) {
+      if (!a[k] && !b[k]) continue;
+      var t = E.t[k]; if (t < 0 || !E.k[k]) continue;
+      var covered = Math.min(E.len[k], a[k] + b[k]), people = covered * T[t].perM;
+      pop += people; poc += people * T[t].pocShare; low += people * T[t].lowShare;
+    }
+    return { a: a, b: b, pop: pop, poc: poc, low: low,
+      pocRate: poc / TOT.poc, whiteRate: (pop - poc) / (TOT.pop - TOT.poc),
+      lowRate: low / TOT.low, highRate: (pop - low) / (TOT.pop - TOT.low), rate: pop / TOT.pop };
+  }
+  var solo = S.map(function (s, i) { return coverage([i]).pop; });
+
+  // ---- State ---------------------------------------------------------------------------------------
+  var st = { step: 1, r1: [], r2: [], shock: "budget" };
+  function cur() { return st.step >= 3 ? st.r2 : st.r1; }
+  function budgetNow() { return st.step >= 3 ? SHOCKS[st.shock].budget : BUDGET; }
+  function closedNow() { return st.step >= 3 ? SHOCKS[st.shock].closed : []; }
+  function editable() { return st.step === 1 || st.step === 3; }
+
+  // ---- Map setup --------------------------------------------------------------------------------------
+  var svg = $("map"), W = M.width, H = M.height;
+  var view = { x: 0, y: 0, w: W, h: H };
+  function el(name, attrs) { var e = document.createElementNS(NS, name); for (var k in attrs) e.setAttribute(k, attrs[k]); return e; }
+  function polyD(g) { var d = "M" + g[0] + "," + g[1]; for (var i = 2; i < g.length; i += 2) d += "L" + g[i] + "," + g[i + 1]; return d; }
+  var gTracts = el("g", {}), gBase = el("g", {}), gCover = el("g", {}), gLabels = el("g", {}), gStops = el("g", {});
+  [gTracts, gBase, gCover, gLabels, gStops].forEach(function (g) { svg.appendChild(g); });
+
+  // tract polygons
+  var tractEls = T.map(function (t, i) {
+    var d = t.rings.map(function (r) { return polyD(r) + "Z"; }).join("");
+    var p = el("path", { d: d, fill: "transparent", stroke: "none", "data-t": i });
+    gTracts.appendChild(p); return p;
+  });
+  // base streets in three passes (paths, local, arterial)
+  var baseD = ["", "", ""];
+  for (var k = 0; k < NE; k++) baseD[E.k[k]] += polyD(E.g[k]);
+  gBase.appendChild(el("path", { d: baseD[0], fill: "none", stroke: "var(--street)", "stroke-width": 1, "stroke-dasharray": "3 3", "vector-effect": "non-scaling-stroke" }));
+  gBase.appendChild(el("path", { d: baseD[1], fill: "none", stroke: "var(--street)", "stroke-width": 1, "vector-effect": "non-scaling-stroke" }));
+  gBase.appendChild(el("path", { d: baseD[2], fill: "none", stroke: "var(--arterial)", "stroke-width": 1.8, "vector-effect": "non-scaling-stroke" }));
+  var coverPath = el("path", { d: "", fill: "none", stroke: "var(--cover)", "stroke-width": 2.6, "stroke-linecap": "round", "stroke-linejoin": "round", "vector-effect": "non-scaling-stroke" });
+  gCover.appendChild(coverPath);
+
+  // neighborhood labels (lon, lat)
+  var LABELS = [["Ballard", -122.3840, 47.6712], ["Fremont", -122.3500, 47.6525], ["Wallingford", -122.3345, 47.6610], ["Green Lake", -122.3390, 47.6800],
+    ["Phinney Ridge", -122.3545, 47.6720], ["Roosevelt", -122.3165, 47.6775], ["University District", -122.3130, 47.6630], ["UW", -122.3060, 47.6545],
+    ["Ravenna", -122.3005, 47.6745], ["Crown Hill", -122.3760, 47.6890], ["Sunset Hill", -122.4000, 47.6780], ["Ship Canal", -122.3770, 47.6560]];
+  var LAT0 = 47.668, KX = Math.cos(LAT0 * Math.PI / 180) * 111320, KY = 111320;
+  function proj(lon, lat) { return [(lon + 122.410) * KX, (47.693 - lat) * KY]; }
+  var labelEls = LABELS.map(function (L) {
+    var p = proj(L[1], L[2]);
+    var t = el("text", { x: p[0], y: p[1], "text-anchor": "middle", fill: L[0] === "Ship Canal" ? "#6a8aa8" : "#6a6964", "font-style": L[0] === "Ship Canal" ? "italic" : "normal",
+      "font-weight": 600, style: "paint-order:stroke;stroke:#fbfaf7;stroke-width:4px;letter-spacing:.02em" });
+    t.textContent = L[0]; gLabels.appendChild(t); return t;
+  });
+
+  // stops
+  var stopEls = S.map(function (s, i) {
+    var g = el("g", { class: "stop", tabindex: 0, role: "button", "data-s": i });
+    g.appendChild(el("circle", { class: "hit", cx: s.xy[0], cy: s.xy[1], r: 1, fill: "transparent" }));
+    g.appendChild(el("circle", { class: "ring", cx: s.xy[0], cy: s.xy[1], r: 1, fill: "#fff", stroke: "var(--stop)", "stroke-width": 2, "vector-effect": "non-scaling-stroke" }));
+    var num = el("text", { x: s.xy[0], y: s.xy[1], "text-anchor": "middle", "dominant-baseline": "central", fill: "#fff", "font-weight": 700 });
+    g.appendChild(num); gStops.appendChild(g); return g;
+  });
+
+  function mpp() { return view.w / svg.getBoundingClientRect().width || view.w / 800; }
+  function applyView() {
+    svg.setAttribute("viewBox", view.x + " " + view.y + " " + view.w + " " + view.h);
+    var u = mpp();
+    stopEls.forEach(function (g) { g.querySelector(".hit").setAttribute("r", 14 * u); g.querySelector(".ring").setAttribute("r", 8 * u); g.querySelector("text").setAttribute("font-size", 10 * u); });
+    labelEls.forEach(function (t) { t.setAttribute("font-size", 12.5 * u); t.style.strokeWidth = (4 * u) + "px"; });
+  }
+  function zoomAt(f, cx, cy) {
+    var nw = Math.min(W, Math.max(W / 8, view.w * f)), nh = nw * H / W;
+    if (cx == null) { cx = view.x + view.w / 2; cy = view.y + view.h / 2; }
+    view.x = cx - (cx - view.x) * nw / view.w; view.y = cy - (cy - view.y) * nh / view.h; view.w = nw; view.h = nh;
+    view.x = Math.max(0, Math.min(W - view.w, view.x)); view.y = Math.max(0, Math.min(H - view.h, view.y)); applyView();
+  }
+  $("zin").onclick = function () { zoomAt(0.7); };
+  $("zout").onclick = function () { zoomAt(1 / 0.7); };
+  $("zreset").onclick = function () { view = { x: 0, y: 0, w: W, h: H }; applyView(); };
+  function svgPt(e) { var r = svg.getBoundingClientRect(); return [view.x + (e.clientX - r.left) / r.width * view.w, view.y + (e.clientY - r.top) / r.height * view.h]; }
+  svg.addEventListener("wheel", function (e) { e.preventDefault(); var p = svgPt(e); zoomAt(e.deltaY < 0 ? 0.85 : 1 / 0.85, p[0], p[1]); }, { passive: false });
+  var drag = null;
+  svg.addEventListener("pointerdown", function (e) { if (e.target.closest(".stop")) return; drag = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y, moved: false }; svg.setPointerCapture(e.pointerId); svg.classList.add("dragging"); });
+  svg.addEventListener("pointermove", function (e) {
+    if (drag) { var r = svg.getBoundingClientRect(), dx = (e.clientX - drag.x) / r.width * view.w, dy = (e.clientY - drag.y) / r.height * view.h;
+      if (Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y) > 3) drag.moved = true;
+      view.x = Math.max(0, Math.min(W - view.w, drag.vx - dx)); view.y = Math.max(0, Math.min(H - view.h, drag.vy - dy)); applyView(); return; }
+    hover(e);
+  });
+  svg.addEventListener("pointerup", function () { drag = null; svg.classList.remove("dragging"); });
+  window.addEventListener("resize", applyView);
+
+  // ---- Layers ---------------------------------------------------------------------------------------
+  var RAMP = ["#f1ecf8", "#ddd1ef", "#c5b4e3", "#9a83c4", "#6f55a3"];
+  var LAYERS = {
+    density: { label: "Residents per acre", val: function (t) { return t.density; }, fmt: function (v) { return v.toFixed(0); } },
+    poc: { label: "Share people of color", val: function (t) { return t.pocShare; }, fmt: function (v) { return Math.round(v * 100) + "%"; } },
+    low: { label: "Share below 200% of poverty", val: function (t) { return t.lowShare; }, fmt: function (v) { return Math.round(v * 100) + "%"; } }
+  };
+  var layer = "none";
+  function quantiles(vals) { var s = vals.slice().sort(function (a, b) { return a - b; }); return [0.2, 0.4, 0.6, 0.8].map(function (q) { return s[Math.floor(q * (s.length - 1))]; }); }
+  function renderLayer() {
+    var L = LAYERS[layer], h = '<span><span class="sw" style="background:var(--cover)"></span>Within a 10-minute walk</span>' +
+      '<span><span class="dot" style="background:var(--stop)"></span>Your stop</span><span><span class="dot" style="background:#fff;border:2px solid var(--stop)"></span>Candidate</span>';
+    if (!L) { tractEls.forEach(function (p) { p.setAttribute("fill", "transparent"); }); $("legend").innerHTML = h; return; }
+    var vals = T.map(L.val), br = quantiles(vals);
+    tractEls.forEach(function (p, i) { var v = vals[i], b = 0; while (b < 4 && v > br[b]) b++; p.setAttribute("fill", RAMP[b]); p.setAttribute("fill-opacity", 0.75); });
+    h += '<span>' + L.label + ': ' + L.fmt(Math.min.apply(null, vals)) + '<span class="ramp" aria-hidden="true">' + RAMP.map(function (c) { return '<i style="background:' + c + '"></i>'; }).join("") + '</span>' + L.fmt(Math.max.apply(null, vals)) + ' (by tract, in fifths)</span>';
+    $("legend").innerHTML = h;
+  }
+  document.querySelectorAll("input[name=layer]").forEach(function (r) { r.addEventListener("change", function () { layer = r.value; renderLayer(); }); });
+
+  // ---- Coverage drawing ---------------------------------------------------------------------------------
+  function cutFrom(g, dist, fromEnd) {
+    var pts = []; for (var i = 0; i < g.length; i += 2) pts.push([g[i], g[i + 1]]); if (fromEnd) pts.reverse();
+    var total = 0; for (i = 1; i < pts.length; i++) total += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+    var target = Math.min(total, dist), acc = 0, out = [pts[0]];
+    for (i = 1; i < pts.length; i++) {
+      var seg = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+      if (acc + seg >= target) { var f = seg ? (target - acc) / seg : 0; out.push([pts[i - 1][0] + f * (pts[i][0] - pts[i - 1][0]), pts[i - 1][1] + f * (pts[i][1] - pts[i - 1][1])]); break; }
+      acc += seg; out.push(pts[i]);
+    }
+    return "M" + out.map(function (p) { return p[0].toFixed(0) + "," + p[1].toFixed(0); }).join("L");
+  }
+  function drawCoverage(c) {
+    var d = "";
+    for (var k = 0; k < NE; k++) {
+      var a = c.a[k], b = c.b[k]; if (!a && !b) continue;
+      var len = E.len[k];
+      if (a + b >= len) { d += polyD(E.g[k]); continue; }
+      if (a) d += cutFrom(E.g[k], a / len * gLen(k), false);
+      if (b) d += cutFrom(E.g[k], b / len * gLen(k), true);
+    }
+    coverPath.setAttribute("d", d);
+  }
+  var glCache = {};
+  function gLen(k) { if (glCache[k] != null) return glCache[k]; var g = E.g[k], t = 0; for (var i = 2; i < g.length; i += 2) t += Math.hypot(g[i] - g[i - 2], g[i + 1] - g[i - 1]); return (glCache[k] = t); }
+
+  // ---- Rendering ---------------------------------------------------------------------------------------------
+  function pct(v) { return Math.round(v * 100) + "%"; }
+  function num(v) { return Math.round(v).toLocaleString("en-US"); }
+  function render() {
+    var sel = cur(), closed = closedNow(), c = coverage(sel);
+    drawCoverage(c);
+    stopEls.forEach(function (g, i) {
+      var on = sel.indexOf(i) >= 0, shut = closed.indexOf(i) >= 0, ring = g.querySelector(".ring"), txt = g.querySelector("text");
+      ring.setAttribute("fill", shut ? "#d9d7d0" : on ? "var(--stop)" : "#fff");
+      ring.setAttribute("stroke", shut ? "#8a8984" : "var(--stop)");
+      txt.textContent = on ? String(sel.indexOf(i) + 1) : shut ? "×" : "";
+      txt.setAttribute("fill", shut ? "#4a4945" : "#fff");
+      g.setAttribute("aria-label", S[i].name + (shut ? ", closed" : on ? ", selected" : ", not selected") + ". About " + num(solo[i]) + " residents within a 10-minute walk.");
+      g.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    var steps = $("steps").children; for (var i = 0; i < 4; i++) steps[i].className = i + 1 === st.step ? "on" : i + 1 < st.step ? "done" : "";
+    renderPanel(c); renderList();
+  }
+  function metricsHtml(c) {
+    function bar(label, v, color, other, otherLabel) {
+      return '<div class="metric"><div class="lbl"><span>' + label + '</span><strong>' + pct(v) + '</strong></div><div class="bar"><div style="width:' + Math.min(100, v * 100) + '%;background:' + color + '"></div></div>' +
+        '<div class="lbl"><span>' + otherLabel + '</span><strong>' + pct(other) + '</strong></div><div class="bar"><div style="width:' + Math.min(100, other * 100) + '%;background:#9d9a91"></div></div></div>';
+    }
+    function gap(a, b, who) {
+      var d = Math.round((a - b) * 100);
+      return '<p class="gapline">' + (Math.abs(d) < 2 ? 'Reached at about the same rate as everyone else.' : d > 0 ? who + ' reached at a rate <strong>' + d + ' points higher</strong>.' : who + ' reached at a rate <strong>' + (-d) + ' points lower</strong>.') + '</p>';
+    }
+    return '<div class="metric"><div class="lbl"><span>Residents within a 10-minute walk</span></div><div class="big">' + num(c.pop) + '</div><p class="hint">' + pct(c.rate) + ' of the ' + num(TOT.pop) + ' people in the study area</p></div>' +
+      bar("People of color reached", c.pocRate, "var(--stop)", c.whiteRate, "White residents reached") + gap(c.pocRate, c.whiteRate, "People of color") +
+      bar("Lower-income residents reached", c.lowRate, "var(--stop)", c.highRate, "Higher-income residents reached") + gap(c.lowRate, c.highRate, "Lower-income residents");
+  }
+  function renderPanel(c) {
+    var sel = cur(), B = budgetNow(), h = '<div class="card soft">';
+    if (st.step === 1 || st.step === 3) {
+      var over = sel.length > B;
+      h += '<h2>' + (st.step === 1 ? "Step 1 · Place your stops" : "Step 3 · Revise your plan") + '</h2>' +
+        '<div class="budget" aria-hidden="true">' + Array.from({ length: Math.max(B, sel.length) }, function (_, i) { return '<i class="' + (i < sel.length ? (i >= B ? "over" : "used") : "") + '"></i>'; }).join("") + '</div>' +
+        '<p class="hint"><strong>' + sel.length + ' of ' + B + '</strong> stops placed. ' + (over ? '<span style="color:var(--warn);font-weight:700">Over budget: remove ' + (sel.length - B) + '.</span>' : 'Click a candidate stop on the map, or use the list below.') + '</p>';
+      if (st.step === 3) h += '<div class="shock"><strong>' + SHOCKS[st.shock].title + '.</strong> ' + SHOCKS[st.shock].text + '</div>';
+      h += metricsHtml(c);
+      h += '<div class="row">' + (st.step === 1
+        ? '<button class="btn primary" id="lockBtn"' + (sel.length === B ? "" : " disabled") + '>Lock in plan</button><button class="btn" id="clearBtn">Clear</button>'
+        : '<button class="btn primary" id="compareBtn"' + (!over && sel.every(function (i) { return SHOCKS[st.shock].closed.indexOf(i) < 0; }) && sel.length > 0 ? "" : " disabled") + '>Compare plans</button>') + '</div>';
+      if (st.step === 1 && sel.length !== B) h += '<p class="hint" style="margin-top:6px;">Place all ' + B + ' stops to lock in your plan.</p>';
+    } else if (st.step === 2) {
+      h += '<h2>Step 2 · Something changes</h2><p>Your plan is locked in. Before it can be built, conditions change.</p>' +
+        '<label for="shockSel" class="hint" style="display:block;margin-bottom:4px;">Instructor or group picks the shock:</label><select id="shockSel">' +
+        Object.keys(SHOCKS).map(function (k) { return '<option value="' + k + '"' + (k === st.shock ? " selected" : "") + '>' + SHOCKS[k].title + '</option>'; }).join("") + '<option value="random">Surprise us</option></select>' +
+        '<div class="row"><button class="btn primary" id="shockBtn">Reveal the shock</button></div>' + metricsHtml(c);
+    } else {
+      var c1 = coverage(st.r1), c2 = coverage(st.r2);
+      function row(label, a, b, isPct) { var d = b - a; return '<tr><th scope="row">' + label + '</th><td>' + (isPct ? pct(a) : num(a)) + '</td><td>' + (isPct ? pct(b) : num(b)) + '</td><td>' + (isPct ? (d >= 0 ? "+" : "−") + Math.abs(Math.round(d * 100)) + " pts" : (d >= 0 ? "+" : "−") + num(Math.abs(d))) + '</td></tr>'; }
+      h += '<h2>Step 4 · Compare your plans</h2><p class="hint">Shock: ' + SHOCKS[st.shock].title + '. The map shows your revised plan.</p>' +
+        '<table class="cmp"><thead><tr><th scope="col">Measure</th><th scope="col">Plan</th><th scope="col">Revised</th><th scope="col">Change</th></tr></thead><tbody>' +
+        row("Residents reached", c1.pop, c2.pop) + row("People of color reached", c1.pocRate, c2.pocRate, true) + row("White residents reached", c1.whiteRate, c2.whiteRate, true) +
+        row("Lower-income reached", c1.lowRate, c2.lowRate, true) + row("Higher-income reached", c1.highRate, c2.highRate, true) + '</tbody></table>' +
+        '<div class="row"><button class="btn primary" id="shareBtn">Copy link to our plans</button><button class="btn" id="restartBtn">Start over</button></div>' +
+        '<p class="status" id="shareStatus" role="status"></p>';
+    }
+    $("panel").innerHTML = h + '</div>';
+  }
+  function renderList() {
+    var sel = cur(), closed = closedNow(), B = budgetNow(), can = editable();
+    var order = S.map(function (s, i) { return i; }).sort(function (a, b) { return S[a].name.localeCompare(S[b].name); });
+    $("stoplist").innerHTML = order.map(function (i) {
+      var on = sel.indexOf(i) >= 0, shut = closed.indexOf(i) >= 0;
+      return '<label class="' + (shut ? "na" : "") + '"><input type="checkbox" data-s="' + i + '"' + (on ? " checked" : "") + (shut || !can || (!on && sel.length >= B) ? " disabled" : "") + '>' +
+        '<span>' + S[i].name + (shut ? " (closed)" : "") + '</span><small>' + num(solo[i]) + ' residents</small></label>';
+    }).join("");
+  }
+
+  // ---- Actions ---------------------------------------------------------------------------------------------------
+  function toggle(i) {
+    if (!editable() || closedNow().indexOf(i) >= 0) return;
+    var sel = cur(), at = sel.indexOf(i);
+    if (at >= 0) sel.splice(at, 1); else if (sel.length < budgetNow()) sel.push(i); else return flashBudget();
+    render();
+  }
+  function flashBudget() { var b = document.querySelector(".budget"); if (b) { b.style.outline = "3px solid var(--warn)"; setTimeout(function () { b.style.outline = ""; }, 600); } }
+  gStops.addEventListener("click", function (e) { var g = e.target.closest(".stop"); if (g) toggle(+g.getAttribute("data-s")); });
+  gStops.addEventListener("keydown", function (e) { if (e.key !== "Enter" && e.key !== " ") return; var g = e.target.closest(".stop"); if (g) { e.preventDefault(); toggle(+g.getAttribute("data-s")); g.focus(); } });
+  $("stoplist").addEventListener("change", function (e) { var i = e.target.getAttribute("data-s"); if (i != null) toggle(+i); });
+  $("panel").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    if (b.id === "clearBtn") { st.r1 = []; render(); }
+    else if (b.id === "lockBtn") { st.step = 2; render(); }
+    else if (b.id === "shockBtn") {
+      var v = $("shockSel").value; if (v === "random") { var keys = Object.keys(SHOCKS); v = keys[Math.floor(Math.random() * keys.length)]; }
+      st.shock = v; st.r2 = st.r1.filter(function (i) { return SHOCKS[v].closed.indexOf(i) < 0; }); st.step = 3; render();
+    }
+    else if (b.id === "compareBtn") { st.step = 4; render(); }
+    else if (b.id === "restartBtn") { st = { step: 1, r1: [], r2: [], shock: "budget" }; history.replaceState(null, "", location.href.split("#")[0]); render(); }
+    else if (b.id === "shareBtn") {
+      var url = location.href.split("#")[0] + "#r1=" + st.r1.join(".") + "&shock=" + st.shock + "&r2=" + st.r2.join(".");
+      history.replaceState(null, "", url);
+      var done = function () { $("shareStatus").textContent = "Link copied. Paste it into Canvas to submit your plans."; };
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(url).then(done, function () { $("shareStatus").textContent = url; });
+      else $("shareStatus").textContent = url;
+    }
+  });
+
+  // tooltip
+  var tip = $("tip");
+  function hover(e) {
+    var g = e.target.closest && e.target.closest(".stop"), r = svg.parentNode.getBoundingClientRect(), html = "";
+    if (g) { var i = +g.getAttribute("data-s"); html = "<strong>" + S[i].name + "</strong><br>About " + num(solo[i]) + " residents within a 10-minute walk"; }
+    else if (layer !== "none" && e.target.getAttribute && e.target.getAttribute("data-t") != null) { var t = T[+e.target.getAttribute("data-t")];
+      html = "<strong>Census tract " + t.name + "</strong><br>" + num(t.pop) + " residents · " + t.density.toFixed(0) + " per acre<br>" + pct(t.pocShare) + " people of color · " + pct(t.lowShare) + " below 200% of poverty"; }
+    if (!html) { tip.classList.remove("show"); return; }
+    tip.innerHTML = html; tip.classList.add("show");
+    tip.style.left = Math.min(e.clientX - r.left + 12, r.width - 270) + "px"; tip.style.top = (e.clientY - r.top + 12) + "px";
+  }
+  svg.addEventListener("pointerleave", function () { tip.classList.remove("show"); });
+
+  // ---- Load from share link -------------------------------------------------------------------------------
+  (function () {
+    var h = location.hash.slice(1); if (!h) return;
+    var q = {}; h.split("&").forEach(function (kv) { var p = kv.split("="); q[p[0]] = p[1] || ""; });
+    var parse = function (s) { return (s || "").split(".").filter(Boolean).map(Number).filter(function (i) { return i >= 0 && i < S.length; }); };
+    if (q.r1) { st.r1 = parse(q.r1); st.shock = SHOCKS[q.shock] ? q.shock : "budget"; st.r2 = parse(q.r2); st.step = q.r2 ? 4 : 1; }
+  })();
+
+  renderLayer(); applyView(); render();
+})();
+</script>
+</body>
+</html>
