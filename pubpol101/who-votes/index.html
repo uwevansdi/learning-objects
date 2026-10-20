@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Who Votes?</title>
+<meta name="description" content="Interactive dashboard of representation ratios: how each group's share of voters compares with its share of adult citizens, from Wolfinger and Rosenstone's 1972 analysis to the Cooperative Election Study. PUBPOL 101, Evans School.">
+<style>
+  :root {
+    color-scheme: light;
+    --surface: #ffffff;
+    --surface-2: #f6f5f2;
+    --border: #d9d7d0;
+    --ink: #1b1b1a;
+    --ink-2: #4a4945;
+    --ink-3: #6a6964;
+    --grid: #ebeae6;
+    --axis: #8a8984;
+    --y2024: #4b2e83;   /* Spirit Purple */
+    --y2022: #e93cac;   /* Accent Pink */
+    --y2020: #85754d;   /* Heritage Gold */
+    --y1972: #6a6964;   /* neutral gray: the historical baseline */
+    --accent: #4b2e83;
+    --accent-soft: #efeaf7;
+    --good: #1d6b3a; --good-soft: #e7f3eb;
+    --warn: #8a4b00; --warn-soft: #fbf0e1;
+    --focus: #4b2e83;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--surface); color: var(--ink); font-size: 16px; line-height: 1.5; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 20px 16px 32px; }
+  .eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; margin: 0 0 4px; }
+  h1 { font-size: 27px; line-height: 1.2; margin: 0 0 8px; }
+  h2 { font-size: 19px; margin: 0 0 6px; }
+  h3 { font-size: 16px; margin: 0 0 6px; }
+  p { margin: 0 0 10px; }
+  .lede { color: var(--ink-2); max-width: 75ch; }
+  a { color: var(--accent); }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  .proto { border: 2px dashed var(--warn); background: var(--warn-soft); border-radius: 8px; padding: 10px 14px; margin: 12px 0; font-size: 14px; }
+  .proto strong { color: var(--warn); }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: flex-end; margin: 16px 0 12px; padding: 12px 14px; background: var(--surface-2); border-radius: var(--radius); }
+  .ctl > span { display: block; font-size: 13px; font-weight: 700; color: var(--ink-2); margin-bottom: 4px; }
+  .seg { display: flex; flex-wrap: wrap; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface); }
+  .seg label { position: relative; font-size: 14px; }
+  .seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .seg span { display: block; padding: 7px 12px; white-space: nowrap; }
+  .seg input:checked + span { background: var(--accent); color: #fff; font-weight: 600; }
+  .seg label + label span { border-left: 1px solid var(--border); }
+  .seg input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: -3px; }
+  .years { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+  .years label { display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
+  .years input { width: 17px; height: 17px; accent-color: var(--accent); }
+  .years label.na { color: var(--ink-3); }
+
+  .grid { display: grid; gap: 20px; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); align-items: start; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+  .card { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; position: relative; }
+  .card.soft { background: var(--surface-2); }
+  .chart-sub { font-size: 13px; color: var(--ink-3); margin: 0 0 6px; }
+  .note { font-size: 13px; color: var(--ink-2); background: var(--surface-2); border-radius: 6px; padding: 6px 10px; margin-top: 8px; }
+  svg { display: block; width: 100%; height: auto; }
+  svg text { font-family: inherit; }
+  .row-hit { fill: transparent; cursor: pointer; }
+  .row-hit:hover { fill: rgba(75, 46, 131, 0.05); }
+  .tooltip { position: absolute; pointer-events: none; z-index: 5; background: var(--ink); color: #fff; font-size: 13px; line-height: 1.4; padding: 6px 9px; border-radius: 6px; opacity: 0; transition: opacity .12s; max-width: 260px; }
+  .tooltip.show { opacity: 1; }
+
+  .detail .big { font-size: 30px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .detail .sub { font-size: 14px; color: var(--ink-2); }
+  .calc { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: center; gap: 6px; text-align: center; margin: 12px 0; font-variant-numeric: tabular-nums; }
+  .calc div { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 4px; }
+  .calc .v { font-size: 20px; font-weight: 700; }
+  .calc .k { font-size: 11.5px; color: var(--ink-3); line-height: 1.25; }
+  .calc .op { font-size: 20px; font-weight: 700; color: var(--ink-3); border: 0; background: none; }
+  .yr-list { list-style: none; padding: 0; margin: 8px 0 0; font-size: 14px; }
+  .yr-list li { display: flex; justify-content: space-between; gap: 8px; padding: 5px 0; border-top: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+  .shape { display: inline-block; width: 14px; text-align: center; margin-right: 6px; font-size: 13px; }
+
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  caption { text-align: left; font-weight: 700; padding-bottom: 6px; }
+  th, td { padding: 5px 8px; border-bottom: 1px solid var(--grid); text-align: right; white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; white-space: normal; }
+  thead th { font-size: 12px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .03em; }
+
+  .qs { margin-top: 26px; }
+  .q-list { display: grid; gap: 14px; margin-top: 10px; }
+  fieldset { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px 16px; margin: 0; }
+  legend { font-weight: 700; padding: 0 4px; font-size: 15px; }
+  .q-prompt { margin: 2px 0 8px; color: var(--ink-2); }
+  .opt { display: flex; gap: 10px; align-items: flex-start; padding: 6px 4px; border-radius: 6px; }
+  .opt:hover { background: var(--surface-2); }
+  .opt input { margin-top: 4px; width: 18px; height: 18px; flex: none; accent-color: var(--accent); }
+  button.btn { font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 8px; padding: 7px 14px; border: 1px solid var(--accent); background: var(--surface); color: var(--accent); }
+  button.btn.primary { background: var(--accent); color: #fff; }
+  button.btn:hover { filter: brightness(0.95); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .feedback { margin-top: 10px; padding: 10px 12px; border-radius: 8px; font-size: 15px; display: none; }
+  .feedback.show { display: block; }
+  .feedback.right { background: var(--good-soft); border-left: 4px solid var(--good); }
+  .feedback.wrong { background: var(--warn-soft); border-left: 4px solid var(--warn); }
+  .feedback .tag { font-weight: 700; }
+  .feedback.right .tag { color: var(--good); }
+  .feedback.wrong .tag { color: var(--warn); }
+  .discuss { border-left: 4px solid var(--accent); background: var(--accent-soft); border-radius: 8px; padding: 12px 14px; }
+  .discuss ol { margin: 6px 0 0; padding-left: 20px; }
+  .discuss li { margin-bottom: 8px; }
+
+  details { margin-top: 22px; border-top: 1px solid var(--border); padding-top: 12px; font-size: 14px; color: var(--ink-2); }
+  summary { cursor: pointer; font-weight: 600; color: var(--ink); }
+  details ul { padding-left: 20px; }
+  details li { margin-bottom: 4px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  @media (max-width: 520px) { .calc .v { font-size: 16px; } }
+  /* DRAFT watermark: remove when the page is approved for students */
+  .watermark { position: fixed; inset: 0; z-index: 50; pointer-events: none; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .watermark span { font-family: var(--font-head, sans-serif); font-weight: 800; font-size: clamp(90px, 18vw, 240px); letter-spacing: .08em; color: rgba(138, 75, 0, 0.09); transform: rotate(-28deg); white-space: nowrap; user-select: none; }
+  @media print { .watermark span { color: rgba(0, 0, 0, 0.12); } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+<link rel="stylesheet" href="../../assets/brand.css">
+</head>
+<body>
+<div class="watermark" aria-hidden="true"><span>DRAFT</span></div>
+<header class="brandbar"><div class="brandbar-inner"><img class="sig-h" src="../../assets/evans-signature-horizontal.png" alt="Evans School of Public Policy and Governance, University of Washington" width="1156" height="200"><span class="unit">PUBPOL 101 · Week 4</span></div></header>
+<main class="wrap">
+  <p class="eyebrow">Public Administration and Democracy · Political participation</p>
+  <h1>Who votes? Whose voices do elections amplify?</h1>
+  <p class="lede">
+    If every adult citizen were equally likely to vote, each group's share of voters would match its share of the population. They don't match. In 1980, Raymond Wolfinger and Steven Rosenstone showed that voters are "a distorted sample that exaggerates the size of some groups and minimizes that of others." Explore their 1972 findings next to recent Cooperative Election Study data, and look for who is overrepresented and who is left out.
+  </p>
+  <div class="proto" role="note"><strong>Prototype.</strong> The 1972 values are from Wolfinger and Rosenstone's Table 6.1. The 2020–2024 values are <strong>approximate placeholders</strong> read from a draft figure and will be replaced with Prof. Zhao's Cooperative Election Study estimates before students use this page.</div>
+
+  <div class="controls" role="group" aria-label="Dashboard controls">
+    <div class="ctl">
+      <span id="dimLabel">Compare groups by</span>
+      <div class="seg" role="radiogroup" aria-labelledby="dimLabel" id="dims"></div>
+    </div>
+    <div class="ctl">
+      <span id="yrLabel">Show elections</span>
+      <div class="years" role="group" aria-labelledby="yrLabel" id="years"></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <section class="card" aria-labelledby="chartTitle">
+      <h2 id="chartTitle"></h2>
+      <p class="chart-sub">Each mark is a group's <strong>representation ratio</strong>: its share of voters divided by its share of adult citizens. Left of 1 means underrepresented; right of 1, overrepresented. Click a group for details.</p>
+      <svg id="chart" role="img" aria-labelledby="chartTitle chartDesc"></svg>
+      <p class="sr-only" id="chartDesc"></p>
+      <p class="note" id="dimNote"></p>
+      <div class="tooltip" id="tip"></div>
+    </section>
+
+    <aside class="card soft detail" id="detail" aria-live="polite"></aside>
+  </div>
+
+  <details id="tableBox" style="margin-top:16px;">
+    <summary>Table of values for this comparison</summary>
+    <div class="table-wrap"><table id="table"></table></div>
+  </details>
+
+  <section class="qs" aria-labelledby="qTitle">
+    <h2 id="qTitle" style="font-size:20px;">Read the evidence</h2>
+    <p class="lede">Use <strong>Show me</strong> to set up the dashboard, then answer. Nothing you choose here is saved or sent anywhere.</p>
+    <div class="q-list" id="questions"></div>
+    <div class="discuss" style="margin-top:16px;">
+      <h3>Discuss with your group</h3>
+      <ol>
+        <li>Wolfinger and Rosenstone concluded that although voters looked different from citizens, their party and policy views were "virtually a carbon copy" of the population in 1972. Look at which groups are most over- and underrepresented today. Would you expect that conclusion to still hold? What would you need to know to test it?</li>
+        <li>Officials respond to the people who vote. Pick the most underrepresented group on this page. Which public programs or decisions affect that group most, and what might change if its turnout matched its share of citizens?</li>
+        <li>Some groups are underrepresented because voting is harder for them (moving often, new to the rules), others possibly because they feel less invited in. Which would be easier for a government to fix, and how?</li>
+      </ol>
+    </div>
+  </section>
+
+  <details>
+    <summary>About this data</summary>
+    <ul>
+      <li><strong>1972:</strong> Raymond E. Wolfinger and Steven J. Rosenstone, <em>Who Votes?</em> (Yale University Press, 1980), Table 6.1, based on the Census Bureau's 1972 Current Population Survey. Citizens over 17; voters in the general election. Puerto Rican, Chicano, and length-of-residence figures were estimated from 1974 data. Turnout in the survey is self-reported.</li>
+      <li><strong>2020–2024:</strong> Cooperative Election Study (CES), validated voters, meaning respondents matched to state voter files rather than relying on self-reports. <em>Values shown now are placeholders; final estimates will come from Prof. Zhao's replication.</em></li>
+      <li><strong>Comparing eras.</strong> Categories don't match exactly. The 1972 age groups are 37–69 and 70–78 where recent data use 37–68 and 69–78, and 1972 education is measured in years of school rather than degrees. Rows that combine eras are marked as approximate.</li>
+      <li><strong>Why a ratio?</strong> A group's difference in share (voters minus citizens) depends on how big the group is. The ratio shows how much each member's voice is inflated or deflated: 0.5 means the group casts half the votes its size would predict. The scale is logarithmic so that 0.5 and 2.0 sit equally far from 1.</li>
+      <li><strong>Privacy.</strong> This page collects no data. It sets no cookies, uses no storage, and makes no network requests after it loads.</li>
+      <li><strong>Accessibility.</strong> Every control works by keyboard. Marks use both color and shape, and the table above lists every value.</li>
+      <li><strong>Built with:</strong> Prof. Alex Zhao, PUBPOL 101 · <strong>Content review:</strong> <em>[pending]</em> · <strong>Maintained by:</strong> Evans Digital · Prototype 0.1</li>
+    </ul>
+  </details>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---- Series -------------------------------------------------------------------
+  var SERIES = [
+    { id: "2024", label: "2024", color: "var(--y2024)", shape: "circle", glyph: "●", src: "CES (placeholder)" },
+    { id: "2022", label: "2022", color: "var(--y2022)", shape: "triangle", glyph: "▲", src: "CES (placeholder)" },
+    { id: "2020", label: "2020", color: "var(--y2020)", shape: "square", glyph: "■", src: "CES (placeholder)" },
+    { id: "1972", label: "1972", color: "var(--y1972)", shape: "diamond", glyph: "◆", src: "Wolfinger & Rosenstone" }
+  ];
+  function ser(id) { for (var i = 0; i < SERIES.length; i++) if (SERIES[i].id === id) return SERIES[i]; }
+
+  // ---- Data -----------------------------------------------------------------------
+  // 1972 entries: [citizen share %, voter share %, ratio as published, 1972 category label]
+  // 2020–2024 entries: ratio only. PLACEHOLDERS read from a draft figure; replace with CES estimates.
+  var DIMS = [
+    { id: "age", label: "Age", title: "Representation by age",
+      note: "1972 age groups are 37–69 and 70–78; recent data use 37–68 and 69–78.",
+      rows: [
+        { label: "18–24", d: { "1972": [17.9, 14.2, 0.79, "18–24"], "2020": 0.59, "2022": 0.59, "2024": 0.44 } },
+        { label: "25–31", d: { "1972": [14.6, 13.7, 0.94, "25–31"], "2020": 0.69, "2022": 0.60, "2024": 0.69 } },
+        { label: "32–36", d: { "1972": [8.2, 8.3, 1.01, "32–36"], "2020": 0.84, "2022": 0.77, "2024": 0.86 } },
+        { label: "37–68", approx: true, d: { "1972": [49.7, 54.8, 1.10, "37–69"], "2020": 1.09, "2022": 1.09, "2024": 1.09 } },
+        { label: "69–78", approx: true, d: { "1972": [6.5, 6.6, 1.02, "70–78"], "2020": 1.26, "2022": 1.38, "2024": 1.27 } },
+        { label: "79 and over", d: { "1972": [3.1, 2.4, 0.77, "79 and over"], "2020": 1.32, "2022": 1.46, "2024": 1.35 } }
+      ] },
+    { id: "edu", label: "Education", title: "Representation by education",
+      note: "1972 education is years of school, matched to today's degree categories approximately: 0–11 years ≈ no diploma; 12 years ≈ high school; 1–3 years of college ≈ some college; 4 years ≈ bachelor's; 5+ years ≈ postgraduate. 1972 has no separate two-year degree category.",
+      rows: [
+        { label: "No high school diploma", approx: true, d: { "1972": [36.4, 29.0, 0.80, "0–11 years of school"], "2020": 0.67, "2022": 0.68, "2024": 0.64 } },
+        { label: "High school graduate", approx: true, d: { "1972": [37.6, 38.7, 1.03, "12 years"], "2020": 0.82, "2022": 0.78, "2024": 0.72 } },
+        { label: "Some college, no degree", approx: true, d: { "1972": [14.2, 16.8, 1.18, "1–3 years of college"], "2020": 1.03, "2022": 0.96, "2024": 0.98 } },
+        { label: "Two-year degree", d: { "2020": 1.04, "2022": 1.08, "2024": 1.07 } },
+        { label: "Four-year degree", approx: true, d: { "1972": [7.3, 9.4, 1.29, "4 years of college"], "2020": 1.20, "2022": 1.21, "2024": 1.26 } },
+        { label: "Postgraduate degree", approx: true, d: { "1972": [4.5, 6.1, 1.36, "5+ years of college"], "2020": 1.26, "2022": 1.36, "2024": 1.36 } }
+      ] },
+    { id: "edu72", label: "Education (1972 detail)", title: "Representation by years of school, 1972",
+      note: "Wolfinger and Rosenstone's full education breakdown. Recent estimates use degree categories; see the Education view.",
+      rows: [
+        { label: "0–4 years", d: { "1972": [3.6, 2.0, 0.56] } },
+        { label: "5–7 years", d: { "1972": [6.4, 4.7, 0.73] } },
+        { label: "8 years", d: { "1972": [10.0, 8.8, 0.88] } },
+        { label: "9–11 years", d: { "1972": [16.4, 13.5, 0.82] } },
+        { label: "12 years", d: { "1972": [37.6, 38.7, 1.03] } },
+        { label: "1–3 years of college", d: { "1972": [14.2, 16.8, 1.18] } },
+        { label: "4 years of college", d: { "1972": [7.3, 9.4, 1.29] } },
+        { label: "5+ years of college", d: { "1972": [4.5, 6.1, 1.36] } }
+      ] },
+    { id: "inc", label: "Income", title: "Representation by family income, 1972",
+      note: "1972 dollars. Recent income estimates will be added from Prof. Zhao's CES replication.",
+      rows: [
+        { label: "Under $2,000", d: { "1972": [6.2, 4.3, 0.69] } },
+        { label: "$2,000–$7,499", d: { "1972": [34.0, 29.0, 0.85] } },
+        { label: "$7,500–$9,999", d: { "1972": [15.0, 14.7, 0.98] } },
+        { label: "$10,000–$14,999", d: { "1972": [25.6, 28.1, 1.10] } },
+        { label: "$15,000–$24,999", d: { "1972": [14.5, 17.6, 1.21] } },
+        { label: "$25,000 and over", d: { "1972": [4.8, 6.2, 1.29] } }
+      ] },
+    { id: "groups", label: "Other groups", title: "Representation of other groups, 1972",
+      note: "Group labels follow the 1980 book. Puerto Rican and Chicano figures were estimated from 1974 data. Recent estimates for comparable groups will be added from the CES replication.",
+      rows: [
+        { label: "Women", d: { "1972": [53.2, 52.7, 0.99] } },
+        { label: "Unmarried or separated", d: { "1972": [30.2, 26.4, 0.87] } },
+        { label: "Students, age 18–24", d: { "1972": [2.7, 2.8, 1.04] } },
+        { label: "Southerners", d: { "1972": [25.6, 21.6, 0.84] } },
+        { label: "Government employees", d: { "1972": [10.2, 12.6, 1.24] } },
+        { label: "Unemployed", d: { "1972": [2.7, 2.2, 0.81] } },
+        { label: "Black Americans", d: { "1972": [9.8, 8.2, 0.84] } },
+        { label: "Puerto Ricans", d: { "1972": [0.6, 0.3, 0.50] } },
+        { label: "Chicanos", d: { "1972": [1.9, 1.3, 0.68] } }
+      ] },
+    { id: "res", label: "Time at address", title: "Representation by time at current address, 1974",
+      note: "Estimated from 1974 data. People who had moved recently had to register again at their new address.",
+      rows: [
+        { label: "Less than 4 months", d: { "1972": [7.3, 3.1, 0.42] } },
+        { label: "4–6 months", d: { "1972": [5.7, 3.0, 0.53] } },
+        { label: "7–11 months", d: { "1972": [4.5, 2.6, 0.58] } },
+        { label: "1–2 years", d: { "1972": [15.9, 12.1, 0.76] } },
+        { label: "3–5 years", d: { "1972": [16.1, 16.3, 1.01] } },
+        { label: "6–9 years", d: { "1972": [13.5, 15.8, 1.17] } },
+        { label: "10 or more years", d: { "1972": [37.1, 46.6, 1.26] } }
+      ] }
+  ];
+
+  var state = { dim: "age", years: { "2024": true, "2022": true, "2020": true, "1972": true }, sel: 0 };
+  var $ = function (id) { return document.getElementById(id); };
+  function dim() { for (var i = 0; i < DIMS.length; i++) if (DIMS[i].id === state.dim) return DIMS[i]; }
+  function ratioOf(row, y) { var v = row.d[y]; return v == null ? null : (Array.isArray(v) ? v[2] : v); }
+  function availableYears(d) { return SERIES.map(function (s) { return s.id; }).filter(function (y) { return d.rows.some(function (r) { return r.d[y] != null; }); }); }
+  function fmt(r) { return r.toFixed(2); }
+  function words(r) {
+    if (r >= 0.97 && r <= 1.03) return "about proportional";
+    var pct = Math.round(Math.abs(r - 1) * 100);
+    return r < 1 ? pct + "% underrepresented" : pct + "% overrepresented";
+  }
+
+  // ---- Controls -------------------------------------------------------------------
+  $("dims").innerHTML = DIMS.map(function (d) {
+    return '<label><input type="radio" name="dim" value="' + d.id + '"' + (d.id === state.dim ? " checked" : "") + '><span>' + d.label + '</span></label>';
+  }).join("");
+  $("dims").addEventListener("change", function (e) { state.dim = e.target.value; state.sel = 0; render(); });
+  function renderYears() {
+    var av = availableYears(dim());
+    $("years").innerHTML = SERIES.map(function (s) {
+      var ok = av.indexOf(s.id) >= 0;
+      return '<label class="' + (ok ? "" : "na") + '"><input type="checkbox" value="' + s.id + '"' + (state.years[s.id] && ok ? " checked" : "") + (ok ? "" : " disabled") + '>' +
+        '<span class="shape" aria-hidden="true" style="color:' + s.color + '">' + s.glyph + '</span>' + s.label + (ok ? "" : " (not yet)") + '</label>';
+    }).join("");
+  }
+  $("years").addEventListener("change", function (e) { state.years[e.target.value] = e.target.checked; render(); });
+
+  // ---- Chart ---------------------------------------------------------------------
+  var LO = 0.35, HI = 1.6;
+  function mark(shape, x, y, color, size) {
+    var s = size, ring = 'stroke="var(--surface)" stroke-width="1.5"';
+    if (shape === "circle") return '<circle cx="' + x + '" cy="' + y + '" r="' + s + '" fill="' + color + '" ' + ring + '/>';
+    if (shape === "square") return '<rect x="' + (x - s) + '" y="' + (y - s) + '" width="' + (2 * s) + '" height="' + (2 * s) + '" fill="' + color + '" ' + ring + '/>';
+    if (shape === "triangle") return '<polygon points="' + x + ',' + (y - s * 1.2) + ' ' + (x + s * 1.15) + ',' + (y + s * 0.85) + ' ' + (x - s * 1.15) + ',' + (y + s * 0.85) + '" fill="' + color + '" ' + ring + '/>';
+    return '<polygon points="' + x + ',' + (y - s * 1.25) + ' ' + (x + s * 1.1) + ',' + y + ' ' + x + ',' + (y + s * 1.25) + ' ' + (x - s * 1.1) + ',' + y + '" fill="' + color + '" ' + ring + '/>';
+  }
+  function renderChart() {
+    var d = dim(), narrow = window.innerWidth <= 560, FS = narrow ? 15 : 13;
+    var years = availableYears(d).filter(function (y) { return state.years[y]; });
+    // narrow screens: labels sit above each row so the plot can use the full width
+    var W = narrow ? 400 : 640, LW = narrow ? 12 : 190, RW = narrow ? 12 : 18, MT = 34, MB = 44, LH = narrow ? 20 : 0;
+    var RH = Math.max(narrow ? 40 : 40, years.length * (narrow ? 11 : 12) + 14) + LH;
+    var H = MT + d.rows.length * RH + MB, PW = W - LW - RW;
+    function x(r) { return LW + (Math.log(r) - Math.log(LO)) / (Math.log(HI) - Math.log(LO)) * PW; }
+    var s = "";
+    // zone shading + labels
+    s += '<rect x="' + LW + '" y="' + MT + '" width="' + (x(1) - LW) + '" height="' + (H - MT - MB) + '" fill="var(--surface-2)"/>';
+    s += '<text x="' + (x(1) - 8) + '" y="' + (MT - 12) + '" font-size="' + (FS - 1) + '" font-weight="700" text-anchor="end" fill="var(--ink-2)">' + (narrow ? "← Under" : "← Underrepresented") + '</text>';
+    s += '<text x="' + (x(1) + 8) + '" y="' + (MT - 12) + '" font-size="' + (FS - 1) + '" font-weight="700" fill="var(--ink-2)">' + (narrow ? "Over →" : "Overrepresented →") + '</text>';
+    [0.4, 0.5, 0.67, 0.8, 1, 1.25, 1.5].forEach(function (t) {
+      s += '<line x1="' + x(t) + '" x2="' + x(t) + '" y1="' + MT + '" y2="' + (H - MB) + '" stroke="' + (t === 1 ? "var(--ink)" : "var(--grid)") + '" stroke-width="' + (t === 1 ? 1.5 : 1) + '"' + (t === 1 ? ' stroke-dasharray="5 4"' : '') + '/>';
+      s += '<text x="' + x(t) + '" y="' + (H - MB + 18) + '" font-size="' + (FS - 1) + '" text-anchor="middle" fill="var(--ink-3)">' + (t === 1 ? "1.0" : t) + '</text>';
+    });
+    s += '<text x="' + (LW + PW / 2) + '" y="' + (H - 6) + '" font-size="' + (FS - 1) + '" text-anchor="middle" fill="var(--ink-2)">' + (narrow ? "Voter share ÷ citizen share" : "Representation ratio (voter share ÷ adult-citizen share)") + '</text>';
+    d.rows.forEach(function (row, i) {
+      var y0 = MT + i * RH, cy = y0 + LH + (RH - LH) / 2, sel = i === state.sel;
+      if (sel) s += '<rect x="0" y="' + (y0 + 1) + '" width="' + W + '" height="' + (RH - 2) + '" fill="var(--accent-soft)" rx="4"/>';
+      if (i > 0) s += '<line x1="0" x2="' + W + '" y1="' + y0 + '" y2="' + y0 + '" stroke="var(--grid)"/>';
+      s += (narrow ? '<text x="' + LW + '" y="' + (y0 + 16) + '" font-size="' + FS + '" fill="var(--ink)" style="paint-order:stroke;stroke:var(--surface);stroke-width:3px"' : '<text x="' + (LW - 10) + '" y="' + (cy + FS / 3) + '" font-size="' + FS + '" text-anchor="end" fill="var(--ink)"') + (sel ? ' font-weight="700"' : '') + '>' + row.label + (row.approx && state.years["1972"] ? "*" : "") + '</text>';
+      var n = years.length, step = narrow ? 11 : 12;
+      years.forEach(function (yid, k) {
+        var r = ratioOf(row, yid); if (r == null) return;
+        var sr = ser(yid), my = cy + (k - (n - 1) / 2) * step;
+        s += mark(sr.shape, x(Math.max(LO, Math.min(HI, r))), my, sr.color, narrow ? 6.5 : 5.5);
+      });
+      s += '<rect class="row-hit" data-i="' + i + '" x="0" y="' + y0 + '" width="' + W + '" height="' + RH + '"/>';
+    });
+    $("chart").setAttribute("viewBox", "0 0 " + W + " " + H);
+    $("chart").innerHTML = s;
+    $("chartTitle").textContent = d.title;
+    var noteBits = [d.note];
+    if (d.rows.some(function (r) { return r.approx; }) && state.years["1972"]) noteBits.push("* Category definitions differ between 1972 and recent data.");
+    if (years.some(function (y) { return y !== "1972"; })) noteBits.push("2020–2024 values are placeholders.");
+    $("dimNote").textContent = noteBits.join(" ");
+    var lo = null, hi = null;
+    d.rows.forEach(function (row) { years.forEach(function (y) { var r = ratioOf(row, y); if (r == null) return; if (!lo || r < lo.r) lo = { r: r, row: row, y: y }; if (!hi || r > hi.r) hi = { r: r, row: row, y: y }; }); });
+    $("chartDesc").textContent = d.title + ". " + (lo ? "Lowest: " + lo.row.label + " in " + lo.y + " at " + fmt(lo.r) + ". Highest: " + hi.row.label + " in " + hi.y + " at " + fmt(hi.r) + "." : "No years selected.") + " Full values are in the table below the chart.";
+  }
+
+  // ---- Detail panel ------------------------------------------------------------------
+  function renderDetail() {
+    var d = dim(), row = d.rows[state.sel], h = '<h2>' + row.label + '</h2>';
+    var v72 = row.d["1972"];
+    if (Array.isArray(v72)) {
+      h += '<p class="sub">How the 1972 ratio is calculated' + (v72[3] && v72[3] !== row.label ? ' (1972 category: ' + v72[3] + ')' : '') + ':</p>' +
+        '<div class="calc"><div><div class="v">' + v72[1].toFixed(1) + '%</div><div class="k">of voters</div></div><div class="op">÷</div>' +
+        '<div><div class="v">' + v72[0].toFixed(1) + '%</div><div class="k">of adult citizens</div></div><div class="op">=</div>' +
+        '<div><div class="v">' + fmt(v72[2]) + '</div><div class="k">ratio</div></div></div>' +
+        '<p class="sub">In 1972 this group was <strong>' + words(v72[2]) + '</strong> at the polls' +
+        (v72[2] < 0.97 ? ': for every 100 votes its size would predict, it cast about ' + Math.round(v72[2] * 100) + '.' : v72[2] > 1.03 ? ': for every 100 votes its size would predict, it cast about ' + Math.round(v72[2] * 100) + '.' : '.') + '</p>';
+    }
+    var list = SERIES.filter(function (s) { return row.d[s.id] != null; });
+    h += '<ul class="yr-list">' + list.map(function (s) {
+      var r = ratioOf(row, s.id);
+      return '<li><span><span class="shape" aria-hidden="true" style="color:' + s.color + '">' + s.glyph + '</span>' + s.label + ' <small style="color:var(--ink-3)">' + s.src + '</small></span><span><strong>' + fmt(r) + '</strong> · ' + words(r) + '</span></li>';
+    }).join("") + '</ul>';
+    if (row.d["1972"] != null && row.d["2024"] != null) {
+      var a = ratioOf(row, "1972"), b = ratioOf(row, "2024"), diff = b - a;
+      h += '<p class="sub" style="margin-top:10px;">Since 1972: ' + (Math.abs(diff) < 0.04 ? 'little change.' : (diff < 0 ? 'this group\'s voice at the polls has <strong>shrunk</strong> relative to its size.' : 'this group\'s voice at the polls has <strong>grown</strong> relative to its size.')) + ' <em>(Preliminary)</em></p>';
+    }
+    if (!row.d["2024"] && !list.some(function (s) { return s.id !== "1972"; })) h += '<p class="sub" style="margin-top:10px;">Recent estimates for this group are not available yet.</p>';
+    $("detail").innerHTML = h;
+  }
+
+  // ---- Table -------------------------------------------------------------------------
+  function renderTable() {
+    var d = dim(), years = availableYears(d);
+    var has72 = years.indexOf("1972") >= 0;
+    var head = '<caption>' + d.title + '</caption><thead><tr><th scope="col">Group</th>' +
+      (has72 ? '<th scope="col">1972 share of citizens</th><th scope="col">1972 share of voters</th>' : '') +
+      years.map(function (y) { return '<th scope="col">' + y + ' ratio</th>'; }).join("") + '</tr></thead>';
+    var body = '<tbody>' + d.rows.map(function (row) {
+      var v72 = row.d["1972"];
+      return '<tr><th scope="row">' + row.label + (Array.isArray(v72) && v72[3] && v72[3] !== row.label ? ' <small>(1972: ' + v72[3] + ')</small>' : '') + '</th>' +
+        (has72 ? '<td>' + (Array.isArray(v72) ? v72[0].toFixed(1) + '%' : '–') + '</td><td>' + (Array.isArray(v72) ? v72[1].toFixed(1) + '%' : '–') + '</td>' : '') +
+        years.map(function (y) { var r = ratioOf(row, y); return '<td>' + (r == null ? '–' : fmt(r)) + '</td>'; }).join("") + '</tr>';
+    }).join("") + '</tbody>';
+    $("table").innerHTML = head + body;
+  }
+
+  function render() { renderYears(); renderChart(); renderDetail(); renderTable(); }
+
+  // ---- Interaction -----------------------------------------------------------------------
+  var tip = $("tip");
+  $("chart").addEventListener("click", function (e) { var i = e.target.getAttribute && e.target.getAttribute("data-i"); if (i != null) { state.sel = +i; renderChart(); renderDetail(); } });
+  $("chart").addEventListener("mousemove", function (e) {
+    var i = e.target.getAttribute && e.target.getAttribute("data-i"); if (i == null) { tip.classList.remove("show"); return; }
+    var row = dim().rows[+i], years = availableYears(dim()).filter(function (y) { return state.years[y]; });
+    tip.innerHTML = "<strong>" + row.label + "</strong>" + years.map(function (y) { var r = ratioOf(row, y); return r == null ? "" : "<br>" + y + ": " + fmt(r) + " (" + words(r) + ")"; }).join("");
+    var b = $("chart").parentNode.getBoundingClientRect();
+    tip.style.left = Math.min(e.clientX - b.left + 12, b.width - 270) + "px"; tip.style.top = (e.clientY - b.top + 12) + "px"; tip.classList.add("show");
+  });
+  $("chart").addEventListener("mouseleave", function () { tip.classList.remove("show"); });
+  window.addEventListener("resize", function () { clearTimeout(render._r); render._r = setTimeout(renderChart, 150); });
+
+  // ---- Questions ------------------------------------------------------------------------------
+  var QUESTIONS = [
+    { title: "1. The most underrepresented group in 1972", set: { dim: "res" },
+      prompt: "Wolfinger and Rosenstone found several groups cast only half to two-thirds of the votes their size would predict. Which group had the lowest representation ratio in 1972?",
+      options: ["Puerto Ricans", "People who had moved within the last 4 months", "People with 0–4 years of school", "Voters aged 18–24"], answer: 1,
+      right: "People who had moved in the past four months had a ratio of 0.42, the lowest in the table. Moving meant registering again, often by a deadline weeks before the election. That points to a barrier in the rules, not a lack of interest, and it's one reason later reforms targeted registration.",
+      wrong: "Check the “Time at address” view. Recent movers had a ratio of 0.42, lower than Puerto Ricans (0.50) or people with 0–4 years of school (0.56)." },
+    { title: "2. Computing a ratio", set: { dim: "edu72" },
+      prompt: "In 1972, people with four years of college were 7.3% of adult citizens and 9.4% of voters. What was their representation ratio?",
+      options: ["0.78", "1.29", "2.1", "16.7"], answer: 1,
+      right: "9.4 ÷ 7.3 ≈ 1.29. College graduates cast about 129 votes for every 100 their numbers would predict. The difference in shares (2.1 points) looks small only because the group was small.",
+      wrong: "Divide the share of voters by the share of citizens: 9.4 ÷ 7.3. A difference of 2.1 percentage points sounds small, but relative to the group's size it is large." },
+    { title: "3. Education then and now (preliminary)", set: { dim: "edu" },
+      prompt: "Compare 1972 and 2024 for people without a high school diploma. What happened to their voice at the polls?",
+      options: ["It grew; they are now overrepresented", "It stayed about the same", "It shrank: their ratio fell from about 0.80 to about 0.64", "There is no way to compare"], answer: 2,
+      right: "In these preliminary figures the ratio falls from 0.80 to about 0.64, so the education gap at the polls has widened even as the group itself has shrunk. Comparing eras still needs care: “no diploma” in 2024 describes a much smaller and different group than “0–11 years of school” did in 1972.",
+      wrong: "Set up the Education view and compare the gray diamond (1972) with the purple circle (2024) in the first row. The categories are only approximately comparable, which is worth discussing." },
+    { title: "4. Older voters (preliminary)", set: { dim: "age" },
+      prompt: "In 1972, citizens aged 79 and over were underrepresented (0.77). What does the recent data show for the oldest groups?",
+      options: ["Still underrepresented", "Now overrepresented, at roughly 1.3", "Exactly proportional", "Not measured"], answer: 1,
+      right: "Recent figures put people 69 and older well above 1, while 18–24 year olds sit near 0.5. Wolfinger and Rosenstone found turnout rising with age into the seventies; today the oldest Americans are among the most overrepresented groups at the polls. Why might that be, and what might it mean for policies like Social Security or student debt?",
+      wrong: "Look at the bottom two rows of the Age view. The recent marks sit right of 1, unlike the gray 1972 diamond for 79 and over." }
+  ];
+  var qWrap = $("questions");
+  QUESTIONS.forEach(function (q, qi) {
+    var fs = document.createElement("fieldset");
+    var h = '<legend>' + q.title + '</legend><p class="q-prompt" id="qp' + qi + '">' + q.prompt + '</p><p><button class="btn" data-set="' + qi + '">Show me</button></p>';
+    q.options.forEach(function (o, oi) { h += '<label class="opt" for="q' + qi + 'o' + oi + '"><input type="radio" name="q' + qi + '" id="q' + qi + 'o' + oi + '" value="' + oi + '" aria-describedby="qp' + qi + '"><span>' + o + '</span></label>'; });
+    h += '<div class="row"><button class="btn primary" data-check="' + qi + '">Check answer</button></div><div class="feedback" id="fb' + qi + '" role="status" aria-live="polite"></div>';
+    fs.innerHTML = h; qWrap.appendChild(fs);
+  });
+  qWrap.addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    if (b.hasAttribute("data-set")) {
+      var set = QUESTIONS[+b.getAttribute("data-set")].set; state.dim = set.dim; state.sel = 0;
+      document.querySelector('input[name=dim][value=' + set.dim + ']').checked = true; render();
+      var c = document.querySelector(".controls"); if (c.getBoundingClientRect().top < 0) c.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else if (b.hasAttribute("data-check")) {
+      var qi = +b.getAttribute("data-check"), q = QUESTIONS[qi], sel = document.querySelector('input[name=q' + qi + ']:checked'), fb = $("fb" + qi);
+      if (!sel) { fb.className = "feedback show wrong"; fb.innerHTML = '<span class="tag">Pick an answer first.</span> Look at the data, then choose.'; return; }
+      var ok = +sel.value === q.answer;
+      fb.className = "feedback show " + (ok ? "right" : "wrong");
+      fb.innerHTML = '<span class="tag">' + (ok ? "Correct." : "Not quite.") + '</span> ' + (ok ? q.right : q.wrong);
+    }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
