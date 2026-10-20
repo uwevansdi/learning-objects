@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Who Gets a Bus Stop?</title>
-<meta name="description" content="Group exercise on geographic inequality in public service delivery: place bus stops north of Seattle's Ship Canal, see who lives within a 10-minute walk, and revise after a shock. PUBPOL 101, Evans School.">
+<title>Design a Bus Line</title>
+<meta name="description" content="Group exercise on geographic inequality in public service delivery: design a bus line north of Seattle's Ship Canal under real route constraints, see who lives within a 10-minute walk of its stations, and revise after a shock. PUBPOL 101, Evans School.">
 <style>
   :root {
     color-scheme: light;
@@ -18,8 +18,10 @@
     --grid: #ebeae6;
     --street: #c4c1b8;
     --arterial: #9d9a91;
-    --cover: #e93cac;          /* Accent Pink: walking coverage */
-    --stop: #4b2e83;           /* Spirit Purple: selected stops */
+    --route: #4b2e83;          /* Spirit Purple: the bus line */
+    --route-edge: #32006e;     /* Husky Purple: outlines that give accents contrast */
+    --cover: #2ad2c9;          /* Accent Teal: walking coverage (with a purple edge) */
+    --gold: #ffc700;           /* Spirit Gold: end-of-line markers (always outlined) */
     --accent: #4b2e83;
     --accent-soft: #efeaf7;
     --good: #1d6b3a; --good-soft: #e7f3eb;
@@ -35,23 +37,25 @@
   h2 { font-size: 18px; margin: 0 0 6px; }
   h3 { font-size: 15px; margin: 0 0 6px; }
   p { margin: 0 0 10px; }
-  .lede { color: var(--ink-2); max-width: 78ch; }
+  .lede { color: var(--ink-2); max-width: 80ch; }
   a { color: var(--accent); }
   :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
   .proto { border: 2px dashed var(--warn); background: var(--warn-soft); border-radius: 8px; padding: 10px 14px; margin: 12px 0; font-size: 14px; }
   .proto strong { color: var(--warn); }
+  .rules-intro { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; margin: 12px 0 4px; }
+  .rules-intro div { background: var(--accent-soft); border-radius: 8px; padding: 8px 12px; font-size: 14px; }
+  .rules-intro strong { display: block; font-size: 15px; color: var(--route); }
 
   .steps { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 12px; padding: 0; list-style: none; }
   .steps li { font-size: 14px; font-weight: 600; border-radius: 999px; padding: 5px 13px; border: 1px solid var(--border); color: var(--ink-3); background: var(--surface); }
   .steps li.on { background: var(--accent); border-color: var(--accent); color: #fff; }
   .steps li.done { color: var(--accent); border-color: var(--accent); }
 
-  .grid { display: grid; gap: 18px; grid-template-columns: minmax(0, 1.9fr) minmax(300px, 1fr); align-items: start; }
+  .grid { display: grid; gap: 18px; grid-template-columns: minmax(0, 1.9fr) minmax(310px, 1fr); align-items: start; }
   @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
   .card { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; position: relative; background: var(--surface); }
   .card.soft { background: var(--surface-2); }
 
-  /* map */
   .mapcard { padding: 0; overflow: hidden; }
   .maptools { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
   .layers { display: flex; flex-wrap: wrap; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface); }
@@ -68,21 +72,31 @@
   #map text { font-family: inherit; pointer-events: none; }
   .stop { cursor: pointer; }
   .stop:focus { outline: none; }
-  .stop:focus-visible .ring { stroke: var(--focus); stroke-width: 3; }
+  .stop:focus-visible .ring { stroke: var(--focus); stroke-width: 4; }
   .maplegend { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; padding: 8px 12px; font-size: 13px; color: var(--ink-2); border-top: 1px solid var(--border); }
-  .maplegend .sw { display: inline-block; width: 16px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
-  .maplegend .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: -1px; margin-right: 6px; }
+  .lg { display: inline-block; vertical-align: middle; margin-right: 6px; }
+  .lg.cover { width: 18px; height: 7px; border-radius: 4px; background: var(--cover); box-shadow: inset 0 0 0 1px var(--route-edge); }
+  .lg.route { width: 18px; height: 5px; border-radius: 3px; background: var(--route); }
+  .lg.st { width: 13px; height: 13px; border-radius: 50%; background: var(--route); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--route); }
+  .lg.end { width: 13px; height: 13px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 1.5px var(--route-edge); }
+  .lg.cand { width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2px solid var(--route); }
   .ramp { display: inline-flex; vertical-align: middle; margin: 0 6px; }
   .ramp i { display: block; width: 18px; height: 10px; }
-  .tooltip { position: absolute; pointer-events: none; z-index: 5; background: var(--ink); color: #fff; font-size: 13px; line-height: 1.4; padding: 6px 9px; border-radius: 6px; opacity: 0; transition: opacity .12s; max-width: 260px; }
+  .tooltip { position: absolute; pointer-events: none; z-index: 5; background: var(--ink); color: #fff; font-size: 13px; line-height: 1.4; padding: 6px 9px; border-radius: 6px; opacity: 0; transition: opacity .12s; max-width: 270px; }
   .tooltip.show { opacity: 1; }
 
-  /* panel */
-  .budget { display: flex; gap: 5px; margin: 6px 0 4px; flex-wrap: wrap; }
-  .budget i { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--stop); display: inline-block; }
-  .budget i.used { background: var(--stop); }
-  .budget i.over { background: var(--warn); border-color: var(--warn); }
   .hint { font-size: 13px; color: var(--ink-3); margin: 0; }
+  .checks { list-style: none; padding: 0; margin: 8px 0 0; font-size: 14px; }
+  .checks li { display: flex; gap: 8px; align-items: baseline; padding: 3px 0; }
+  .checks .ic { font-weight: 800; width: 1.2em; flex: none; text-align: center; }
+  .checks li.ok .ic { color: var(--good); }
+  .checks li.no .ic { color: var(--warn); }
+  .checks li.no { color: var(--ink); }
+  .checks small { color: var(--ink-3); }
+  .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; }
+  .stat .k { font-size: 12px; color: var(--ink-3); }
+  .stat .v { font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
   .big { font-size: 28px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
   .metric { margin-top: 12px; }
   .metric .lbl { font-size: 13px; color: var(--ink-2); display: flex; justify-content: space-between; gap: 8px; }
@@ -91,25 +105,36 @@
   .gapline { font-size: 13px; margin-top: 4px; }
   button.btn { font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 8px; padding: 8px 14px; border: 1px solid var(--accent); background: var(--surface); color: var(--accent); }
   button.btn.primary { background: var(--accent); color: #fff; }
+  button.btn.small { font-size: 13px; padding: 4px 9px; }
   button.btn:disabled { opacity: .45; cursor: not-allowed; }
   button.btn:hover:not(:disabled) { filter: brightness(0.95); }
   .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
+  .seg2 { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; font-size: 13px; }
+  .seg2 label { position: relative; }
+  .seg2 input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .seg2 span { display: block; padding: 4px 10px; }
+  .seg2 input:checked + span { background: var(--accent); color: #fff; font-weight: 600; }
+  .seg2 input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: -3px; }
   .shock { border-left: 4px solid var(--warn); background: var(--warn-soft); border-radius: 8px; padding: 10px 12px; margin-top: 10px; font-size: 14px; }
   .shock strong { color: var(--warn); }
   select { font: inherit; font-size: 14px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
-  .status { font-size: 14px; color: var(--good); font-weight: 600; }
+  .status { font-size: 14px; color: var(--good); font-weight: 600; word-break: break-all; }
   .cmp { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; margin-top: 8px; }
   .cmp th, .cmp td { padding: 6px 6px; border-bottom: 1px solid var(--grid); text-align: right; }
   .cmp th:first-child, .cmp td:first-child { text-align: left; }
   .cmp thead th { font-size: 12px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .03em; }
 
-  /* stop list */
-  .stoplist { max-height: 360px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px; }
-  .stoplist label { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; padding: 6px 10px; font-size: 14px; border-bottom: 1px solid var(--grid); cursor: pointer; }
-  .stoplist label:last-child { border-bottom: 0; }
-  .stoplist label.na { color: var(--ink-3); text-decoration: line-through; cursor: not-allowed; }
-  .stoplist input { width: 17px; height: 17px; accent-color: var(--accent); }
-  .stoplist small { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .lists { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 760px) { .lists { grid-template-columns: 1fr; } }
+  .routelist { list-style: none; margin: 8px 0 0; padding: 0; counter-reset: st; }
+  .routelist li { display: grid; grid-template-columns: 1.7em 1fr auto; gap: 8px; align-items: center; padding: 6px 8px; border-bottom: 1px solid var(--grid); font-size: 14px; }
+  .routelist li::before { counter-increment: st; content: counter(st); width: 1.6em; height: 1.6em; border-radius: 50%; background: var(--route); color: #fff; font-size: 12px; font-weight: 700; display: grid; place-items: center; }
+  .routelist .gap { grid-column: 2 / 4; font-size: 12px; color: var(--ink-3); margin-top: -4px; }
+  .routelist .gap.bad { color: var(--warn); font-weight: 600; }
+  .routelist .ctl { display: flex; gap: 4px; }
+  .cands { max-height: 340px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px; }
+  .cands div { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; padding: 6px 10px; border-bottom: 1px solid var(--grid); font-size: 14px; }
+  .cands small { color: var(--ink-3); font-variant-numeric: tabular-nums; }
 
   .discuss { border-left: 4px solid var(--accent); background: var(--accent-soft); border-radius: 8px; padding: 12px 14px; margin-top: 18px; }
   .discuss ol { margin: 6px 0 0; padding-left: 20px; }
@@ -120,7 +145,6 @@
   details li { margin-bottom: 4px; }
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
   [hidden] { display: none !important; }
-
   .watermark { position: fixed; inset: 0; z-index: 50; pointer-events: none; display: flex; align-items: center; justify-content: center; overflow: hidden; }
   .watermark span { font-family: var(--font-head, sans-serif); font-weight: 800; font-size: clamp(90px, 18vw, 240px); letter-spacing: .08em; color: rgba(138, 75, 0, 0.08); transform: rotate(-28deg); white-space: nowrap; user-select: none; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -132,17 +156,23 @@
 <header class="brandbar"><div class="brandbar-inner"><img class="sig-h" src="../../assets/evans-signature-horizontal.png" alt="Evans School of Public Policy and Governance, University of Washington" width="1156" height="200"><span class="unit">PUBPOL 101 · Week 6</span></div></header>
 <main class="wrap">
   <p class="eyebrow">Public Administration and Democracy · Public service delivery</p>
-  <h1>Who gets a bus stop? Planning transit access north of the Ship Canal</h1>
+  <h1>Design a bus line: who does your route serve?</h1>
   <p class="lede">
-    Your team is planning a new frequent bus service between Ballard and the University District. You can fund <strong>8 stops</strong> from the candidate locations on the map. Each stop serves the streets within about a 10-minute walk. Decide where to put them, then check who your plan reaches, and who it leaves out.
+    Your team is designing a new frequent bus line north of the Ship Canal. A bus line isn't a scatter of stops: stations go in order, the bus has to drive the streets between them, and riders won't use a route that wanders. Pick your stations, check who lives within a 10-minute walk of them, and watch who your line leaves out.
   </p>
-  <div class="proto" role="note"><strong>Draft for discussion with Prof. Zhao.</strong> Streets and walking areas are computed from OpenStreetMap; population comes from census tracts and is spread evenly along each tract's residential streets. Candidate stops, the budget, and the shocks are placeholders. Prof. Zhao's block-level data and pedestrian-network analysis will replace these approximations.</div>
+  <div class="rules-intro" aria-label="Route rules">
+    <div><strong>4–6 stations</strong>placed in the order the bus visits them</div>
+    <div><strong>400 m – 2 km apart</strong>measured along the bus's path</div>
+    <div><strong>9 km or shorter</strong>end to end</div>
+    <div><strong>No wandering</strong>route at most 1.5× the straight-line distance between its ends</div>
+  </div>
+  <div class="proto" role="note"><strong>Draft for discussion with Prof. Zhao.</strong> Streets, walking areas, and bus paths are computed from OpenStreetMap; population comes from census tracts spread along residential streets. Candidate stations, the route rules, and the shocks are placeholders to confirm.</div>
 
-  <ol class="steps" id="steps"><li>1 · Plan</li><li>2 · Shock</li><li>3 · Revise</li><li>4 · Compare</li></ol>
+  <ol class="steps" id="steps"><li>1 · Design</li><li>2 · Shock</li><li>3 · Revise</li><li>4 · Compare</li></ol>
 
   <div class="grid">
     <section class="card mapcard" aria-labelledby="mapTitle">
-      <h2 id="mapTitle" class="sr-only">Map of candidate stops and walking coverage</h2>
+      <h2 id="mapTitle" class="sr-only">Map of candidate stations, your route, and walking coverage</h2>
       <div class="maptools">
         <div class="layers" role="radiogroup" aria-label="Census layer">
           <label><input type="radio" name="layer" value="none" checked><span>No layer</span></label>
@@ -156,39 +186,49 @@
           <button type="button" id="zreset" aria-label="Reset view" style="width:auto;padding:0 8px;font-size:13px;">Reset</button>
         </div>
       </div>
-      <svg id="map" role="group" aria-label="Map. Candidate stops are buttons; use Tab to move between them and Enter to add or remove a stop."></svg>
+      <svg id="map" role="group" aria-label="Map. Candidate stations are buttons; Tab moves between them and Enter adds or removes a station."></svg>
       <div class="maplegend" id="legend"></div>
       <div class="tooltip" id="tip"></div>
     </section>
-
     <aside id="panel" aria-live="polite"></aside>
   </div>
 
   <section class="card" style="margin-top:18px;" aria-labelledby="listTitle">
-    <h2 id="listTitle">Candidate stops</h2>
-    <p class="hint">The same choices as the map, as a list. Residents is how many people live within a 10-minute walk of that stop alone; neighboring stops overlap.</p>
-    <div class="stoplist" id="stoplist"></div>
+    <h2 id="listTitle">Your route and the candidates</h2>
+    <div class="lists">
+      <div>
+        <h3>Your route, in order</h3>
+        <ol class="routelist" id="routelist"></ol>
+        <p class="hint" id="routeEmpty">No stations yet. Add one from the map or the list.</p>
+      </div>
+      <div>
+        <h3>Candidate stations</h3>
+        <p class="hint">Residents is how many people live within a 10-minute walk of that station alone.</p>
+        <div class="cands" id="cands"></div>
+      </div>
+    </div>
   </section>
 
   <div class="discuss">
     <h3>Discuss with your group</h3>
     <ol>
-      <li>Did your team aim to reach the most people, or the people who most depend on transit? How did that choice show up on the map?</li>
-      <li>Which neighborhoods ended up farthest from any stop? Who lives there, and who might speak up for them in a real planning process?</li>
-      <li>When the shock hit, what did you give up first, and why? Did your revised plan become more or less equitable?</li>
+      <li>Your route had to be direct and connected. Which neighborhoods did that rule out, even though you wanted to reach them? Is that a fair tradeoff for riders?</li>
+      <li>Did your team aim for the most residents, or for the residents who most depend on transit? How did that choice change your route?</li>
+      <li>When the shock hit, what did you cut first, and who lost access? Did your revised line become more or less equitable?</li>
     </ol>
   </div>
 
   <details>
     <summary>About this draft and its data</summary>
     <ul>
-      <li><strong>Streets:</strong> © OpenStreetMap contributors, available under the Open Database License. Includes streets, stairways, and trails such as the Burke-Gilman; freeways are excluded. Streets south of the Ship Canal are left out.</li>
-      <li><strong>Walking areas:</strong> all streets within 800 meters along the network (about 10 minutes at a typical walking pace) of each candidate stop, precomputed. Hills are not yet accounted for.</li>
-      <li><strong>Population:</strong> City of Seattle, Racial and Social Equity Composite Index (2026 release, American Community Survey 5-year estimates), by census tract: total population, people of color, and people below 200% of the poverty level ("lower income" here). Each tract's residents are spread evenly along its residential streets; trails and stairways carry no residents. Tracts are included when their center lies in the study area.</li>
-      <li><strong>Placeholders to confirm with Prof. Zhao:</strong> candidate stop locations, the 8-stop budget, the two shocks, walking distance and speed, and the move to block-level population.</li>
-      <li><strong>Privacy.</strong> This page collects no data. A group's plan is saved only in the link it copies.</li>
-      <li><strong>Accessibility.</strong> Stops can be chosen from the map or the list above, by keyboard or mouse. The scorecard states results in text.</li>
-      <li><strong>Built with:</strong> Prof. Alex Zhao, PUBPOL 101 · <strong>Maintained by:</strong> Evans Digital · Draft 0.1</li>
+      <li><strong>Streets:</strong> © OpenStreetMap contributors, Open Database License. Walking uses streets, stairways, and trails; the bus uses streets only and prefers arterials. Freeways and areas south of the Ship Canal are excluded.</li>
+      <li><strong>Walking areas:</strong> streets within 800 meters along the network (about 10 minutes on foot) of each station. Hills are not yet accounted for.</li>
+      <li><strong>Bus paths:</strong> the shortest street path between two stations, with local streets counted as 1.6 times longer so the bus favors arterials. Travel time assumes an average of 18 km/h including stops.</li>
+      <li><strong>Population:</strong> City of Seattle Racial and Social Equity Composite Index (2026 release, ACS 5-year estimates), by census tract: total population, people of color, and people below 200% of the poverty level ("lower income"). Residents are spread evenly along each tract's residential streets.</li>
+      <li><strong>To confirm with Prof. Zhao:</strong> candidate stations, the route rules, travel speed, the shocks, and block-level population.</li>
+      <li><strong>Privacy.</strong> This page collects no data. A group's plans are saved only in the link it copies.</li>
+      <li><strong>Accessibility.</strong> Stations can be added, removed, and reordered from the lists above by keyboard. The rule checks and scorecard state results in text.</li>
+      <li><strong>Built with:</strong> Prof. Alex Zhao, PUBPOL 101 · <strong>Maintained by:</strong> Evans Digital · Draft 0.2</li>
     </ul>
   </details>
 </main>
@@ -199,30 +239,34 @@
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
   var NS = "http://www.w3.org/2000/svg";
-  var M = DATA.meta, E = DATA.edges, T = DATA.tracts, S = DATA.stops;
-  var NE = E.len.length;
+  var M = DATA.meta, E = DATA.edges, T = DATA.tracts, S = DATA.stops, NE = E.len.length;
 
-  // ---- Shocks (placeholders) ----------------------------------------------------------------
+  // ---- Rules and shocks (placeholders) -------------------------------------------------------
+  var RULES = { maxSt: 6, minSt: 4, minGap: 400, maxGap: 2000, maxLen: 9000, maxDir: 1.5, speedKmh: 18 };
   var SHOCKS = {
-    budget: { title: "Budget cut", text: "Sales tax revenue came in low. The service can now fund only 6 stops. Remove at least 2.", budget: 6, closed: [] },
-    market: { title: "Construction closure", text: "A water main replacement will close NW Market St to buses for two years. Market St stops are unavailable; choose replacements.", budget: 8,
-      closed: S.map(function (s, i) { return /^NW Market St/.test(s.name) ? i : -1; }).filter(function (i) { return i >= 0; }) }
+    stations: { title: "Station cost overrun", text: "Construction bids came in high. The line can now have only 5 stations.", maxSt: 5 },
+    length: { title: "Operating budget cut", text: "Service hours were cut. The route can be no longer than 6.5 km end to end.", maxLen: 6500 }
   };
-  var BUDGET = 8;
+  function rules() { var r = Object.assign({}, RULES); if (st.step >= 3) Object.assign(r, SHOCKS[st.shock]); return r; }
 
-  // ---- Tract stats -----------------------------------------------------------------------------
+  // bus paths between station pairs
+  var PATH = {};
+  DATA.routes.forEach(function (r) { PATH[r[0] + "-" + r[1]] = { len: r[2], edges: r[3] }; PATH[r[1] + "-" + r[0]] = { len: r[2], edges: r[3] }; });
+  function pathBetween(a, b) { return PATH[a + "-" + b] || null; }
+
+  // ---- Tract stats --------------------------------------------------------------------------------
   function ringArea(r) { var a = 0; for (var i = 0, j = r.length - 2; i < r.length; j = i, i += 2) a += (r[j] * r[i + 1] - r[i] * r[j + 1]); return Math.abs(a) / 2; }
   var TOT = { pop: 0, poc: 0, low: 0 };
   T.forEach(function (t) {
     t.area = t.rings.reduce(function (a, r) { return a + ringArea(r); }, 0);
-    t.density = t.pop / (t.area / 4046.86);               // residents per acre
+    t.density = t.pop / (t.area / 4046.86);
     t.pocShare = t.pop ? t.poc / t.pop : 0;
     t.lowShare = t.povBase ? t.low / t.povBase : 0;
-    t.perM = t.streetLen ? t.pop / t.streetLen : 0;        // residents per meter of residential street
+    t.perM = t.streetLen ? t.pop / t.streetLen : 0;
     TOT.pop += t.pop; TOT.poc += t.poc; TOT.low += t.lowShare * t.pop;
   });
 
-  // ---- Coverage math ----------------------------------------------------------------------------
+  // ---- Coverage and route math ---------------------------------------------------------------------
   function coverage(sel) {
     var a = new Float32Array(NE), b = new Float32Array(NE);
     sel.forEach(function (si) { S[si].cover.forEach(function (c) { if (c[1] > a[c[0]]) a[c[0]] = c[1]; if (c[2] > b[c[0]]) b[c[0]] = c[2]; }); });
@@ -230,72 +274,77 @@
     for (var k = 0; k < NE; k++) {
       if (!a[k] && !b[k]) continue;
       var t = E.t[k]; if (t < 0 || !E.k[k]) continue;
-      var covered = Math.min(E.len[k], a[k] + b[k]), people = covered * T[t].perM;
+      var people = Math.min(E.len[k], a[k] + b[k]) * T[t].perM;
       pop += people; poc += people * T[t].pocShare; low += people * T[t].lowShare;
     }
-    return { a: a, b: b, pop: pop, poc: poc, low: low,
-      pocRate: poc / TOT.poc, whiteRate: (pop - poc) / (TOT.pop - TOT.poc),
-      lowRate: low / TOT.low, highRate: (pop - low) / (TOT.pop - TOT.low), rate: pop / TOT.pop };
+    return { a: a, b: b, pop: pop, poc: poc, low: low, rate: pop / TOT.pop,
+      pocRate: poc / TOT.poc, whiteRate: (pop - poc) / (TOT.pop - TOT.poc), lowRate: low / TOT.low, highRate: (pop - low) / (TOT.pop - TOT.low) };
   }
   var solo = S.map(function (s, i) { return coverage([i]).pop; });
+  function straight(a, b) { return Math.hypot(S[a].xy[0] - S[b].xy[0], S[a].xy[1] - S[b].xy[1]); }
+  function routeInfo(route, R) {
+    var gaps = [], len = 0, missing = 0;
+    for (var i = 1; i < route.length; i++) { var p = pathBetween(route[i - 1], route[i]); if (p) { gaps.push(p.len); len += p.len; } else { gaps.push(null); missing++; } }
+    var ends = route.length > 1 ? straight(route[0], route[route.length - 1]) : 0;
+    var dir = route.length > 1 && ends > 0 && !missing ? len / ends : null;
+    var known = gaps.filter(function (g) { return g != null; });
+    var checks = [
+      { ok: route.length >= R.minSt && route.length <= R.maxSt, text: R.minSt + "–" + R.maxSt + " stations", now: route.length + " placed" },
+      { ok: route.length > 1 && !missing && known.every(function (g) { return g >= R.minGap && g <= R.maxGap; }), text: "Stations " + (R.minGap) + " m – " + (R.maxGap / 1000) + " km apart",
+        now: route.length < 2 ? "add stations" : missing ? missing + " gap(s) too far for a bus path" : "gaps " + km(Math.min.apply(null, known)) + "–" + km(Math.max.apply(null, known)) },
+      { ok: route.length > 1 && !missing && len <= R.maxLen, text: "Route " + km(R.maxLen) + " or shorter", now: route.length < 2 ? "–" : missing ? "incomplete" : km(len) },
+      { ok: dir != null && dir <= R.maxDir, text: "Direct: at most " + R.maxDir + "× the straight-line distance", now: dir == null ? "–" : dir.toFixed(2) + "×" }
+    ];
+    return { gaps: gaps, len: len, missing: missing, dir: dir, checks: checks, valid: checks.every(function (c) { return c.ok; }), minutes: len / 1000 / R.speedKmh * 60 };
+  }
+  function km(m) { return (m / 1000).toFixed(1) + " km"; }
 
-  // ---- State ---------------------------------------------------------------------------------------
-  var st = { step: 1, r1: [], r2: [], shock: "budget" };
+  // ---- State ------------------------------------------------------------------------------------------------
+  var st = { step: 1, r1: [], r2: [], shock: "stations", addTo: "end" };
   function cur() { return st.step >= 3 ? st.r2 : st.r1; }
-  function budgetNow() { return st.step >= 3 ? SHOCKS[st.shock].budget : BUDGET; }
-  function closedNow() { return st.step >= 3 ? SHOCKS[st.shock].closed : []; }
   function editable() { return st.step === 1 || st.step === 3; }
 
-  // ---- Map setup --------------------------------------------------------------------------------------
-  var svg = $("map"), W = M.width, H = M.height;
-  var view = { x: 0, y: 0, w: W, h: H };
+  // ---- Map --------------------------------------------------------------------------------------------------
+  var svg = $("map"), W = M.width, H = M.height, view = { x: 0, y: 0, w: W, h: H };
   function el(name, attrs) { var e = document.createElementNS(NS, name); for (var k in attrs) e.setAttribute(k, attrs[k]); return e; }
   function polyD(g) { var d = "M" + g[0] + "," + g[1]; for (var i = 2; i < g.length; i += 2) d += "L" + g[i] + "," + g[i + 1]; return d; }
-  var gTracts = el("g", {}), gBase = el("g", {}), gCover = el("g", {}), gLabels = el("g", {}), gStops = el("g", {});
-  [gTracts, gBase, gCover, gLabels, gStops].forEach(function (g) { svg.appendChild(g); });
-
-  // tract polygons
-  var tractEls = T.map(function (t, i) {
-    var d = t.rings.map(function (r) { return polyD(r) + "Z"; }).join("");
-    var p = el("path", { d: d, fill: "transparent", stroke: "none", "data-t": i });
-    gTracts.appendChild(p); return p;
-  });
-  // base streets in three passes (paths, local, arterial)
-  var baseD = ["", "", ""];
-  for (var k = 0; k < NE; k++) baseD[E.k[k]] += polyD(E.g[k]);
+  var gTracts = el("g", {}), gBase = el("g", {}), gCover = el("g", {}), gRoute = el("g", {}), gLabels = el("g", {}), gStops = el("g", {});
+  [gTracts, gBase, gCover, gRoute, gLabels, gStops].forEach(function (g) { svg.appendChild(g); });
+  var tractEls = T.map(function (t, i) { var p = el("path", { d: t.rings.map(function (r) { return polyD(r) + "Z"; }).join(""), fill: "transparent", "data-t": i }); gTracts.appendChild(p); return p; });
+  var baseD = ["", "", ""]; for (var k = 0; k < NE; k++) baseD[E.k[k]] += polyD(E.g[k]);
   gBase.appendChild(el("path", { d: baseD[0], fill: "none", stroke: "var(--street)", "stroke-width": 1, "stroke-dasharray": "3 3", "vector-effect": "non-scaling-stroke" }));
   gBase.appendChild(el("path", { d: baseD[1], fill: "none", stroke: "var(--street)", "stroke-width": 1, "vector-effect": "non-scaling-stroke" }));
   gBase.appendChild(el("path", { d: baseD[2], fill: "none", stroke: "var(--arterial)", "stroke-width": 1.8, "vector-effect": "non-scaling-stroke" }));
-  var coverPath = el("path", { d: "", fill: "none", stroke: "var(--cover)", "stroke-width": 2.6, "stroke-linecap": "round", "stroke-linejoin": "round", "vector-effect": "non-scaling-stroke" });
-  gCover.appendChild(coverPath);
+  // coverage: teal with a thin Husky Purple edge so it holds 3:1 contrast against the light map
+  var coverEdge = el("path", { d: "", fill: "none", stroke: "var(--route-edge)", "stroke-width": 6, "stroke-linecap": "round", "stroke-linejoin": "round", "vector-effect": "non-scaling-stroke", opacity: 0.55 });
+  var coverFill = el("path", { d: "", fill: "none", stroke: "var(--cover)", "stroke-width": 4, "stroke-linecap": "round", "stroke-linejoin": "round", "vector-effect": "non-scaling-stroke" });
+  gCover.appendChild(coverEdge); gCover.appendChild(coverFill);
+  var routeCase = el("path", { d: "", fill: "none", stroke: "#fff", "stroke-width": 9, "stroke-linecap": "round", "stroke-linejoin": "round", "vector-effect": "non-scaling-stroke" });
+  var routeLine = el("path", { d: "", fill: "none", stroke: "var(--route)", "stroke-width": 5, "stroke-linecap": "round", "stroke-linejoin": "round", "vector-effect": "non-scaling-stroke" });
+  var routeBad = el("path", { d: "", fill: "none", stroke: "var(--warn)", "stroke-width": 3, "stroke-dasharray": "6 5", "vector-effect": "non-scaling-stroke" });
+  gRoute.appendChild(routeCase); gRoute.appendChild(routeLine); gRoute.appendChild(routeBad);
 
-  // neighborhood labels (lon, lat)
   var LABELS = [["Ballard", -122.3840, 47.6712], ["Fremont", -122.3500, 47.6525], ["Wallingford", -122.3345, 47.6610], ["Green Lake", -122.3390, 47.6800],
     ["Phinney Ridge", -122.3545, 47.6720], ["Roosevelt", -122.3165, 47.6775], ["University District", -122.3130, 47.6630], ["UW", -122.3060, 47.6545],
     ["Ravenna", -122.3005, 47.6745], ["Crown Hill", -122.3760, 47.6890], ["Sunset Hill", -122.4000, 47.6780], ["Ship Canal", -122.3770, 47.6560]];
-  var LAT0 = 47.668, KX = Math.cos(LAT0 * Math.PI / 180) * 111320, KY = 111320;
-  function proj(lon, lat) { return [(lon + 122.410) * KX, (47.693 - lat) * KY]; }
+  var KX = Math.cos(47.668 * Math.PI / 180) * 111320, KY = 111320;
   var labelEls = LABELS.map(function (L) {
-    var p = proj(L[1], L[2]);
-    var t = el("text", { x: p[0], y: p[1], "text-anchor": "middle", fill: L[0] === "Ship Canal" ? "#6a8aa8" : "#6a6964", "font-style": L[0] === "Ship Canal" ? "italic" : "normal",
-      "font-weight": 600, style: "paint-order:stroke;stroke:#fbfaf7;stroke-width:4px;letter-spacing:.02em" });
+    var t = el("text", { x: (L[1] + 122.410) * KX, y: (47.693 - L[2]) * KY, "text-anchor": "middle", fill: L[0] === "Ship Canal" ? "#5d7f9e" : "#6a6964",
+      "font-style": L[0] === "Ship Canal" ? "italic" : "normal", "font-weight": 600, style: "paint-order:stroke;stroke:#fbfaf7;letter-spacing:.02em" });
     t.textContent = L[0]; gLabels.appendChild(t); return t;
   });
-
-  // stops
   var stopEls = S.map(function (s, i) {
     var g = el("g", { class: "stop", tabindex: 0, role: "button", "data-s": i });
     g.appendChild(el("circle", { class: "hit", cx: s.xy[0], cy: s.xy[1], r: 1, fill: "transparent" }));
-    g.appendChild(el("circle", { class: "ring", cx: s.xy[0], cy: s.xy[1], r: 1, fill: "#fff", stroke: "var(--stop)", "stroke-width": 2, "vector-effect": "non-scaling-stroke" }));
-    var num = el("text", { x: s.xy[0], y: s.xy[1], "text-anchor": "middle", "dominant-baseline": "central", fill: "#fff", "font-weight": 700 });
-    g.appendChild(num); gStops.appendChild(g); return g;
+    g.appendChild(el("circle", { class: "ring", cx: s.xy[0], cy: s.xy[1], r: 1, fill: "#fff", stroke: "var(--route)", "stroke-width": 2, "vector-effect": "non-scaling-stroke" }));
+    g.appendChild(el("text", { x: s.xy[0], y: s.xy[1], "text-anchor": "middle", "dominant-baseline": "central", fill: "#fff", "font-weight": 700 }));
+    gStops.appendChild(g); return g;
   });
-
-  function mpp() { return view.w / svg.getBoundingClientRect().width || view.w / 800; }
+  function mpp() { return view.w / (svg.getBoundingClientRect().width || 800); }
   function applyView() {
     svg.setAttribute("viewBox", view.x + " " + view.y + " " + view.w + " " + view.h);
     var u = mpp();
-    stopEls.forEach(function (g) { g.querySelector(".hit").setAttribute("r", 14 * u); g.querySelector(".ring").setAttribute("r", 8 * u); g.querySelector("text").setAttribute("font-size", 10 * u); });
+    stopEls.forEach(function (g) { var on = g.getAttribute("data-on") === "1"; g.querySelector(".hit").setAttribute("r", 14 * u); g.querySelector(".ring").setAttribute("r", (on ? 9 : 7) * u); g.querySelector("text").setAttribute("font-size", 10.5 * u); });
     labelEls.forEach(function (t) { t.setAttribute("font-size", 12.5 * u); t.style.strokeWidth = (4 * u) + "px"; });
   }
   function zoomAt(f, cx, cy) {
@@ -310,17 +359,15 @@
   function svgPt(e) { var r = svg.getBoundingClientRect(); return [view.x + (e.clientX - r.left) / r.width * view.w, view.y + (e.clientY - r.top) / r.height * view.h]; }
   svg.addEventListener("wheel", function (e) { e.preventDefault(); var p = svgPt(e); zoomAt(e.deltaY < 0 ? 0.85 : 1 / 0.85, p[0], p[1]); }, { passive: false });
   var drag = null;
-  svg.addEventListener("pointerdown", function (e) { if (e.target.closest(".stop")) return; drag = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y, moved: false }; svg.setPointerCapture(e.pointerId); svg.classList.add("dragging"); });
+  svg.addEventListener("pointerdown", function (e) { if (e.target.closest(".stop")) return; drag = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y }; svg.setPointerCapture(e.pointerId); svg.classList.add("dragging"); });
   svg.addEventListener("pointermove", function (e) {
-    if (drag) { var r = svg.getBoundingClientRect(), dx = (e.clientX - drag.x) / r.width * view.w, dy = (e.clientY - drag.y) / r.height * view.h;
-      if (Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y) > 3) drag.moved = true;
-      view.x = Math.max(0, Math.min(W - view.w, drag.vx - dx)); view.y = Math.max(0, Math.min(H - view.h, drag.vy - dy)); applyView(); return; }
+    if (drag) { var r = svg.getBoundingClientRect(); view.x = Math.max(0, Math.min(W - view.w, drag.vx - (e.clientX - drag.x) / r.width * view.w)); view.y = Math.max(0, Math.min(H - view.h, drag.vy - (e.clientY - drag.y) / r.height * view.h)); applyView(); return; }
     hover(e);
   });
   svg.addEventListener("pointerup", function () { drag = null; svg.classList.remove("dragging"); });
   window.addEventListener("resize", applyView);
 
-  // ---- Layers ---------------------------------------------------------------------------------------
+  // ---- Layers ------------------------------------------------------------------------------------------------
   var RAMP = ["#f1ecf8", "#ddd1ef", "#c5b4e3", "#9a83c4", "#6f55a3"];
   var LAYERS = {
     density: { label: "Residents per acre", val: function (t) { return t.density; }, fmt: function (v) { return v.toFixed(0); } },
@@ -328,26 +375,25 @@
     low: { label: "Share below 200% of poverty", val: function (t) { return t.lowShare; }, fmt: function (v) { return Math.round(v * 100) + "%"; } }
   };
   var layer = "none";
-  function quantiles(vals) { var s = vals.slice().sort(function (a, b) { return a - b; }); return [0.2, 0.4, 0.6, 0.8].map(function (q) { return s[Math.floor(q * (s.length - 1))]; }); }
   function renderLayer() {
-    var L = LAYERS[layer], h = '<span><span class="sw" style="background:var(--cover)"></span>Within a 10-minute walk</span>' +
-      '<span><span class="dot" style="background:var(--stop)"></span>Your stop</span><span><span class="dot" style="background:#fff;border:2px solid var(--stop)"></span>Candidate</span>';
+    var L = LAYERS[layer], h = '<span><i class="lg route"></i>Your bus line</span><span><i class="lg st"></i>Station</span><span><i class="lg end"></i>End of line</span>' +
+      '<span><i class="lg cover"></i>Within a 10-minute walk</span><span><i class="lg cand"></i>Candidate</span>';
     if (!L) { tractEls.forEach(function (p) { p.setAttribute("fill", "transparent"); }); $("legend").innerHTML = h; return; }
-    var vals = T.map(L.val), br = quantiles(vals);
+    var vals = T.map(L.val), s = vals.slice().sort(function (a, b) { return a - b; }), br = [0.2, 0.4, 0.6, 0.8].map(function (q) { return s[Math.floor(q * (s.length - 1))]; });
     tractEls.forEach(function (p, i) { var v = vals[i], b = 0; while (b < 4 && v > br[b]) b++; p.setAttribute("fill", RAMP[b]); p.setAttribute("fill-opacity", 0.75); });
-    h += '<span>' + L.label + ': ' + L.fmt(Math.min.apply(null, vals)) + '<span class="ramp" aria-hidden="true">' + RAMP.map(function (c) { return '<i style="background:' + c + '"></i>'; }).join("") + '</span>' + L.fmt(Math.max.apply(null, vals)) + ' (by tract, in fifths)</span>';
-    $("legend").innerHTML = h;
+    $("legend").innerHTML = h + '<span>' + L.label + ': ' + L.fmt(s[0]) + '<span class="ramp" aria-hidden="true">' + RAMP.map(function (c) { return '<i style="background:' + c + '"></i>'; }).join("") + '</span>' + L.fmt(s[s.length - 1]) + ' (by tract, in fifths)</span>';
   }
   document.querySelectorAll("input[name=layer]").forEach(function (r) { r.addEventListener("change", function () { layer = r.value; renderLayer(); }); });
 
-  // ---- Coverage drawing ---------------------------------------------------------------------------------
+  // ---- Drawing --------------------------------------------------------------------------------------------------
+  var glCache = {};
+  function gLen(k) { if (glCache[k] != null) return glCache[k]; var g = E.g[k], t = 0; for (var i = 2; i < g.length; i += 2) t += Math.hypot(g[i] - g[i - 2], g[i + 1] - g[i - 1]); return (glCache[k] = t); }
   function cutFrom(g, dist, fromEnd) {
     var pts = []; for (var i = 0; i < g.length; i += 2) pts.push([g[i], g[i + 1]]); if (fromEnd) pts.reverse();
-    var total = 0; for (i = 1; i < pts.length; i++) total += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
-    var target = Math.min(total, dist), acc = 0, out = [pts[0]];
+    var acc = 0, out = [pts[0]];
     for (i = 1; i < pts.length; i++) {
       var seg = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
-      if (acc + seg >= target) { var f = seg ? (target - acc) / seg : 0; out.push([pts[i - 1][0] + f * (pts[i][0] - pts[i - 1][0]), pts[i - 1][1] + f * (pts[i][1] - pts[i - 1][1])]); break; }
+      if (acc + seg >= dist) { var f = seg ? (dist - acc) / seg : 0; out.push([pts[i - 1][0] + f * (pts[i][0] - pts[i - 1][0]), pts[i - 1][1] + f * (pts[i][1] - pts[i - 1][1])]); break; }
       acc += seg; out.push(pts[i]);
     }
     return "M" + out.map(function (p) { return p[0].toFixed(0) + "," + p[1].toFixed(0); }).join("L");
@@ -361,134 +407,160 @@
       if (a) d += cutFrom(E.g[k], a / len * gLen(k), false);
       if (b) d += cutFrom(E.g[k], b / len * gLen(k), true);
     }
-    coverPath.setAttribute("d", d);
+    coverEdge.setAttribute("d", d); coverFill.setAttribute("d", d);
   }
-  var glCache = {};
-  function gLen(k) { if (glCache[k] != null) return glCache[k]; var g = E.g[k], t = 0; for (var i = 2; i < g.length; i += 2) t += Math.hypot(g[i] - g[i - 2], g[i + 1] - g[i - 1]); return (glCache[k] = t); }
+  function drawRoute(route) {
+    var d = "", bad = "";
+    for (var i = 1; i < route.length; i++) {
+      var p = pathBetween(route[i - 1], route[i]);
+      if (p) p.edges.forEach(function (k) { d += polyD(E.g[k]); });
+      else { var A = S[route[i - 1]].xy, B = S[route[i]].xy; bad += "M" + A[0] + "," + A[1] + "L" + B[0] + "," + B[1]; }
+    }
+    routeCase.setAttribute("d", d); routeLine.setAttribute("d", d); routeBad.setAttribute("d", bad);
+  }
 
-  // ---- Rendering ---------------------------------------------------------------------------------------------
+  // ---- Rendering -------------------------------------------------------------------------------------------------
   function pct(v) { return Math.round(v * 100) + "%"; }
   function num(v) { return Math.round(v).toLocaleString("en-US"); }
   function render() {
-    var sel = cur(), closed = closedNow(), c = coverage(sel);
-    drawCoverage(c);
+    var route = cur(), R = rules(), info = routeInfo(route, R), c = coverage(route);
+    drawCoverage(c); drawRoute(route);
     stopEls.forEach(function (g, i) {
-      var on = sel.indexOf(i) >= 0, shut = closed.indexOf(i) >= 0, ring = g.querySelector(".ring"), txt = g.querySelector("text");
-      ring.setAttribute("fill", shut ? "#d9d7d0" : on ? "var(--stop)" : "#fff");
-      ring.setAttribute("stroke", shut ? "#8a8984" : "var(--stop)");
-      txt.textContent = on ? String(sel.indexOf(i) + 1) : shut ? "×" : "";
-      txt.setAttribute("fill", shut ? "#4a4945" : "#fff");
-      g.setAttribute("aria-label", S[i].name + (shut ? ", closed" : on ? ", selected" : ", not selected") + ". About " + num(solo[i]) + " residents within a 10-minute walk.");
+      var pos = route.indexOf(i), on = pos >= 0, end = on && (pos === 0 || pos === route.length - 1) && route.length > 1;
+      var ring = g.querySelector(".ring"), txt = g.querySelector("text");
+      g.setAttribute("data-on", on ? "1" : "0");
+      ring.setAttribute("fill", end ? "var(--gold)" : on ? "var(--route)" : "#fff");
+      ring.setAttribute("stroke", end ? "var(--route-edge)" : "var(--route)");
+      txt.textContent = on ? String(pos + 1) : ""; txt.setAttribute("fill", end ? "var(--route-edge)" : "#fff");
+      g.setAttribute("aria-label", S[i].name + (on ? ", station " + (pos + 1) + " of your route" : ", candidate") + ". About " + num(solo[i]) + " residents within a 10-minute walk.");
       g.setAttribute("aria-pressed", on ? "true" : "false");
     });
+    applyView();
     var steps = $("steps").children; for (var i = 0; i < 4; i++) steps[i].className = i + 1 === st.step ? "on" : i + 1 < st.step ? "done" : "";
-    renderPanel(c); renderList();
+    renderPanel(c, info, R); renderLists(route, info, R);
+  }
+  function checksHtml(info) {
+    return '<ul class="checks">' + info.checks.map(function (k) { return '<li class="' + (k.ok ? "ok" : "no") + '"><span class="ic" aria-hidden="true">' + (k.ok ? "✓" : "✗") + '</span><span>' + k.text + ' <small>(' + k.now + ')</small><span class="sr-only">' + (k.ok ? " met" : " not met") + '</span></span></li>'; }).join("") + '</ul>';
+  }
+  function statsHtml(info, route) {
+    return '<div class="stats"><div class="stat"><div class="k">Route length</div><div class="v">' + (route.length > 1 && !info.missing ? km(info.len) : "–") + '</div></div>' +
+      '<div class="stat"><div class="k">End-to-end trip</div><div class="v">' + (route.length > 1 && !info.missing ? Math.round(info.minutes) + " min" : "–") + '</div></div></div>';
   }
   function metricsHtml(c) {
-    function bar(label, v, color, other, otherLabel) {
-      return '<div class="metric"><div class="lbl"><span>' + label + '</span><strong>' + pct(v) + '</strong></div><div class="bar"><div style="width:' + Math.min(100, v * 100) + '%;background:' + color + '"></div></div>' +
+    function bar(label, v, other, otherLabel) {
+      return '<div class="metric"><div class="lbl"><span>' + label + '</span><strong>' + pct(v) + '</strong></div><div class="bar"><div style="width:' + Math.min(100, v * 100) + '%;background:var(--route)"></div></div>' +
         '<div class="lbl"><span>' + otherLabel + '</span><strong>' + pct(other) + '</strong></div><div class="bar"><div style="width:' + Math.min(100, other * 100) + '%;background:#9d9a91"></div></div></div>';
     }
-    function gap(a, b, who) {
-      var d = Math.round((a - b) * 100);
-      return '<p class="gapline">' + (Math.abs(d) < 2 ? 'Reached at about the same rate as everyone else.' : d > 0 ? who + ' reached at a rate <strong>' + d + ' points higher</strong>.' : who + ' reached at a rate <strong>' + (-d) + ' points lower</strong>.') + '</p>';
-    }
-    return '<div class="metric"><div class="lbl"><span>Residents within a 10-minute walk</span></div><div class="big">' + num(c.pop) + '</div><p class="hint">' + pct(c.rate) + ' of the ' + num(TOT.pop) + ' people in the study area</p></div>' +
-      bar("People of color reached", c.pocRate, "var(--stop)", c.whiteRate, "White residents reached") + gap(c.pocRate, c.whiteRate, "People of color") +
-      bar("Lower-income residents reached", c.lowRate, "var(--stop)", c.highRate, "Higher-income residents reached") + gap(c.lowRate, c.highRate, "Lower-income residents");
+    function gap(a, b, who) { var d = Math.round((a - b) * 100); return '<p class="gapline">' + (Math.abs(d) < 2 ? 'Reached at about the same rate as everyone else.' : who + ' reached at a rate <strong>' + Math.abs(d) + ' points ' + (d > 0 ? "higher" : "lower") + '</strong>.') + '</p>'; }
+    return '<div class="metric"><div class="lbl"><span>Residents within a 10-minute walk of a station</span></div><div class="big">' + num(c.pop) + '</div><p class="hint">' + pct(c.rate) + ' of the ' + num(TOT.pop) + ' people in the study area</p></div>' +
+      bar("People of color reached", c.pocRate, c.whiteRate, "White residents reached") + gap(c.pocRate, c.whiteRate, "People of color") +
+      bar("Lower-income residents reached", c.lowRate, c.highRate, "Higher-income residents reached") + gap(c.lowRate, c.highRate, "Lower-income residents");
   }
-  function renderPanel(c) {
-    var sel = cur(), B = budgetNow(), h = '<div class="card soft">';
+  function renderPanel(c, info, R) {
+    var route = cur(), h = '<div class="card soft">';
     if (st.step === 1 || st.step === 3) {
-      var over = sel.length > B;
-      h += '<h2>' + (st.step === 1 ? "Step 1 · Place your stops" : "Step 3 · Revise your plan") + '</h2>' +
-        '<div class="budget" aria-hidden="true">' + Array.from({ length: Math.max(B, sel.length) }, function (_, i) { return '<i class="' + (i < sel.length ? (i >= B ? "over" : "used") : "") + '"></i>'; }).join("") + '</div>' +
-        '<p class="hint"><strong>' + sel.length + ' of ' + B + '</strong> stops placed. ' + (over ? '<span style="color:var(--warn);font-weight:700">Over budget: remove ' + (sel.length - B) + '.</span>' : 'Click a candidate stop on the map, or use the list below.') + '</p>';
+      h += '<h2>' + (st.step === 1 ? "Step 1 · Design your line" : "Step 3 · Revise your line") + '</h2>';
       if (st.step === 3) h += '<div class="shock"><strong>' + SHOCKS[st.shock].title + '.</strong> ' + SHOCKS[st.shock].text + '</div>';
-      h += metricsHtml(c);
-      h += '<div class="row">' + (st.step === 1
-        ? '<button class="btn primary" id="lockBtn"' + (sel.length === B ? "" : " disabled") + '>Lock in plan</button><button class="btn" id="clearBtn">Clear</button>'
-        : '<button class="btn primary" id="compareBtn"' + (!over && sel.every(function (i) { return SHOCKS[st.shock].closed.indexOf(i) < 0; }) && sel.length > 0 ? "" : " disabled") + '>Compare plans</button>') + '</div>';
-      if (st.step === 1 && sel.length !== B) h += '<p class="hint" style="margin-top:6px;">Place all ' + B + ' stops to lock in your plan.</p>';
+      h += '<p class="hint" style="margin-top:6px;">Click candidate stations in the order the bus should visit them.</p>' +
+        '<div class="row" style="margin-top:6px;"><span class="hint">Add new stations to the</span><span class="seg2" role="radiogroup" aria-label="Add new stations to"><label><input type="radio" name="addTo" value="start"' + (st.addTo === "start" ? " checked" : "") + '><span>start</span></label><label><input type="radio" name="addTo" value="end"' + (st.addTo === "end" ? " checked" : "") + '><span>end</span></label></span></div>' +
+        checksHtml(info) + statsHtml(info, route) + metricsHtml(c) +
+        '<div class="row">' + (st.step === 1 ? '<button class="btn primary" id="lockBtn"' + (info.valid ? "" : " disabled") + '>Lock in route</button><button class="btn" id="clearBtn">Clear</button>'
+          : '<button class="btn primary" id="compareBtn"' + (info.valid ? "" : " disabled") + '>Compare routes</button>') + '</div>' +
+        (info.valid ? "" : '<p class="hint" style="margin-top:6px;">Meet every route rule to continue.</p>');
     } else if (st.step === 2) {
-      h += '<h2>Step 2 · Something changes</h2><p>Your plan is locked in. Before it can be built, conditions change.</p>' +
+      h += '<h2>Step 2 · Something changes</h2><p>Your route is locked in. Before it opens, conditions change.</p>' +
         '<label for="shockSel" class="hint" style="display:block;margin-bottom:4px;">Instructor or group picks the shock:</label><select id="shockSel">' +
         Object.keys(SHOCKS).map(function (k) { return '<option value="' + k + '"' + (k === st.shock ? " selected" : "") + '>' + SHOCKS[k].title + '</option>'; }).join("") + '<option value="random">Surprise us</option></select>' +
-        '<div class="row"><button class="btn primary" id="shockBtn">Reveal the shock</button></div>' + metricsHtml(c);
+        '<div class="row"><button class="btn primary" id="shockBtn">Reveal the shock</button></div>' + statsHtml(info, route) + metricsHtml(c);
     } else {
-      var c1 = coverage(st.r1), c2 = coverage(st.r2);
-      function row(label, a, b, isPct) { var d = b - a; return '<tr><th scope="row">' + label + '</th><td>' + (isPct ? pct(a) : num(a)) + '</td><td>' + (isPct ? pct(b) : num(b)) + '</td><td>' + (isPct ? (d >= 0 ? "+" : "−") + Math.abs(Math.round(d * 100)) + " pts" : (d >= 0 ? "+" : "−") + num(Math.abs(d))) + '</td></tr>'; }
-      h += '<h2>Step 4 · Compare your plans</h2><p class="hint">Shock: ' + SHOCKS[st.shock].title + '. The map shows your revised plan.</p>' +
-        '<table class="cmp"><thead><tr><th scope="col">Measure</th><th scope="col">Plan</th><th scope="col">Revised</th><th scope="col">Change</th></tr></thead><tbody>' +
-        row("Residents reached", c1.pop, c2.pop) + row("People of color reached", c1.pocRate, c2.pocRate, true) + row("White residents reached", c1.whiteRate, c2.whiteRate, true) +
-        row("Lower-income reached", c1.lowRate, c2.lowRate, true) + row("Higher-income reached", c1.highRate, c2.highRate, true) + '</tbody></table>' +
-        '<div class="row"><button class="btn primary" id="shareBtn">Copy link to our plans</button><button class="btn" id="restartBtn">Start over</button></div>' +
-        '<p class="status" id="shareStatus" role="status"></p>';
+      var c1 = coverage(st.r1), c2 = coverage(st.r2), i1 = routeInfo(st.r1, RULES), i2 = routeInfo(st.r2, Object.assign({}, RULES, SHOCKS[st.shock]));
+      function row(label, a, b, kind) {
+        var d = b - a, f = kind === "pct" ? function (v) { return pct(v); } : kind === "km" ? function (v) { return km(v); } : num;
+        var dd = kind === "pct" ? Math.abs(Math.round(d * 100)) + " pts" : kind === "km" ? km(Math.abs(d)) : num(Math.abs(d));
+        return '<tr><th scope="row">' + label + '</th><td>' + f(a) + '</td><td>' + f(b) + '</td><td>' + (d >= 0 ? "+" : "−") + dd + '</td></tr>';
+      }
+      h += '<h2>Step 4 · Compare your routes</h2><p class="hint">Shock: ' + SHOCKS[st.shock].title + '. The map shows your revised route.</p>' +
+        '<table class="cmp"><thead><tr><th scope="col">Measure</th><th scope="col">First</th><th scope="col">Revised</th><th scope="col">Change</th></tr></thead><tbody>' +
+        row("Stations", st.r1.length, st.r2.length) + row("Route length", i1.len, i2.len, "km") + row("Residents reached", c1.pop, c2.pop) +
+        row("People of color reached", c1.pocRate, c2.pocRate, "pct") + row("White residents reached", c1.whiteRate, c2.whiteRate, "pct") +
+        row("Lower-income reached", c1.lowRate, c2.lowRate, "pct") + row("Higher-income reached", c1.highRate, c2.highRate, "pct") + '</tbody></table>' +
+        '<div class="row"><button class="btn primary" id="shareBtn">Copy link to our routes</button><button class="btn" id="restartBtn">Start over</button></div><p class="status" id="shareStatus" role="status"></p>';
     }
     $("panel").innerHTML = h + '</div>';
   }
-  function renderList() {
-    var sel = cur(), closed = closedNow(), B = budgetNow(), can = editable();
+  function renderLists(route, info, R) {
+    var can = editable();
+    $("routeEmpty").hidden = route.length > 0;
+    $("routelist").innerHTML = route.map(function (si, i) {
+      var gapHtml = "";
+      if (i > 0) { var g = info.gaps[i - 1], bad = g == null || g < R.minGap || g > R.maxGap;
+        gapHtml = '<span class="gap' + (bad ? " bad" : "") + '">' + (g == null ? "Too far apart for a bus path" : km(g) + " from station " + i + (g < R.minGap ? " · too close" : g > R.maxGap ? " · too far" : "")) + '</span>'; }
+      return '<li><span>' + S[si].name + '</span><span class="ctl">' +
+        (can ? '<button class="btn small" data-mv="' + i + '" data-d="-1"' + (i === 0 ? " disabled" : "") + ' aria-label="Move ' + S[si].name + ' earlier">↑</button>' +
+          '<button class="btn small" data-mv="' + i + '" data-d="1"' + (i === route.length - 1 ? " disabled" : "") + ' aria-label="Move ' + S[si].name + ' later">↓</button>' +
+          '<button class="btn small" data-rm="' + si + '" aria-label="Remove ' + S[si].name + '">✕</button>' : '') + '</span>' + gapHtml + '</li>';
+    }).join("");
     var order = S.map(function (s, i) { return i; }).sort(function (a, b) { return S[a].name.localeCompare(S[b].name); });
-    $("stoplist").innerHTML = order.map(function (i) {
-      var on = sel.indexOf(i) >= 0, shut = closed.indexOf(i) >= 0;
-      return '<label class="' + (shut ? "na" : "") + '"><input type="checkbox" data-s="' + i + '"' + (on ? " checked" : "") + (shut || !can || (!on && sel.length >= B) ? " disabled" : "") + '>' +
-        '<span>' + S[i].name + (shut ? " (closed)" : "") + '</span><small>' + num(solo[i]) + ' residents</small></label>';
+    var full = route.length >= R.maxSt;
+    $("cands").innerHTML = order.map(function (i) {
+      var on = route.indexOf(i) >= 0;
+      return '<div><span>' + S[i].name + '</span><small>' + num(solo[i]) + ' residents</small>' +
+        (on ? '<button class="btn small" data-rm="' + i + '"' + (can ? "" : " disabled") + ' aria-label="Remove ' + S[i].name + '">Remove</button>'
+          : '<button class="btn small" data-add="' + i + '"' + (can && !full ? "" : " disabled") + ' aria-label="Add ' + S[i].name + ' to the ' + st.addTo + ' of your route">Add</button>') + '</div>';
     }).join("");
   }
 
-  // ---- Actions ---------------------------------------------------------------------------------------------------
-  function toggle(i) {
-    if (!editable() || closedNow().indexOf(i) >= 0) return;
-    var sel = cur(), at = sel.indexOf(i);
-    if (at >= 0) sel.splice(at, 1); else if (sel.length < budgetNow()) sel.push(i); else return flashBudget();
-    render();
-  }
-  function flashBudget() { var b = document.querySelector(".budget"); if (b) { b.style.outline = "3px solid var(--warn)"; setTimeout(function () { b.style.outline = ""; }, 600); } }
+  // ---- Actions ----------------------------------------------------------------------------------------------------
+  function add(i) { var r = cur(); if (!editable() || r.indexOf(i) >= 0) return; if (r.length >= rules().maxSt) return flash(); if (st.addTo === "start") r.unshift(i); else r.push(i); render(); }
+  function remove(i) { var r = cur(), at = r.indexOf(i); if (!editable() || at < 0) return; r.splice(at, 1); render(); }
+  function toggle(i) { if (cur().indexOf(i) >= 0) remove(i); else add(i); }
+  function flash() { var c = document.querySelector(".checks li"); if (c) { c.style.outline = "3px solid var(--warn)"; setTimeout(function () { c.style.outline = ""; }, 700); } }
   gStops.addEventListener("click", function (e) { var g = e.target.closest(".stop"); if (g) toggle(+g.getAttribute("data-s")); });
   gStops.addEventListener("keydown", function (e) { if (e.key !== "Enter" && e.key !== " ") return; var g = e.target.closest(".stop"); if (g) { e.preventDefault(); toggle(+g.getAttribute("data-s")); g.focus(); } });
-  $("stoplist").addEventListener("change", function (e) { var i = e.target.getAttribute("data-s"); if (i != null) toggle(+i); });
+  document.querySelector(".lists").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b || b.disabled) return;
+    if (b.hasAttribute("data-add")) add(+b.getAttribute("data-add"));
+    else if (b.hasAttribute("data-rm")) remove(+b.getAttribute("data-rm"));
+    else if (b.hasAttribute("data-mv")) { var r = cur(), i = +b.getAttribute("data-mv"), j = i + +b.getAttribute("data-d"); var t = r[i]; r[i] = r[j]; r[j] = t; render(); }
+  });
+  $("panel").addEventListener("change", function (e) { if (e.target.name === "addTo") { st.addTo = e.target.value; renderLists(cur(), routeInfo(cur(), rules()), rules()); } });
   $("panel").addEventListener("click", function (e) {
     var b = e.target.closest("button"); if (!b) return;
     if (b.id === "clearBtn") { st.r1 = []; render(); }
     else if (b.id === "lockBtn") { st.step = 2; render(); }
-    else if (b.id === "shockBtn") {
-      var v = $("shockSel").value; if (v === "random") { var keys = Object.keys(SHOCKS); v = keys[Math.floor(Math.random() * keys.length)]; }
-      st.shock = v; st.r2 = st.r1.filter(function (i) { return SHOCKS[v].closed.indexOf(i) < 0; }); st.step = 3; render();
-    }
+    else if (b.id === "shockBtn") { var v = $("shockSel").value; if (v === "random") { var ks = Object.keys(SHOCKS); v = ks[Math.floor(Math.random() * ks.length)]; } st.shock = v; st.r2 = st.r1.slice(); st.step = 3; render(); }
     else if (b.id === "compareBtn") { st.step = 4; render(); }
-    else if (b.id === "restartBtn") { st = { step: 1, r1: [], r2: [], shock: "budget" }; history.replaceState(null, "", location.href.split("#")[0]); render(); }
+    else if (b.id === "restartBtn") { st = { step: 1, r1: [], r2: [], shock: "stations", addTo: "end" }; history.replaceState(null, "", location.href.split("#")[0]); render(); }
     else if (b.id === "shareBtn") {
       var url = location.href.split("#")[0] + "#r1=" + st.r1.join(".") + "&shock=" + st.shock + "&r2=" + st.r2.join(".");
       history.replaceState(null, "", url);
-      var done = function () { $("shareStatus").textContent = "Link copied. Paste it into Canvas to submit your plans."; };
-      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(url).then(done, function () { $("shareStatus").textContent = url; });
-      else $("shareStatus").textContent = url;
+      var done = function () { $("shareStatus").textContent = "Link copied. Paste it into Canvas to submit your routes."; };
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(url).then(done, function () { $("shareStatus").textContent = url; }); else $("shareStatus").textContent = url;
     }
   });
 
-  // tooltip
   var tip = $("tip");
   function hover(e) {
     var g = e.target.closest && e.target.closest(".stop"), r = svg.parentNode.getBoundingClientRect(), html = "";
-    if (g) { var i = +g.getAttribute("data-s"); html = "<strong>" + S[i].name + "</strong><br>About " + num(solo[i]) + " residents within a 10-minute walk"; }
+    if (g) { var i = +g.getAttribute("data-s"), pos = cur().indexOf(i);
+      html = "<strong>" + S[i].name + "</strong><br>About " + num(solo[i]) + " residents within a 10-minute walk" + (pos >= 0 ? "<br>Station " + (pos + 1) + " · click to remove" : editable() ? "<br>Click to add to the " + st.addTo + " of your route" : ""); }
     else if (layer !== "none" && e.target.getAttribute && e.target.getAttribute("data-t") != null) { var t = T[+e.target.getAttribute("data-t")];
       html = "<strong>Census tract " + t.name + "</strong><br>" + num(t.pop) + " residents · " + t.density.toFixed(0) + " per acre<br>" + pct(t.pocShare) + " people of color · " + pct(t.lowShare) + " below 200% of poverty"; }
     if (!html) { tip.classList.remove("show"); return; }
     tip.innerHTML = html; tip.classList.add("show");
-    tip.style.left = Math.min(e.clientX - r.left + 12, r.width - 270) + "px"; tip.style.top = (e.clientY - r.top + 12) + "px";
+    tip.style.left = Math.min(e.clientX - r.left + 12, r.width - 280) + "px"; tip.style.top = (e.clientY - r.top + 12) + "px";
   }
   svg.addEventListener("pointerleave", function () { tip.classList.remove("show"); });
 
-  // ---- Load from share link -------------------------------------------------------------------------------
+  // ---- Load from share link ----------------------------------------------------------------------------------------
   (function () {
     var h = location.hash.slice(1); if (!h) return;
     var q = {}; h.split("&").forEach(function (kv) { var p = kv.split("="); q[p[0]] = p[1] || ""; });
     var parse = function (s) { return (s || "").split(".").filter(Boolean).map(Number).filter(function (i) { return i >= 0 && i < S.length; }); };
-    if (q.r1) { st.r1 = parse(q.r1); st.shock = SHOCKS[q.shock] ? q.shock : "budget"; st.r2 = parse(q.r2); st.step = q.r2 ? 4 : 1; }
+    if (q.r1) { st.r1 = parse(q.r1); st.shock = SHOCKS[q.shock] ? q.shock : "stations"; st.r2 = parse(q.r2); st.step = q.r2 ? 4 : 1; }
   })();
 
-  renderLayer(); applyView(); render();
+  renderLayer(); render();
 })();
 </script>
 </body>

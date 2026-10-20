@@ -18,7 +18,7 @@
     --grid: #ebeae6;
     --axis: #8a8984;
     --y2024: #4b2e83;   /* Spirit Purple */
-    --y2022: #e93cac;   /* Accent Pink */
+    --y2022: #2ad2c9;   /* Accent Teal, always drawn with a Husky Purple edge */
     --y2020: #85754d;   /* Heritage Gold */
     --y1972: #6a6964;   /* neutral gray: the historical baseline */
     --accent: #4b2e83;
@@ -200,7 +200,7 @@
   // ---- Series -------------------------------------------------------------------
   var SERIES = [
     { id: "2024", label: "2024", color: "var(--y2024)", shape: "circle", glyph: "●", src: "CES (placeholder)" },
-    { id: "2022", label: "2022", color: "var(--y2022)", shape: "triangle", glyph: "▲", src: "CES (placeholder)" },
+    { id: "2022", label: "2022", color: "var(--y2022)", edge: "#32006e", shape: "triangle", glyph: "▲", src: "CES (placeholder)" },
     { id: "2020", label: "2020", color: "var(--y2020)", shape: "square", glyph: "■", src: "CES (placeholder)" },
     { id: "1972", label: "1972", color: "var(--y1972)", shape: "diamond", glyph: "◆", src: "Wolfinger & Rosenstone" }
   ];
@@ -300,15 +300,15 @@
     $("years").innerHTML = SERIES.map(function (s) {
       var ok = av.indexOf(s.id) >= 0;
       return '<label class="' + (ok ? "" : "na") + '"><input type="checkbox" value="' + s.id + '"' + (state.years[s.id] && ok ? " checked" : "") + (ok ? "" : " disabled") + '>' +
-        '<span class="shape" aria-hidden="true" style="color:' + s.color + '">' + s.glyph + '</span>' + s.label + (ok ? "" : " (not yet)") + '</label>';
+        '<span class="shape' + (s.edge ? ' glyph-edge' : '') + '" aria-hidden="true" style="color:' + s.color + '">' + s.glyph + '</span>' + s.label + (ok ? "" : " (not yet)") + '</label>';
     }).join("");
   }
   $("years").addEventListener("change", function (e) { state.years[e.target.value] = e.target.checked; render(); });
 
   // ---- Chart ---------------------------------------------------------------------
   var LO = 0.35, HI = 1.6;
-  function mark(shape, x, y, color, size) {
-    var s = size, ring = 'stroke="var(--surface)" stroke-width="1.5"';
+  function mark(shape, x, y, color, size, edge) {
+    var s = size, ring = edge ? 'stroke="' + edge + '" stroke-width="1.4"' : 'stroke="var(--surface)" stroke-width="1.5"';
     if (shape === "circle") return '<circle cx="' + x + '" cy="' + y + '" r="' + s + '" fill="' + color + '" ' + ring + '/>';
     if (shape === "square") return '<rect x="' + (x - s) + '" y="' + (y - s) + '" width="' + (2 * s) + '" height="' + (2 * s) + '" fill="' + color + '" ' + ring + '/>';
     if (shape === "triangle") return '<polygon points="' + x + ',' + (y - s * 1.2) + ' ' + (x + s * 1.15) + ',' + (y + s * 0.85) + ' ' + (x - s * 1.15) + ',' + (y + s * 0.85) + '" fill="' + color + '" ' + ring + '/>';
@@ -341,7 +341,7 @@
       years.forEach(function (yid, k) {
         var r = ratioOf(row, yid); if (r == null) return;
         var sr = ser(yid), my = cy + (k - (n - 1) / 2) * step;
-        s += mark(sr.shape, x(Math.max(LO, Math.min(HI, r))), my, sr.color, narrow ? 6.5 : 5.5);
+        s += mark(sr.shape, x(Math.max(LO, Math.min(HI, r))), my, sr.color, narrow ? 6.5 : 5.5, sr.edge);
       });
       s += '<rect class="row-hit" data-i="' + i + '" x="0" y="' + y0 + '" width="' + W + '" height="' + RH + '"/>';
     });

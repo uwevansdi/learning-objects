@@ -18,8 +18,9 @@
     --axis: #8a8984;
     --sales: #4b2e83;
     --income: #e93cac;
-    --fee: #85754d;
-    --credit: #c5b4e3;
+    --fee: #2ad2c9;           /* Accent Teal, drawn with a Husky Purple edge */
+    --credit: #aadb1e;        /* Accent Green, drawn with a Husky Purple edge */
+    --edge: #32006e;
     --accent: #4b2e83;       /* UW purple, used for chrome only */
     --accent-soft: #efeaf7;
     --good: #1d6b3a;
@@ -175,8 +176,8 @@
       <ul class="legend" aria-label="Chart legend">
         <li><span class="sw" style="background:var(--sales)"></span>Sales tax</li>
         <li><span class="sw" style="background:var(--income)"></span>Income tax</li>
-        <li><span class="sw" style="background:var(--fee)"></span>Flat fee</li>
-        <li><span class="sw" style="background:var(--credit)"></span>Credit (reduces tax)</li>
+        <li><span class="sw sw-edge" style="background:var(--fee)"></span>Flat fee</li>
+        <li><span class="sw sw-edge" style="background:var(--credit)"></span>Credit (reduces tax)</li>
         <li><span class="sw net"></span>Net rate</li>
       </ul>
       <svg id="chart" viewBox="0 0 600 410" role="img" aria-labelledby="chartTitle summaryText">
@@ -216,13 +217,13 @@
           <input type="range" id="surtax" min="0" max="10" step="0.5" style="--thumb:var(--income)">
         </div>
         <div class="control">
-          <div class="control-top"><label for="fee"><span class="sw" style="background:var(--fee)"></span>Flat fee per household</label><span class="val" id="feeVal"></span></div>
+          <div class="control-top"><label for="fee"><span class="sw sw-edge" style="background:var(--fee)"></span>Flat fee per household</label><span class="val" id="feeVal"></span></div>
           <input type="range" id="fee" min="0" max="1000" step="50" style="--thumb:var(--fee)">
         </div>
 
         <p class="group-title">Credits</p>
         <div class="control">
-          <div class="control-top"><label for="credit"><span class="sw" style="background:var(--credit)"></span>Low-income credit</label><span class="val" id="creditVal"></span></div>
+          <div class="control-top"><label for="credit"><span class="sw sw-edge" style="background:var(--credit)"></span>Low-income credit</label><span class="val" id="creditVal"></span></div>
           <input type="range" id="credit" min="0" max="1500" step="50" style="--thumb:var(--credit)">
           <p class="hint">Full amount for the lowest-income household and half for the next. Washington's Working Families Tax Credit works in this spirit.</p>
         </div>
@@ -385,9 +386,9 @@
         if (k === segs.length - 1 && hgt > 4) {
           // rounded data-end on the outermost segment only
           b += '<path d="M' + x0 + ',' + (bot - gap) + 'V' + (top + 4) + 'Q' + x0 + ',' + top + ' ' + (x0 + 4) + ',' + top +
-            'H' + (x0 + BW - 4) + 'Q' + (x0 + BW) + ',' + top + ' ' + (x0 + BW) + ',' + (top + 4) + 'V' + (bot - gap) + 'Z" fill="' + sg[1] + '"/>';
+            'H' + (x0 + BW - 4) + 'Q' + (x0 + BW) + ',' + top + ' ' + (x0 + BW) + ',' + (top + 4) + 'V' + (bot - gap) + 'Z" fill="' + sg[1] + '"' + (sg[1] === 'var(--fee)' ? ' stroke="var(--edge)" stroke-width="1.2"' : '') + '/>';
         } else {
-          b += '<rect x="' + x0 + '" y="' + top + '" width="' + BW + '" height="' + hgt + '" fill="' + sg[1] + '"/>';
+          b += '<rect x="' + x0 + '" y="' + top + '" width="' + BW + '" height="' + hgt + '" fill="' + sg[1] + '"' + (sg[1] === 'var(--fee)' ? ' stroke="var(--edge)" stroke-width="1.2"' : '') + '/>';
         }
         base += share;
       });
@@ -395,9 +396,9 @@
         var cs = r.credit / r.h.income, ct = y(0) + 2, cb = y(-cs);
         if (cb - ct > 4) {
           b += '<path d="M' + x0 + ',' + ct + 'V' + (cb - 4) + 'Q' + x0 + ',' + cb + ' ' + (x0 + 4) + ',' + cb +
-            'H' + (x0 + BW - 4) + 'Q' + (x0 + BW) + ',' + cb + ' ' + (x0 + BW) + ',' + (cb - 4) + 'V' + ct + 'Z" fill="var(--credit)"/>';
+            'H' + (x0 + BW - 4) + 'Q' + (x0 + BW) + ',' + cb + ' ' + (x0 + BW) + ',' + (cb - 4) + 'V' + ct + 'Z" fill="var(--credit)" stroke="var(--edge)" stroke-width="1.2"/>';
         } else if (cb > ct) {
-          b += '<rect x="' + x0 + '" y="' + ct + '" width="' + BW + '" height="' + (cb - ct) + '" fill="var(--credit)"/>';
+          b += '<rect x="' + x0 + '" y="' + ct + '" width="' + BW + '" height="' + (cb - ct) + '" fill="var(--credit)" stroke="var(--edge)" stroke-width="1.2"/>';
         }
       }
     });

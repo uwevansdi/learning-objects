@@ -17,7 +17,8 @@
     --grid: #ebeae6;
     --axis: #8a8984;
     --wall: #4b2e83;
-    --buy: #e93cac;
+    --buy: #aadb1e;          /* Accent Green, always drawn with a Husky Purple edge */
+    --buy-edge: #32006e;
     --accent: #4b2e83;       /* UW purple, chrome only */
     --accent-soft: #efeaf7;
     --good: #1d6b3a; --good-soft: #e7f3eb;
@@ -188,7 +189,7 @@
       <div class="card" style="margin-top:14px;">
         <h3 id="c1Title">Net present value at every discount rate</h3>
         <p class="chart-sub">Where the lines cross, the ranking flips. Below zero, doing nothing beats the project. Below 2%, both lines rise off the top of the chart.</p>
-        <ul class="legend"><li><span class="sw line" style="background:var(--wall)"></span>Seawall</li><li><span class="sw line" style="background:var(--buy)"></span>Buyouts</li></ul>
+        <ul class="legend"><li><span class="sw line" style="background:var(--wall)"></span>Seawall</li><li><span class="sw line sw-edge" style="background:var(--buy);height:5px;vertical-align:2px"></span>Buyouts</li></ul>
         <svg id="c1" viewBox="0 0 600 270" role="img" aria-labelledby="c1Title c1Desc"></svg>
         <p class="sr-only" id="c1Desc"></p>
         <div class="tooltip" id="tip1"></div>
@@ -196,7 +197,7 @@
       <div class="card" style="margin-top:14px;">
         <h3 id="c2Title">Cumulative net present value over time</h3>
         <p class="chart-sub">Each line adds up discounted benefits minus discounted costs, year by year. Where a line crosses zero, the option has paid for itself.</p>
-        <ul class="legend"><li><span class="sw line" style="background:var(--wall)"></span>Seawall</li><li><span class="sw line" style="background:var(--buy)"></span>Buyouts</li></ul>
+        <ul class="legend"><li><span class="sw line" style="background:var(--wall)"></span>Seawall</li><li><span class="sw line sw-edge" style="background:var(--buy);height:5px;vertical-align:2px"></span>Buyouts</li></ul>
         <svg id="c2" viewBox="0 0 600 260" role="img" aria-labelledby="c2Title c2Desc"></svg>
         <p class="sr-only" id="c2Desc"></p>
         <div class="tooltip" id="tip2"></div>
@@ -275,13 +276,15 @@
     h += '<clipPath id="' + svgId + 'clip"><rect x="' + ML + '" y="' + (MT - 6) + '" width="' + PW + '" height="' + (PH + 12) + '"/></clipPath>';
     if (extra.before) h += extra.before(x, y, MT, PH);
     series.forEach(function (sr) {
-      h += '<polyline clip-path="url(#' + svgId + 'clip)" points="' + xs.map(function (v, i) { return x(v) + "," + y(sr.ys[i]); }).join(" ") + '" fill="none" stroke="' + sr.color + '" stroke-width="2.5" stroke-linejoin="round"/>';
+      var ptsStr = xs.map(function (v, i) { return x(v) + "," + y(sr.ys[i]); }).join(" ");
+      if (sr.edge) h += '<polyline clip-path="url(#' + svgId + 'clip)" points="' + ptsStr + '" fill="none" stroke="' + sr.edge + '" stroke-width="5" stroke-linejoin="round"/>';
+      h += '<polyline clip-path="url(#' + svgId + 'clip)" points="' + ptsStr + '" fill="none" stroke="' + sr.color + '" stroke-width="' + (sr.edge ? 3 : 2.5) + '" stroke-linejoin="round"/>';
     });
     if (marker != null) {
       h += '<line x1="' + x(marker) + '" x2="' + x(marker) + '" y1="' + MT + '" y2="' + (MT + PH) + '" stroke="var(--ink)" stroke-dasharray="3 3"/>';
       series.forEach(function (sr) {
         var i = xs.indexOf(marker); if (i < 0) return;
-        h += '<circle cx="' + x(marker) + '" cy="' + y(sr.ys[i]) + '" r="5" fill="' + sr.color + '" stroke="var(--surface)" stroke-width="2"/>';
+        h += '<circle cx="' + x(marker) + '" cy="' + y(sr.ys[i]) + '" r="5" fill="' + sr.color + '" stroke="' + (sr.edge || 'var(--surface)') + '" stroke-width="2"/>';
       });
     }
     if (extra.after) h += extra.after(x, y, MT, PH);
@@ -297,7 +300,7 @@
       var v = g.x0 + (p.x - g.ML) / g.PW * (g.x1 - g.x0), i = 0, best = 1e9;
       g.xs.forEach(function (xv, k) { if (Math.abs(xv - v) < best) { best = Math.abs(xv - v); i = k; } });
       var cx = g.x(g.xs[i]), ch = '<line x1="' + cx + '" x2="' + cx + '" y1="' + g.MT + '" y2="' + (g.MT + g.PH) + '" stroke="var(--ink-3)"/>', html = "<strong>" + label(g.xs[i]) + "</strong>";
-      g.series.forEach(function (sr) { if (g.y(sr.ys[i]) >= g.MT - 6) ch += '<circle cx="' + cx + '" cy="' + g.y(sr.ys[i]) + '" r="4" fill="' + sr.color + '" stroke="var(--surface)" stroke-width="1.5"/>'; html += "<br>" + sr.name + ": " + m(sr.ys[i]); });
+      g.series.forEach(function (sr) { if (g.y(sr.ys[i]) >= g.MT - 6) ch += '<circle cx="' + cx + '" cy="' + g.y(sr.ys[i]) + '" r="4" fill="' + sr.color + '" stroke="' + (sr.edge || 'var(--surface)') + '" stroke-width="1.5"/>'; html += "<br>" + sr.name + ": " + m(sr.ys[i]); });
       svg.querySelector(".xh").innerHTML = ch;
       var tip = $(tipId), b = svg.parentNode.getBoundingClientRect();
       tip.innerHTML = html; tip.classList.add("show");
@@ -330,7 +333,7 @@
     if (sw != null) $("verdict").innerHTML += ' The ranking flips at about <strong>' + (sw * 100).toFixed(1) + '%</strong>.';
 
     function rowHtml(name, color, o) {
-      return '<tr><th scope="row"><span class="sw" style="background:' + color + '"></span>' + name + '</th><td>' + m(o.c) + '</td><td>' + m(o.b) + '</td><td><strong>' + m(o.n) + '</strong></td><td>' + (o.b / o.c).toFixed(2) + '</td></tr>';
+      return '<tr><th scope="row"><span class="sw' + (color === 'var(--buy)' ? ' sw-edge' : '') + '" style="background:' + color + '"></span>' + name + '</th><td>' + m(o.c) + '</td><td>' + m(o.b) + '</td><td><strong>' + m(o.n) + '</strong></td><td>' + (o.b / o.c).toFixed(2) + '</td></tr>';
     }
     $("pvBody").innerHTML = rowHtml("Seawall", "var(--wall)", W) + rowHtml("Buyouts", "var(--buy)", B);
     var d50 = 1 / Math.pow(1 + r, 50);
@@ -339,7 +342,7 @@
     // chart 1: NPV vs rate
     var rates = []; for (var k = 0; k <= 20; k++) rates.push(k / 2);
     var ws = rates.map(function (rr) { return npv(f.wall, rr / 100); }), bs = rates.map(function (rr) { return npv(f.buy, rr / 100); });
-    lineChart("c1", rates, [{ name: "Seawall", color: "var(--wall)", ys: ws }, { name: "Buyouts", color: "var(--buy)", ys: bs }], function (v) { return v + "%"; }, s.r,
+    lineChart("c1", rates, [{ name: "Seawall", color: "var(--wall)", ys: ws }, { name: "Buyouts", color: "var(--buy)", edge: "var(--buy-edge)", ys: bs }], function (v) { return v + "%"; }, s.r,
       { xTicks: [0, 2, 3, 4, 6, 7, 8, 10], scaleFrom: 4, before: function (x, y, MT, PH) {
           var h = ""; [2, 3, 7].forEach(function (v) { h += '<line x1="' + x(v) + '" x2="' + x(v) + '" y1="' + MT + '" y2="' + (MT + PH) + '" stroke="var(--grid)" stroke-width="6" opacity=".7"/>'; });
           return h; },
@@ -360,16 +363,16 @@
     var ticks = []; for (var yv = 0; yv <= s.H; yv += (s.H > 60 ? 25 : 10)) ticks.push(yv);
     function payback(arr) { for (var i = 1; i < arr.length; i++) if (arr[i] >= 0 && arr[i - 1] < 0) return i; return null; }
     var pw = payback(cw), pb = payback(cb);
-    lineChart("c2", years, [{ name: "Seawall", color: "var(--wall)", ys: cw }, { name: "Buyouts", color: "var(--buy)", ys: cb }], function (v) { return "Yr " + v; }, null,
+    lineChart("c2", years, [{ name: "Seawall", color: "var(--wall)", ys: cw }, { name: "Buyouts", color: "var(--buy)", edge: "var(--buy-edge)", ys: cb }], function (v) { return "Yr " + v; }, null,
       { xTicks: ticks, after: function (x, y) {
           var h = "";
           if (pw != null && pb != null && Math.abs(pw - pb) <= 8) {
-            return '<circle cx="' + x(pw) + '" cy="' + y(0) + '" r="5" fill="var(--wall)" stroke="var(--surface)" stroke-width="2"/><circle cx="' + x(pb) + '" cy="' + y(0) + '" r="5" fill="var(--buy)" stroke="var(--surface)" stroke-width="2"/>' +
+            return '<circle cx="' + x(pw) + '" cy="' + y(0) + '" r="5" fill="var(--wall)" stroke="var(--surface)" stroke-width="2"/><circle cx="' + x(pb) + '" cy="' + y(0) + '" r="5" fill="var(--buy)" stroke="var(--buy-edge)" stroke-width="2"/>' +
               '<text x="' + x((pw + pb) / 2) + '" y="' + (y(0) - 12) + '" font-size="12" font-weight="700" text-anchor="middle" fill="var(--ink)" style="paint-order:stroke;stroke:var(--surface);stroke-width:4px">Both pay off: seawall year ' + pw + ', buyouts year ' + pb + '</text>';
           }
           [[pw, "var(--wall)", "Seawall pays off"], [pb, "var(--buy)", "Buyouts pay off"]].forEach(function (p, i) {
             if (p[0] == null) return;
-            h += '<circle cx="' + x(p[0]) + '" cy="' + y(0) + '" r="5" fill="' + p[1] + '" stroke="var(--surface)" stroke-width="2"/>' +
+            h += '<circle cx="' + x(p[0]) + '" cy="' + y(0) + '" r="5" fill="' + p[1] + '" stroke="' + (p[1] === 'var(--buy)' ? 'var(--buy-edge)' : 'var(--surface)') + '" stroke-width="2"/>' +
               '<text x="' + x(p[0]) + '" y="' + (y(0) + (i ? 20 : -10)) + '" font-size="12" font-weight="700" text-anchor="middle" fill="var(--ink)" style="paint-order:stroke;stroke:var(--surface);stroke-width:4px">' + p[2] + ', year ' + p[0] + '</text>';
           });
           return h; } });

@@ -18,7 +18,7 @@
     --axis: #8a8984;
     --s1: #4b2e83;           /* East / end of class / main series */
     --s1-light: #c5b4e3;     /* start of class (compare) */
-    --s2: #e93cac;           /* West */
+    --s2: #2ad2c9;           /* West: Accent Teal, drawn with a Husky Purple edge */
     --none: #e4e2dc;
     --accent: #4b2e83;       /* UW purple, chrome only */
     --accent-soft: #efeaf7;
@@ -298,11 +298,11 @@
     BY_COUNTY.forEach(function (r, i) {
       var y = MT + i * RH, w = Math.max(2, r[1] / max * PW);
       s += '<text x="' + (LW - 6) + '" y="' + (y + 11) + '" font-size="11.5" text-anchor="end" fill="var(--ink-2)">' + r[0] + '</text>';
-      s += '<rect x="' + LW + '" y="' + (y + 2) + '" width="' + w + '" height="' + (RH - 4) + '" rx="2" fill="' + (r[2] === "E" ? "var(--s1)" : "var(--s2)") + '"/>';
+      s += '<rect x="' + LW + '" y="' + (y + 2) + '" width="' + w + '" height="' + (RH - 4) + '" rx="2" fill="' + (r[2] === "E" ? "var(--s1)" : "var(--s2)") + '"' + (r[2] === "E" ? '' : ' stroke="#32006e" stroke-width="1"') + '/>';
       s += '<text x="' + (LW + w + 5) + '" y="' + (y + 11) + '" font-size="11.5" font-weight="700" fill="var(--ink)">' + r[1] + '</text>';
     });
     return '<p class="timing" style="margin:0 0 4px;"><strong>Total smoke days, 2014–2025</strong> (counties with data every year)</p>' +
-      '<ul class="legend"><li><span class="sw" style="background:var(--s1)"></span>East of the Cascades</li><li><span class="sw" style="background:var(--s2)"></span>West of the Cascades</li></ul>' + s + '</svg>';
+      '<ul class="legend"><li><span class="sw" style="background:var(--s1)"></span>East of the Cascades</li><li><span class="sw sw-edge" style="background:var(--s2)"></span>West of the Cascades</li></ul>' + s + '</svg>';
   }
   function chartCoverage() {
     var full = BY_COUNTY.map(function (r) { return r[0]; }).sort();
