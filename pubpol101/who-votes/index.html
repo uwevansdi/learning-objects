@@ -424,9 +424,22 @@
   // ---- Detail panel ------------------------------------------------------------------
   function renderDetail() {
     var d = dim(), row = d.rows[state.sel], h = '<h2>' + row.label + '</h2>';
+    // Lead with the election the chart is showing, so the headline number always matches the chart.
+    var yr = state.year, rNow = ratioOf(row, yr);
+    if (state.view === "change" && row.d["1972"] != null && rNow != null) {
+      var r72 = ratioOf(row, "1972");
+      h += '<div class="big" style="font-size:26px;">' + per100(r72) + ' → ' + per100(rNow) + '</div>' +
+        '<p class="sub">votes per 100 expected, 1972 to ' + yr + '. In ' + yr + ' this group was <strong>' + words(rNow) + '</strong>.' + (yr !== "1972" ? ' <em>(Preliminary)</em>' : '') + '</p>';
+    } else if (rNow != null) {
+      h += '<div class="big">' + per100(rNow) + '</div>' +
+        '<p class="sub">votes cast in ' + yr + ' for every 100 its share of citizens would predict: <strong>' + words(rNow) + '</strong>.' + (yr !== "1972" ? ' <em>(Preliminary)</em>' : '') + '</p>';
+    } else {
+      h += '<p class="sub">No ' + yr + ' estimate for this group yet.</p>';
+    }
     var v72 = row.d["1972"];
     if (Array.isArray(v72)) {
-      h += '<p class="sub">How the 1972 ratio is calculated' + (v72[3] && v72[3] !== row.label ? ' (1972 category: ' + v72[3] + ')' : '') + ':</p>' +
+      h += '<h3 style="margin-top:14px;">' + (yr === "1972" && state.view !== "change" ? 'How this ratio is calculated' : 'How the ratio works, using 1972 shares') + '</h3>' +
+        '<p class="sub">' + (yr === "1972" && state.view !== "change" ? '' : 'Only the 1972 data includes both shares, so it shows the math. ') + 'In 1972' + (v72[3] && v72[3] !== row.label ? ' (category: ' + v72[3] + ')' : '') + ':</p>' +
         '<div class="calc"><div><div class="v">' + v72[1].toFixed(1) + '%</div><div class="k">of voters</div></div><div class="op">÷</div>' +
         '<div><div class="v">' + v72[0].toFixed(1) + '%</div><div class="k">of adult citizens</div></div><div class="op">=</div>' +
         '<div><div class="v">' + fmt(v72[2]) + '</div><div class="k">ratio</div></div></div>' +
