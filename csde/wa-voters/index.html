@@ -1,0 +1,1040 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Who Can Vote in Washington</title>
+<meta name="description" content="Explore estimates of Washington's eligible voters (adult U.S. citizens) by race and ethnicity for every county, legislative district and precinct, 2010 to 2025.">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+  @font-face { font-family: "Encode Sans"; font-weight: 500 800; font-display: swap; src: url("../../assets/fonts/encode-sans-latin.woff2") format("woff2"); }
+  @font-face { font-family: "Open Sans"; font-weight: 400 700; font-display: swap; src: url("../../assets/fonts/open-sans-latin.woff2") format("woff2"); }
+  @font-face { font-family: "Open Sans"; font-style: italic; font-weight: 400 700; font-display: swap; src: url("../../assets/fonts/open-sans-italic-latin.woff2") format("woff2"); }
+
+  :root {
+    color-scheme: light;
+    --font-head: "Encode Sans", Arial, system-ui, sans-serif;
+    --font-body: "Open Sans", Calibri, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --husky: #32006e; --spirit: #4b2e83; --heritage: #85754d; --gold-web: #e8e3d3; --lavender: #c5b4e3;
+    --bg: #f7f6f3; --surface: #ffffff; --surface-2: #f2f0eb; --border: #dcd8ce;
+    --text: #1c1b1f; --text-2: #4a4851; --muted: #6b6873;
+    --accent: #4b2e83; --accent-ink: #ffffff; --focus: #e93cac;
+    --mask: rgba(247, 246, 243, 0.72); --outline: #32006e;
+    /* race and ethnicity, fixed order (validated for color-vision deficiency, light and dark) */
+    --g1: #6a4fc4; --g2: #1a9a90; --g3: #b8862b; --g4: #2a78d6; --g5: #d6409f; --g6: #6f9a12; --g7: #a0522d;
+    --s0: #f1edf8; --s1: #d6caeb; --s2: #b5a0d9; --s3: #8f72c2; --s4: #6646a4; --s5: #3b1a78;
+    --d0: #6b5a2e; --d1: #9c8650; --d2: #cdbd8e; --d3: #e6e4df; --d4: #c3b2e3; --d5: #8b6cc6; --d6: #4b2e83;
+    --hatch-a: #b9b5ab; --hatch-b: #f2f0eb;
+    --line-2: #8a8794;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #141318; --surface: #1d1b22; --surface-2: #26232d; --border: #3a3643;
+      --text: #f0eef4; --text-2: #c9c5d2; --muted: #a09bab;
+      --accent: #b9a5ea; --accent-ink: #1d1b22; --focus: #ff7fd0;
+      --mask: rgba(20, 19, 24, 0.7); --outline: #d8cbff;
+      --s0: #2b2540; --s1: #43386a; --s2: #5f4f96; --s3: #8170c0; --s4: #a996e0; --s5: #d6cbf5;
+      --d0: #d2bf86; --d1: #a08b55; --d2: #6b5c36; --d3: #3b3842; --d4: #5d4a92; --d5: #8f73d1; --d6: #cbbcf3;
+      --hatch-a: #5a5663; --hatch-b: #26232d; --line-2: #8f8a99;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #141318; --surface: #1d1b22; --surface-2: #26232d; --border: #3a3643;
+    --text: #f0eef4; --text-2: #c9c5d2; --muted: #a09bab;
+    --accent: #b9a5ea; --accent-ink: #1d1b22; --focus: #ff7fd0;
+    --mask: rgba(20, 19, 24, 0.7); --outline: #d8cbff;
+    --s0: #2b2540; --s1: #43386a; --s2: #5f4f96; --s3: #8170c0; --s4: #a996e0; --s5: #d6cbf5;
+    --d0: #d2bf86; --d1: #a08b55; --d2: #6b5c36; --d3: #3b3842; --d4: #5d4a92; --d5: #8f73d1; --d6: #cbbcf3;
+    --hatch-a: #5a5663; --hatch-b: #26232d; --line-2: #8f8a99;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--text); font: 15px/1.55 var(--font-body); }
+  h1, h2, h3, legend, .eyebrow, .step-n { font-family: var(--font-head); }
+  a { color: var(--accent); }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* DRAFT watermark: remove when CSDE approves the page */
+  .watermark { position: fixed; inset: 0; z-index: 2000; pointer-events: none; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .watermark span { font-family: var(--font-head); font-weight: 800; font-size: clamp(90px, 18vw, 240px); letter-spacing: .08em; color: rgba(138, 75, 0, 0.08); transform: rotate(-28deg); white-space: nowrap; user-select: none; }
+
+  /* Brand bar: UW CSDE (text lockup; swap in the official CSDE signature file when available) */
+  .brandbar { background: var(--husky); color: #fff; border-bottom: 4px solid var(--heritage); }
+  .brandbar-inner { max-width: 1280px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .lockup { display: flex; flex-direction: column; line-height: 1.15; text-decoration: none; color: #fff; }
+  .lockup .uw { font-family: var(--font-head); font-weight: 700; letter-spacing: .14em; text-transform: uppercase; font-size: 13px; }
+  .lockup .csde { font-family: var(--font-head); font-weight: 600; font-size: 15px; }
+  .brandbar .tag { margin-left: auto; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--gold-web); font-family: var(--font-head); font-weight: 600; }
+
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 16px; }
+  .intro { padding: 22px 0 6px; }
+  .eyebrow { color: var(--heritage); text-transform: uppercase; letter-spacing: .08em; font-size: 12px; font-weight: 700; margin: 0 0 4px; }
+  :root[data-theme="dark"] .eyebrow { color: #cdbd8e; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .eyebrow { color: #cdbd8e; } }
+  h1 { margin: 0 0 6px; font-size: clamp(26px, 4vw, 36px); line-height: 1.15; color: var(--accent); }
+  .lede { margin: 0; max-width: 64ch; color: var(--text-2); font-size: 16px; }
+  .lede strong { color: var(--text); }
+
+  /* Steps */
+  .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 16px 0 12px; }
+  .step { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; position: relative; }
+  .step.active { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .step.locked { opacity: .55; }
+  .step-h { display: flex; align-items: baseline; gap: 8px; margin: 0 0 8px; font-size: 14px; font-weight: 700; }
+  .step-n { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-size: 12px; flex: none; }
+  .step.locked .step-n { background: var(--muted); }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  label.f { display: flex; flex-direction: column; gap: 3px; font-size: 12px; font-weight: 600; color: var(--text-2); flex: 1 1 140px; min-width: 0; }
+  select, input[type="search"], button { font: inherit; font-size: 14px; }
+  select, input[type="search"] { width: 100%; padding: 7px 9px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); color: var(--text); min-height: 38px; }
+  button { cursor: pointer; border-radius: 7px; border: 1px solid var(--border); background: var(--surface); color: var(--text); padding: 7px 12px; min-height: 38px; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  button.link { border: 0; background: none; padding: 0; min-height: 0; color: var(--accent); text-decoration: underline; font-size: inherit; }
+  button[disabled] { opacity: .5; cursor: not-allowed; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; flex-wrap: wrap; }
+  .seg button { border: 0; border-radius: 0; min-height: 36px; }
+  .seg button + button { border-left: 1px solid var(--border); }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .addr { display: flex; gap: 6px; margin-top: 8px; }
+  .addr input { flex: 1; }
+  .hint { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+  .geo-choice { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .geo-choice button { text-align: left; padding: 8px 10px; line-height: 1.3; }
+  .geo-choice button small { display: block; color: var(--muted); font-size: 12px; font-weight: 400; }
+  .geo-choice button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .geo-choice button[aria-pressed="true"] small { color: inherit; opacity: .85; }
+
+  /* Layout */
+  .layout { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(320px, 1fr); gap: 14px; align-items: start; }
+  .mapcard, .panel, .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  .mapcard { padding: 10px; position: relative; }
+  #map { height: min(70vh, 640px); min-height: 380px; border-radius: 6px; background: var(--surface-2); }
+  .maptitle { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; margin: 2px 4px 8px; }
+  .maptitle h2 { margin: 0; font-size: 17px; }
+  .maptitle .sub { color: var(--muted); font-size: 13px; }
+  .loading { position: absolute; top: 56px; left: 50%; transform: translateX(-50%); z-index: 900; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 5px 14px; font-size: 13px; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; margin: 10px 4px 2px; font-size: 12px; color: var(--text-2); }
+  .legend .ramp { display: flex; gap: 2px; align-items: stretch; }
+  .legend .ramp { flex-wrap: wrap; }
+  .legend .ramp div { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 76px; text-align: center; }
+  .legend .sw { width: 100%; height: 12px; border-radius: 3px; }
+  .legend .sw.na, .sw.na { background: repeating-linear-gradient(45deg, var(--hatch-a) 0 2px, var(--hatch-b) 2px 6px); }
+  .legend .na-item { display: flex; gap: 6px; align-items: center; }
+  .legend .na-item .sw { width: 22px; }
+  .mapnote { font-size: 12px; color: var(--muted); margin: 6px 4px 0; }
+  .maptools { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 4px 0; align-items: center; }
+  .maptools label { font-size: 13px; display: flex; gap: 6px; align-items: center; }
+
+  .panel { padding: 16px; }
+  .panel h2 { margin: 0; font-size: 20px; line-height: 1.2; }
+  .panel h3 { font-size: 14px; margin: 18px 0 6px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-2); }
+  .panel .sub { color: var(--muted); font-size: 13px; margin: 2px 0 0; }
+  .crumbs { font-size: 13px; margin: 0 0 8px; }
+  .big { display: flex; align-items: baseline; gap: 8px; margin: 12px 0 2px; flex-wrap: wrap; }
+  .big .num { font-family: var(--font-head); font-size: 30px; font-weight: 700; line-height: 1; }
+  .big .what { color: var(--text-2); }
+  .badge { display: inline-flex; gap: 6px; align-items: center; font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface-2); margin-top: 6px; }
+  .badge.warn::before { content: "!"; display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: var(--heritage); color: #fff; font-size: 11px; }
+  .comp { display: flex; gap: 2px; height: 18px; margin: 6px 0 10px; }
+  .comp span { display: block; height: 100%; min-width: 2px; }
+  .comp span:first-child { border-radius: 4px 0 0 4px; } .comp span:last-child { border-radius: 0 4px 4px 0; }
+  table.groups { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.groups th, table.groups td { padding: 4px 4px; text-align: right; border-bottom: 1px solid var(--border); }
+  table.groups th:first-child, table.groups td:first-child { text-align: left; }
+  table.groups td:not(:first-child) { white-space: nowrap; }
+  table.groups thead th { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+  table.groups tr.on td { font-weight: 700; }
+  .key { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+  .fn { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+  .callout { background: var(--surface-2); border-left: 4px solid var(--heritage); border-radius: 6px; padding: 10px 12px; font-size: 13px; margin: 10px 0; }
+  .actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .actions button { font-size: 13px; min-height: 34px; padding: 5px 10px; }
+  .similar { list-style: none; padding: 0; margin: 6px 0 0; }
+  .similar li { display: flex; justify-content: space-between; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .picker { margin-top: 12px; }
+
+  /* Chart */
+  .chart { position: relative; }
+  .chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .chart .tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.15); white-space: nowrap; z-index: 2; }
+  .chart-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--text-2); margin: 4px 0 0; }
+  .chart-legend i { display: inline-block; width: 18px; height: 0; border-top: 2px solid; vertical-align: middle; margin-right: 5px; }
+  .chart-legend i.dash { border-top-style: dashed; }
+
+  /* Stories */
+  .stories { display: grid; gap: 8px; margin-top: 10px; }
+  .story { text-align: left; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; line-height: 1.4; }
+  .story strong { display: block; font-family: var(--font-head); font-size: 15px; margin-bottom: 2px; color: var(--text); }
+  .story span { color: var(--text-2); font-size: 13px; }
+  .story:hover { border-color: var(--accent); }
+
+  /* Below the map */
+  .below { display: grid; gap: 14px; margin: 14px 0 30px; }
+  .card { padding: 14px 16px; }
+  details > summary { cursor: pointer; font-family: var(--font-head); font-weight: 700; font-size: 16px; }
+  .tablewrap { max-height: 420px; overflow: auto; margin-top: 10px; border: 1px solid var(--border); border-radius: 6px; }
+  table.units { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.units th, table.units td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+  table.units th:first-child, table.units td:first-child { text-align: left; white-space: normal; }
+  table.units thead th { position: sticky; top: 0; background: var(--surface-2); z-index: 1; }
+  table.units thead button { border: 0; background: none; padding: 0; min-height: 0; font-weight: 700; font-size: 12px; color: var(--text); }
+  .about { columns: 2 320px; column-gap: 28px; font-size: 14px; color: var(--text-2); }
+  .about p { margin: 0 0 10px; break-inside: avoid; }
+  .about strong { color: var(--text); }
+  footer { font-size: 12px; color: var(--muted); padding: 0 0 30px; }
+
+  /* Leaflet tooltip */
+  .leaflet-tooltip.tt { font: 13px/1.35 var(--font-body); background: var(--surface); color: var(--text); border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+  .leaflet-tooltip.tt::before { display: none; }
+  .leaflet-tooltip.ldlabel { background: none; border: 0; box-shadow: none; font: 700 13px var(--font-head); color: var(--text); text-shadow: 0 0 3px var(--surface), 0 0 3px var(--surface), 0 0 3px var(--surface); padding: 0; }
+  .leaflet-tooltip.ldlabel::before { display: none; }
+  .leaflet-container { font-family: var(--font-body); }
+  .leaflet-control-attribution { font-size: 10px; }
+
+  @media (max-width: 960px) {
+    .layout { grid-template-columns: 1fr; }
+    .steps { grid-template-columns: 1fr; }
+    #map { height: 62vh; }
+  }
+  @media (max-width: 520px) { .geo-choice { grid-template-columns: 1fr; } .brandbar .tag { display: none; } }
+
+  body.embed .brandbar, body.embed .intro { display: none; }
+
+  @media print {
+    .watermark span { color: rgba(0,0,0,.1); }
+    .steps, .maptools, .actions, .below .tablecard, .stories, .addr, .leaflet-control-zoom { display: none !important; }
+    .layout { grid-template-columns: 1fr; }
+    .brandbar { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    #map { height: 520px; }
+    .panel, .mapcard { break-inside: avoid; border: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="watermark" aria-hidden="true"><span>DRAFT</span></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="6" height="6" style="fill: var(--hatch-b)"></rect>
+      <rect width="2" height="6" style="fill: var(--hatch-a)"></rect>
+    </pattern>
+  </defs>
+</svg>
+
+<header class="brandbar">
+  <div class="brandbar-inner">
+    <div class="lockup"><span class="uw">University of Washington</span><span class="csde">Center for Studies in Demography &amp; Ecology</span></div>
+    <span class="tag">Washington elections data</span>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="intro">
+    <p class="eyebrow">Data explorer · Draft</p>
+    <h1>Who can vote in Washington?</h1>
+    <p class="lede">Explore estimates of <strong>eligible voters</strong>, meaning U.S. citizens 18 and older, by race and ethnicity for every county, legislative district and precinct in Washington, 2010 to 2025. These are people who <em>can</em> vote, not people who registered or voted.</p>
+  </section>
+
+  <div class="steps" role="group" aria-label="Steps">
+    <section class="step active" id="step1" aria-labelledby="s1h">
+      <h2 class="step-h" id="s1h"><span class="step-n" aria-hidden="true">1</span> Choose a county</h2>
+      <label class="f">County
+        <select id="county"><option value="">All of Washington</option></select>
+      </label>
+      <form class="addr" id="addrForm" role="search">
+        <label class="sr" for="addr">Find an address</label>
+        <input type="search" id="addr" placeholder="Or find an address, e.g. 1400 NE Campus Pkwy, Seattle" autocomplete="street-address">
+        <button type="submit">Find</button>
+      </form>
+      <p class="hint" id="addrHint">Address search uses Esri's geocoding service. This page doesn't store what you type.</p>
+    </section>
+    <section class="step locked" id="step2" aria-labelledby="s2h">
+      <h2 class="step-h" id="s2h"><span class="step-n" aria-hidden="true">2</span> Precincts or districts?</h2>
+      <div class="geo-choice" role="group" aria-label="Map areas">
+        <button type="button" id="geoP" aria-pressed="false" disabled>Precincts<small>Smallest election areas</small></button>
+        <button type="button" id="geoD" aria-pressed="false" disabled>Legislative districts<small>Each elects 1 senator, 2 representatives</small></button>
+      </div>
+      <p class="hint" id="s2hint">Pick a county first.</p>
+    </section>
+    <section class="step" id="step3" aria-labelledby="s3h">
+      <h2 class="step-h" id="s3h"><span class="step-n" aria-hidden="true">3</span> Explore</h2>
+      <div class="row">
+        <label class="f">Show
+          <select id="metric"></select>
+        </label>
+        <label class="f" style="flex:0 1 190px">Year
+          <select id="year"></select>
+        </label>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <div class="seg" role="group" aria-label="View">
+          <button type="button" id="viewSnap" aria-pressed="true">One year</button>
+          <button type="button" id="viewChange" aria-pressed="false">Change since…</button>
+        </div>
+        <label class="f" id="baseWrap" style="flex:0 1 150px" hidden><span class="sr">Compare with year</span>
+          <select id="base" aria-label="Compare with year"></select>
+        </label>
+      </div>
+    </section>
+  </div>
+
+  <div class="layout">
+    <section class="mapcard" aria-labelledby="mapTitle">
+      <div class="maptitle"><h2 id="mapTitle">Washington counties</h2><span class="sub" id="mapSub"></span></div>
+      <div id="map" role="region" aria-label="Map. Use the panel or the table below to choose places with a keyboard."></div>
+      <div class="loading" id="loading" hidden>Loading…</div>
+      <div class="legend" id="legend" aria-label="Map legend"></div>
+      <p class="mapnote" id="mapNote"></p>
+      <div class="maptools" id="mapTools">
+        <label id="prevWrap" hidden><input type="checkbox" id="prevLines"> Show previous district lines</label>
+      </div>
+    </section>
+    <aside class="panel" id="panel" aria-live="polite" aria-label="Selected place"></aside>
+  </div>
+
+  <div class="below">
+    <section class="card tablecard">
+      <details id="tableDetails">
+        <summary>Table of the places on the map</summary>
+        <p class="fn">Every value shown on the map, for screen readers, sorting and copying. Select a row's name to open its profile.</p>
+        <div class="row" style="margin-top:8px"><button type="button" id="dlCsv">Download this table (CSV)</button></div>
+        <div class="tablewrap"><table class="units" id="unitTable"></table></div>
+      </details>
+    </section>
+    <section class="card" aria-labelledby="aboutH">
+      <h2 id="aboutH" style="margin:0 0 10px;font-size:18px">About these estimates</h2>
+      <div class="about">
+        <p><strong>What's counted.</strong> Citizen voting-age population: U.S. citizens age 18 and older, the group eligible to register and vote. It's not a count of registered voters or of people who voted.</p>
+        <p><strong>Where it comes from.</strong> The U.S. Census Bureau's American Community Survey (ACS) five-year estimates, prepared for Washington's precincts and legislative districts by the Washington elections data project at UW CSDE. Each map year uses the five-year survey shown next to it (for example, 2010 uses 2008–2012).</p>
+        <p><strong>These are estimates.</strong> They come from a survey sample, so every number has a margin of error, and it's largest for small places and small groups. Totals are rounded. Precincts with fewer than 50 eligible citizens are shaded with stripes and their percentages aren't shown. Treat those under 200 with caution.</p>
+        <p><strong>Some years repeat.</strong> 2022, 2023, 2024 and 2025 all use the same survey (2020–2024), so differences between them come only from new precinct lines. The "change since" view won't compare years from the same survey, and it notes when two survey periods overlap.</p>
+        <p><strong>Race and ethnicity.</strong> Hispanic or Latino people may be of any race. The other groups count people who are not Hispanic or Latino. "Two or more races" combines the multiracial categories in the source. People of color means everyone except non-Hispanic white people. The diversity index is the chance, out of 100, that two eligible citizens picked at random belong to different groups.</p>
+        <p><strong>Precinct lines change.</strong> Counties redraw precincts often, so a precinct's numbers can change because its boundaries moved. Each year is drawn with that year's precinct map from the Washington Secretary of State. A few counties' files were incomplete (Pierce and Asotin in 2015, and a handful elsewhere), so those precincts use the same precinct's lines from the nearest year. 2011 uses the 2012 lines. "Change since" for precincts only compares precincts whose lines stayed about the same.</p>
+        <p><strong>Legislative districts.</strong> The 49 districts have used three maps here: the 2012 map, the 2022 map, and the 2024 map, which a federal court redrew in the Yakima Valley under the Voting Rights Act. The district table for 2016–2019 uses the 2012 map, 2020–2021 the 2022 map, and 2022–2025 the 2024 map. District trends and changes are estimated by adding up precincts inside today's lines. They can differ slightly from the official district table.</p>
+        <p><strong>Boundaries and basemap.</strong> Precinct maps: Washington Secretary of State. County and district maps: U.S. Census Bureau cartographic boundary files. Basemap © Esri, HERE, Garmin and OpenStreetMap contributors. Address search by Esri (with OpenStreetMap Nominatim as a backup).</p>
+      </div>
+    </section>
+  </div>
+  <footer id="foot"></footer>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var MIN_N = 50, CAUTION_N = 200;
+
+  // ---------- definitions ----------
+  var GROUPS = [
+    { i: 1, key: "hisp", label: "Hispanic or Latino" },
+    { i: 2, key: "white", label: "White" },
+    { i: 3, key: "black", label: "Black" },
+    { i: 4, key: "asian", label: "Asian" },
+    { i: 5, key: "aian", label: "American Indian or Alaska Native" },
+    { i: 6, key: "nhpi", label: "Native Hawaiian or Pacific Islander" },
+    { i: 7, key: "multi", label: "Two or more races" }
+  ];
+  function share(i) { return function (v) { return 100 * v[i] / v[0]; }; }
+  function diversity(v) { var s = 0, t = 0, i; for (i = 1; i < 8; i++) t += v[i]; if (!t) return null; for (i = 1; i < 8; i++) s += Math.pow(v[i] / t, 2); return 100 * (1 - s); }
+  var BIG = [-10, -4, -1, 1, 4, 10], SMALL = [-4, -1.5, -0.5, 0.5, 1.5, 4];
+  var METRICS = [
+    { key: "poc", label: "People of color", kind: "share", f: function (v) { return 100 * (v[0] - v[2]) / v[0]; }, br: [10, 20, 35, 50, 65], cb: BIG },
+    { key: "hisp", label: "Hispanic or Latino", kind: "share", f: share(1), br: [5, 10, 20, 35, 50], cb: BIG, g: 1 },
+    { key: "white", label: "White", kind: "share", f: share(2), br: [35, 50, 65, 80, 90], cb: BIG, g: 2 },
+    { key: "black", label: "Black", kind: "share", f: share(3), br: [1, 2.5, 5, 10, 20], cb: SMALL, g: 3 },
+    { key: "asian", label: "Asian", kind: "share", f: share(4), br: [1, 2.5, 5, 10, 20], cb: SMALL, g: 4 },
+    { key: "aian", label: "American Indian or Alaska Native", kind: "share", f: share(5), br: [1, 2.5, 5, 10, 20], cb: SMALL, g: 5 },
+    { key: "nhpi", label: "Native Hawaiian or Pacific Islander", kind: "share", f: share(6), br: [0.5, 1, 2.5, 5, 10], cb: SMALL, g: 6 },
+    { key: "multi", label: "Two or more races", kind: "share", f: share(7), br: [1, 2.5, 5, 7.5, 10], cb: SMALL, g: 7 },
+    { key: "div", label: "Diversity index", kind: "index", f: diversity, br: [15, 30, 45, 60, 70], cb: BIG },
+    { key: "tot", label: "Number of eligible citizens", kind: "count", f: function (v) { return v[0]; }, br: null, cb: [-25, -10, -2, 2, 10, 25] }
+  ];
+  var MBY = {}; METRICS.forEach(function (m) { MBY[m.key] = m; });
+  var MAPS = { "2012": "2012 district map", "2022": "2022 district map", "2024": "2024 district map (court-ordered changes in the Yakima Valley)" };
+  var PREV = { "2024": "2022", "2022": "2012" };
+
+  // ---------- state ----------
+  var S = null, COUNTY_FC = null;
+  var st = { cc: "", geo: "", m: "poc", y: "", view: "snap", base: "2010", sel: "", prev: false };
+  var cache = {};
+  var map, countyLayer, unitLayer, maskLayer, outlineLayer, prevLayer, labelLayer, marker;
+  var units = []; // [{id, name, v, vb, val, feature, layer}]
+
+  // ---------- formatting ----------
+  function survey(y, ld) { var s = (ld ? S.ldSource : S.source)[y] || ""; var m = /(\d{4})-(\d{4})/.exec(s); return m ? m[1] + "–" + m[2].slice(2) : s; }
+  function roundN(n) { var r = n < 1000 ? 10 : n < 100000 ? 100 : 1000; return Math.round(n / r) * r; }
+  function fmtCount(n) { return n < 10 ? "under 10" : roundN(n).toLocaleString("en-US"); }
+  function fmtShare(x) { return x == null || isNaN(x) ? "–" : (x < 10 ? x.toFixed(1) : Math.round(x)) + "%"; }
+  function fmtVal(x, m) { if (x == null || isNaN(x)) return "–"; if (m.kind === "count") return fmtCount(x); if (m.kind === "index") return Math.round(x) + ""; return fmtShare(x); }
+  function fmtChange(x, m) {
+    if (x == null || isNaN(x)) return "–";
+    var a = Math.abs(x), s = x > 0.05 ? "+" : x < -0.05 ? "−" : "";
+    var n = a < 10 ? a.toFixed(1) : Math.round(a);
+    return s + n + (m.kind === "count" ? "%" : m.kind === "index" ? " points" : " pts");
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function cname(cc) { return S.counties[cc] + " County"; }
+  function ldName(id) { return "Legislative District " + (+id); }
+  function cssv(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+  // ---------- values ----------
+  function metric() { return MBY[st.m]; }
+  function snapVal(v, m, small) { if (!v || !v[0]) return null; if (small && v[0] < MIN_N && m.kind !== "count") return null; return m.f(v); }
+  function changeVal(v, vb, m, small) {
+    if (!v || !vb || !v[0] || !vb[0]) return null;
+    if (small && (v[0] < MIN_N || vb[0] < MIN_N)) return null;
+    if (m.kind === "count") return 100 * (v[0] - vb[0]) / vb[0];
+    var a = m.f(v), b = m.f(vb); return a == null || b == null ? null : a - b;
+  }
+  function breaksFor(m, vals) {
+    if (st.view === "change") return m.cb;
+    if (m.br) return m.br;
+    var xs = vals.filter(function (x) { return x != null; }).sort(function (a, b) { return a - b; });
+    if (!xs.length) return [1, 2, 3, 4, 5];
+    var out = [];
+    for (var k = 1; k < 6; k++) { var q = xs[Math.floor(k * xs.length / 6)]; var p = Math.pow(10, Math.floor(Math.log10(Math.max(q, 1))) - 1); out.push(Math.round(q / p) * p); }
+    return out.filter(function (x, i) { return i === 0 || x > out[i - 1]; });
+  }
+  function colorFor(x, br) {
+    if (x == null || isNaN(x)) return "url(#hatch)";
+    var i = 0; while (i < br.length && x >= br[i]) i++;
+    if (st.view === "change") return cssv("--d" + i);
+    return cssv("--s" + Math.min(i + (6 - br.length - 1), 5));
+  }
+
+  // ---------- data loading ----------
+  function load(url) {
+    if (!cache[url]) cache[url] = fetch(url).then(function (r) { if (!r.ok) throw new Error(url + " " + r.status); return r.json(); });
+    return cache[url];
+  }
+  function topo(url, name) { return load(url).then(function (t) { return t.__fc || (t.__fc = topojson.feature(t, t.objects[name])); }); }
+  function busy(on, text) { $("loading").hidden = !on; if (text) $("loading").textContent = text; }
+
+  // ---------- geometry ----------
+  function polysOf(g) { return g.type === "Polygon" ? [g.coordinates] : g.type === "MultiPolygon" ? g.coordinates : []; }
+  function inRing(x, y, r) { var c = false; for (var i = 0, j = r.length - 1; i < r.length; j = i++) { var xi = r[i][0], yi = r[i][1], xj = r[j][0], yj = r[j][1]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; }
+  function contains(f, x, y) { return polysOf(f.geometry).some(function (p) { return inRing(x, y, p[0]) && !p.slice(1).some(function (h) { return inRing(x, y, h); }); }); }
+
+  // ---------- map ----------
+  function dark() { var t = document.documentElement.getAttribute("data-theme"); return t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches; }
+  var baseTiles, labelTiles;
+  function setTiles() {
+    var d = dark() ? "Dark" : "Light", u = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_" + d + "_Gray_";
+    if (baseTiles) map.removeLayer(baseTiles); if (labelTiles) map.removeLayer(labelTiles);
+    var attr = "Basemap &copy; Esri, HERE, Garmin, &copy; OpenStreetMap contributors";
+    baseTiles = L.tileLayer(u + "Base/MapServer/tile/{z}/{y}/{x}", { attribution: attr, maxNativeZoom: 16, maxZoom: 18 }).addTo(map);
+    labelTiles = L.tileLayer(u + "Reference/MapServer/tile/{z}/{y}/{x}", { pane: "labels", maxNativeZoom: 16, maxZoom: 18 }).addTo(map);
+  }
+  function initMap() {
+    map = L.map("map", { zoomSnap: 0.25, minZoom: 5.5, maxBounds: [[44.5, -126.5], [50, -115.5]], attributionControl: true });
+    [["counties", 405], ["units", 410], ["mask", 420], ["outline", 430], ["prev", 435], ["labels", 450], ["ldlabels", 460]].forEach(function (p) {
+      map.createPane(p[0]).style.zIndex = p[1];
+    });
+    map.getPane("labels").style.pointerEvents = "none"; map.getPane("mask").style.pointerEvents = "none";
+    map.getPane("prev").style.pointerEvents = "none"; map.getPane("ldlabels").style.pointerEvents = "none";
+    map.fitBounds([[45.54, -124.8], [49.0, -116.9]], { animate: false });
+    setTiles();
+    matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function () { setTiles(); restyle(); });
+  }
+
+  // ---------- rendering the map ----------
+  function tooltipHtml(u) {
+    var m = metric();
+    var head = "<strong>" + esc(u.name) + "</strong>";
+    if (st.view === "change") {
+      var why = u.why ? "<br><em>" + u.why + "</em>" : "";
+      return head + "<br>" + m.label + ": " + fmtChange(u.val, m) + " since " + st.base + why;
+    }
+    if (u.v && u.v[0] < MIN_N && m.kind !== "count") return head + "<br>Too few eligible citizens to estimate";
+    return head + "<br>" + m.label + ": " + fmtVal(u.val, m) + (u.v ? "<br>Eligible citizens: about " + fmtCount(u.v[0]) : "");
+  }
+  function styleFor(u, br) {
+    var selected = st.sel && u.id === st.sel;
+    return { fillColor: colorFor(u.val, br), fillOpacity: dark() ? 0.85 : 0.8, color: selected ? cssv("--focus") : (dark() ? "#141318" : "#ffffff"),
+      weight: selected ? 3 : (st.geo === "p" ? 0.5 : 1.2), opacity: 1 };
+  }
+  var currentBreaks = [];
+  function restyle() {
+    var vals = units.map(function (u) { return u.val; });
+    currentBreaks = breaksFor(metric(), vals);
+    units.forEach(function (u) { if (u.layer) u.layer.setStyle(styleFor(u, currentBreaks)); });
+    units.forEach(function (u) { if (u.layer && u.id === st.sel) u.layer.bringToFront(); });
+    drawLegend(); drawTable();
+  }
+  function buildLayer(fc, pane, toUnit) {
+    units = [];
+    var layer = L.geoJSON(fc, {
+      pane: pane,
+      onEachFeature: function (f, l) {
+        var u = toUnit(f); if (!u) return;
+        u.feature = f; u.layer = l; units.push(u);
+        l.bindTooltip(function () { return tooltipHtml(u); }, { sticky: true, className: "tt", direction: "top", offset: [0, -6] });
+        l.on("click", function (e) { L.DomEvent.stopPropagation(e); onUnitClick(u, e.latlng); });
+        l.on("mouseover", function () { l.setStyle({ weight: 2.5, color: cssv("--outline") }); });
+        l.on("mouseout", function () { l.setStyle(styleFor(u, currentBreaks)); });
+      }
+    });
+    return layer;
+  }
+  function clearUnits() { [unitLayer, maskLayer, outlineLayer, prevLayer, labelLayer].forEach(function (l) { if (l) map.removeLayer(l); }); unitLayer = maskLayer = outlineLayer = prevLayer = labelLayer = null; }
+
+  function countyFeature(cc) { return COUNTY_FC.features.filter(function (f) { return f.properties.cc === cc; })[0]; }
+  function drawMask(cc) {
+    var f = countyFeature(cc); if (!f) return;
+    var world = [[89, -179], [89, 179], [-89, 179], [-89, -179]];
+    var holes = polysOf(f.geometry).map(function (p) { return p[0].map(function (c) { return [c[1], c[0]]; }); });
+    maskLayer = L.polygon([world].concat(holes), { pane: "mask", stroke: false, fillColor: cssv("--mask"), fillOpacity: 1, interactive: false }).addTo(map);
+    outlineLayer = L.geoJSON(f, { pane: "outline", style: { color: cssv("--outline"), weight: 3, fill: false }, interactive: false }).addTo(map);
+  }
+
+  function renderCounties() {
+    clearUnits();
+    if (countyLayer) map.removeLayer(countyLayer);
+    var m = metric();
+    countyLayer = buildLayer(COUNTY_FC, "counties", function (f) {
+      var cc = f.properties.cc, v = S.county[cc][st.y], vb = S.county[cc][st.base];
+      return { id: cc, name: cname(cc), v: v, vb: vb, val: st.view === "change" ? changeVal(v, vb, m, false) : snapVal(v, m, false), kind: "county" };
+    }).addTo(map);
+    if (st.cc) {
+      // county chosen but no map type yet: fade the others and outline it
+      countyLayer.eachLayer(function (l) { l.feature.properties.cc !== st.cc && l.setStyle({ fillOpacity: 0.25 }); });
+      drawMask(st.cc);
+    }
+    restyle();
+    if (st.cc) countyLayer.eachLayer(function (l) { if (l.feature.properties.cc !== st.cc) l.setStyle({ fillOpacity: 0.3 }); });
+  }
+
+  function ldEraFor() { return st.view === "change" ? "2024" : S.ldEra[st.y]; }
+
+  function renderUnits() {
+    var cc = st.cc, m = metric(), token = {}; renderUnits.token = token;
+    if (countyLayer) { map.removeLayer(countyLayer); countyLayer = null; }
+    busy(true, st.geo === "p" ? "Loading precincts…" : "Loading districts…");
+    var jobs;
+    if (st.geo === "p") {
+      jobs = [topo("data/p/" + st.y + "/" + cc + ".json", "p")];
+      if (st.view === "change") jobs.push(topo("data/p/" + st.base + "/" + cc + ".json", "p"));
+    } else {
+      jobs = [topo("data/ld-" + ldEraFor() + ".json", "d")];
+    }
+    jobs.push(topo("data/counties.json", "c"));
+    return Promise.all(jobs).then(function (r) {
+      if (renderUnits.token !== token) return;
+      clearUnits();
+      var fc;
+      if (st.geo === "p") {
+        fc = r[0];
+        var baseIdx = {};
+        if (st.view === "change") r[1].features.forEach(function (f) { baseIdx[f.properties.id] = f.properties; });
+        unitLayer = buildLayer(fc, "units", function (f) {
+          var p = f.properties, u = { id: p.id, name: p.n, v: p.v, props: p, kind: "precinct" };
+          if (st.view === "change") {
+            var b = baseIdx[p.id];
+            if (!b) { u.val = null; u.why = "No precinct with this code in " + st.base; }
+            else if (Math.abs(b.a - p.a) / Math.max(p.a, 0.01) > 0.03 || b.b || p.b) { u.val = null; u.why = "Lines changed since " + st.base; }
+            else { u.vb = b.v; u.val = changeVal(p.v, b.v, m, true); if (u.val == null) u.why = "Too few eligible citizens"; }
+          } else u.val = snapVal(p.v, m, true);
+          return u;
+        });
+      } else {
+        var era = ldEraFor(), list = (S.countyLds[era] || {})[cc] || [];
+        fc = { type: "FeatureCollection", features: r[0].features.filter(function (f) { return list.indexOf(f.properties.id) >= 0; }) };
+        unitLayer = buildLayer(fc, "units", function (f) {
+          var id = f.properties.id, u = { id: String(id), name: ldName(id), kind: "ld" };
+          if (st.view === "change") { u.v = (S.ldNow[st.y] || {})[id]; u.vb = (S.ldNow[st.base] || {})[id]; u.val = changeVal(u.v, u.vb, m, false); }
+          else { u.v = (S.ld[st.y] || {})[id]; u.val = snapVal(u.v, m, false); }
+          return u;
+        });
+        labelLayer = L.layerGroup(units.map(function (u) {
+          return L.tooltip({ permanent: true, direction: "center", className: "ldlabel", pane: "ldlabels" }).setLatLng(u.layer.getBounds().getCenter()).setContent(String(+u.id));
+        })).addTo(map);
+        drawPrevLines(era, cc);
+      }
+      unitLayer.addTo(map);
+      drawMask(cc);
+      restyle();
+      busy(false);
+      if (!renderUnits.fitted || renderUnits.fitted !== cc + st.geo) { map.fitBounds((st.geo === "d" ? unitLayer : outlineLayer).getBounds(), { padding: [16, 16], animate: false }); renderUnits.fitted = cc + st.geo; }
+    }).catch(function (e) { busy(true, "Couldn't load this map. " + e.message); });
+  }
+  function drawPrevLines(era, cc) {
+    var prev = PREV[era];
+    $("prevWrap").hidden = !prev;
+    if (!prev) return;
+    $("prevWrap").lastChild.textContent = " Show " + prev + " district lines";
+    if (!st.prev) return;
+    topo("data/ld-" + prev + ".json", "d").then(function (fc) {
+      if (prevLayer) map.removeLayer(prevLayer);
+      prevLayer = L.geoJSON(fc, { pane: "prev", interactive: false, style: { color: cssv("--heritage") || "#85754d", weight: 2.5, dashArray: "6 5", fill: false } }).addTo(map);
+    });
+  }
+
+  // ---------- legend, title, notes ----------
+  function drawLegend() {
+    var m = metric(), br = currentBreaks, change = st.view === "change", h = "";
+    var lab = change ? (m.kind === "count" ? "Change in eligible citizens since " + st.base : "Change in " + (m.kind === "index" ? "diversity index" : "share " + m.label) + " since " + st.base + (m.kind === "share" ? " (percentage points)" : ""))
+      : (m.kind === "count" ? "Eligible citizens" : m.kind === "index" ? "Diversity index (0–100)" : "Share of eligible citizens: " + m.label);
+    h += '<strong style="flex-basis:100%;color:var(--text)">' + esc(lab) + "</strong><div class=\"ramp\">";
+    var n = br.length + 1;
+    for (var i = 0; i < n; i++) {
+      var lo = i === 0 ? null : br[i - 1], hi = i === br.length ? null : br[i], t;
+      var f = function (x) { return change ? fmtChange(x, m).replace(/ pts| points/, "") : m.kind === "count" ? (x >= 1000 ? (x / 1000) + "k" : x) : m.kind === "index" ? x : x + "%"; };
+      t = lo == null ? "under " + f(hi) : hi == null ? f(lo) + "+" : f(lo) + " to " + f(hi);
+      if (change && lo != null && hi != null && lo < 0 && hi > 0) t = "about the same";
+      var c = change ? cssv("--d" + i) : cssv("--s" + Math.min(i + (6 - br.length - 1), 5));
+      h += '<div><span class="sw" style="background:' + c + '"></span><span>' + esc(t) + "</span></div>";
+    }
+    h += "</div>";
+    var naLabel = change ? (st.geo === "p" ? "Not comparable: lines changed or too few people" : "No estimate") : "Too few eligible citizens (under 50)";
+    if (st.geo === "p" || units.some(function (u) { return u.val == null; })) h += '<span class="na-item"><span class="sw na"></span>' + naLabel + "</span>";
+    $("legend").innerHTML = h;
+    var note = "";
+    if (change && st.geo === "p") {
+      var ok = units.filter(function (u) { return u.val != null; }).length;
+      note = ok + " of " + units.length + " precincts kept about the same lines since " + st.base + " and can be compared. ";
+      if (ok < units.length * 0.4) note += "Try a later starting year, or switch to legislative districts for a full long-term comparison. ";
+    }
+    if (change && st.geo === "d") note += "Both years are estimated inside today's (2024) district lines by adding up precincts. ";
+    if (change && overlap(st.base, st.y)) note += "The two survey periods overlap (" + survey(st.base) + " and " + survey(st.y) + "), which understates change. ";
+    if (!change && st.geo === "d") note += "Districts as drawn on the " + MAPS[S.ldEra[st.y]] + ". Areas outside " + cname(st.cc) + " are faded. ";
+    var bor = st.geo === "p" && !change ? units.filter(function (u) { return u.props && u.props.b; }).length : 0;
+    if (bor) note += bor + " precinct" + (bor > 1 ? "s use" : " uses") + " lines from a nearby year because the " + st.y + " file was incomplete. ";
+    $("mapNote").textContent = note;
+    var sub = st.view === "change" ? st.base + " to " + st.y : st.y + " · survey " + survey(st.y, st.geo === "d");
+    $("mapTitle").textContent = !st.cc ? "Washington counties" : (st.geo === "p" ? "Precincts in " : st.geo === "d" ? "Legislative districts in " : "") + cname(st.cc);
+    $("mapSub").textContent = m.label + " · " + sub;
+  }
+  function overlap(a, b) {
+    var x = /(\d{4})-(\d{4})/.exec(S.source[a] || ""), y = /(\d{4})-(\d{4})/.exec(S.source[b] || "");
+    return x && y && +x[2] >= +y[1] && +y[2] >= +x[1];
+  }
+
+  // ---------- table ----------
+  var sortKey = "name", sortDir = 1;
+  function drawTable() {
+    var m = metric(), change = st.view === "change";
+    var rows = units.slice().sort(function (a, b) {
+      var x = sortKey === "name" ? a.name : sortKey === "n" ? (a.v ? a.v[0] : -1) : (a.val == null ? -1e9 : a.val);
+      var y = sortKey === "name" ? b.name : sortKey === "n" ? (b.v ? b.v[0] : -1) : (b.val == null ? -1e9 : b.val);
+      return (x < y ? -1 : x > y ? 1 : 0) * sortDir;
+    });
+    var kindLabel = st.geo === "p" ? "Precinct" : st.geo === "d" ? "District" : "County";
+    var h = "<caption class=\"sr\">" + esc($("mapTitle").textContent + ", " + $("mapSub").textContent) + "</caption><thead><tr>" +
+      th("name", kindLabel) + th("n", "Eligible citizens " + st.y) + th("val", change ? "Change since " + st.base : m.label) + "</tr></thead><tbody>";
+    rows.forEach(function (u) {
+      h += "<tr><td><button type=\"button\" class=\"link\" data-id=\"" + esc(u.id) + "\">" + esc(u.name) + "</button></td><td>" + (u.v ? fmtCount(u.v[0]) : "–") + "</td><td>" + (change ? fmtChange(u.val, m) : fmtVal(u.val, m)) + "</td></tr>";
+    });
+    $("unitTable").innerHTML = h + "</tbody>";
+    function th(k, t) { return "<th scope=\"col\" aria-sort=\"" + (sortKey === k ? (sortDir > 0 ? "ascending" : "descending") : "none") + "\"><button type=\"button\" data-sort=\"" + k + "\">" + esc(t) + (sortKey === k ? (sortDir > 0 ? " ▲" : " ▼") : "") + "</button></th>"; }
+  }
+  $("unitTable").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.sort) { sortDir = sortKey === b.dataset.sort ? -sortDir : (b.dataset.sort === "name" ? 1 : -1); sortKey = b.dataset.sort; drawTable(); return; }
+    var u = units.filter(function (x) { return x.id === b.dataset.id; })[0]; if (u) onUnitClick(u);
+    $("panel").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  $("dlCsv").addEventListener("click", function () {
+    var head = ["place", "county", "year", "survey", "eligible_citizens"].concat(GROUPS.map(function (g) { return g.key; }), GROUPS.map(function (g) { return g.key + "_pct"; }));
+    if (st.view === "change") head.push("base_year", "base_eligible_citizens", metric().key + "_change");
+    var lines = [head.join(",")];
+    units.forEach(function (u) {
+      var v = u.v || [];
+      var row = [u.name, st.cc ? S.counties[st.cc] : (u.kind === "county" ? S.counties[u.id] : ""), st.y, S.source[st.y] || ""].concat(
+        [v[0]], GROUPS.map(function (g) { return v[g.i]; }), GROUPS.map(function (g) { return v[0] ? (100 * v[g.i] / v[0]).toFixed(1) : ""; }));
+      if (st.view === "change") row.push(st.base, u.vb ? u.vb[0] : "", u.val == null ? "" : u.val.toFixed(2));
+      lines.push(row.map(function (x) { x = x == null ? "" : String(x); return /[",]/.test(x) ? '"' + x.replace(/"/g, '""') + '"' : x; }).join(","));
+    });
+    lines.push("", '"Source: ACS 5-year citizen voting-age population estimates, Washington elections data project, UW CSDE. Precinct values are allocated estimates with margins of error not shown."');
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([lines.join("\r\n")], { type: "text/csv" }));
+    a.download = "wa-eligible-voters-" + (st.cc || "WA") + "-" + (st.geo || "counties") + "-" + st.y + ".csv";
+    document.body.appendChild(a); a.click(); a.remove();
+  });
+
+  // ---------- panel ----------
+  function compRows(v, cmp) {
+    var bar = '<div class="comp" role="img" aria-label="' + esc(GROUPS.map(function (g) { return g.label + " " + fmtShare(100 * v[g.i] / v[0]); }).join(", ")) + '">';
+    GROUPS.forEach(function (g) { var p = 100 * v[g.i] / v[0]; if (p > 0.3) bar += '<span style="width:' + p + "%;background:var(--g" + g.i + ')" title="' + esc(g.label + " " + fmtShare(p)) + '"></span>'; });
+    bar += "</div>";
+    var on = metric().g;
+    var t = '<table class="groups"><thead><tr><th scope="col">Group</th><th scope="col">Share</th><th scope="col">People</th>' + cmp.map(function (c) { return '<th scope="col">' + esc(c.label) + "</th>"; }).join("") + "</tr></thead><tbody>";
+    GROUPS.forEach(function (g) {
+      t += '<tr class="' + (on === g.i ? "on" : "") + '"><td><span class="key" style="background:var(--g' + g.i + ')"></span>' + esc(g.label) + "</td><td>" + fmtShare(100 * v[g.i] / v[0]) + "</td><td>" + fmtCount(v[g.i]) + "</td>" +
+        cmp.map(function (c) { return "<td>" + (c.v && c.v[0] ? fmtShare(100 * c.v[g.i] / c.v[0]) : "–") + "</td>"; }).join("") + "</tr>";
+    });
+    t += '<tr class="' + (st.m === "poc" ? "on" : "") + '"><td>People of color</td><td>' + fmtShare(100 * (v[0] - v[2]) / v[0]) + "</td><td>" + fmtCount(v[0] - v[2]) + "</td>" + cmp.map(function (c) { return "<td>" + (c.v ? fmtShare(100 * (c.v[0] - c.v[2]) / c.v[0]) : "–") + "</td>"; }).join("") + "</tr>";
+    t += '<tr class="' + (st.m === "div" ? "on" : "") + '"><td>Diversity index</td><td>' + Math.round(diversity(v)) + "</td><td></td>" + cmp.map(function (c) { return "<td>" + (c.v ? Math.round(diversity(c.v)) : "–") + "</td>"; }).join("") + "</tr>";
+    return bar + t + "</tbody></table><p class=\"fn\">Race groups exclude Hispanic or Latino people, who may be of any race. Counts are rounded estimates.</p>";
+  }
+  function headline(v, label) {
+    var h = '<div class="big"><span class="num">' + (v ? fmtCount(v[0]) : "–") + '</span><span class="what">' + label + "</span></div>";
+    if (v && v[0] < MIN_N) h += '<span class="badge warn">Very small: under 50 eligible citizens, so percentages aren\'t shown</span>';
+    else if (v && v[0] < CAUTION_N) h += '<span class="badge warn">Small: estimates for under 200 people are very uncertain</span>';
+    return h;
+  }
+  function actionsHtml(extra) {
+    return '<div class="actions">' + (extra || "") + '<button type="button" data-act="link">Copy link to this view</button><button type="button" data-act="print">Print</button></div>';
+  }
+
+  function renderPanel() {
+    var p = $("panel"), m = metric(), y = st.y;
+    if (!st.cc) {
+      var v = S.state[y];
+      p.innerHTML = '<h2>Washington</h2><p class="sub">' + y + " · survey " + survey(y) + "</p>" + headline(v, "eligible citizens statewide") +
+        "<h3>Race and ethnicity</h3>" + compRows(v, []) +
+        "<h3>Over time</h3><div id=\"trend\"></div>" +
+        "<h3>Start with a question</h3><div class=\"stories\" id=\"stories\"></div>" +
+        '<p class="fn">Or pick a county on the map or in step 1.</p>' + actionsHtml();
+      trend($("trend"), [{ label: "Washington", get: function (yy) { return S.state[yy]; } }], S.years);
+      stories();
+      return;
+    }
+    if (!st.sel) {
+      var cv = S.county[st.cc][y];
+      var h = '<h2>' + esc(cname(st.cc)) + '</h2><p class="sub">' + y + " · survey " + survey(y) + "</p>" + headline(cv, "eligible citizens") + rankLine(st.cc);
+      if (!st.geo) h += '<div class="callout"><strong>Next: how would you like to look at ' + esc(cname(st.cc)) + "?</strong><br>Choose <em>precincts</em> for neighborhood detail or <em>legislative districts</em> to see the areas that elect state lawmakers (step 2).</div>";
+      else h += pickerHtml();
+      h += "<h3>Race and ethnicity</h3>" + compRows(cv, [{ label: "WA", v: S.state[y] }]) +
+        "<h3>Over time</h3><div id=\"trend\"></div>" + actionsHtml('<button type="button" data-act="state">Back to all of Washington</button>');
+      p.innerHTML = h;
+      trend($("trend"), [{ label: S.counties[st.cc], get: function (yy) { return S.county[st.cc][yy]; } }, { label: "Washington", get: function (yy) { return S.state[yy]; }, ctx: true }], S.years);
+      wirePicker();
+      return;
+    }
+    var u = units.filter(function (x) { return x.id === st.sel; })[0];
+    if (!u) { st.sel = ""; return renderPanel(); }
+    if (u.kind === "precinct") renderPrecinct(u); else renderLd(u);
+  }
+  function rankLine(cc) {
+    var m = metric(), y = st.y, list = Object.keys(S.county).map(function (k) { return { k: k, x: st.view === "change" ? changeVal(S.county[k][y], S.county[k][st.base], m) : snapVal(S.county[k][y], m) }; })
+      .filter(function (o) { return o.x != null; }).sort(function (a, b) { return b.x - a.x; });
+    var i = list.map(function (o) { return o.k; }).indexOf(cc); if (i < 0) return "";
+    var val = st.view === "change" ? fmtChange(list[i].x, m) + " since " + st.base : fmtVal(list[i].x, m);
+    return '<p class="fn" style="margin-top:8px">' + esc(m.label) + ": <strong>" + val + "</strong>, " + ordinal(i + 1) + " highest of Washington's 39 counties.</p>";
+  }
+  function ordinal(n) { var s = ["th", "st", "nd", "rd"], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+  function pickerHtml() {
+    var kind = st.geo === "p" ? "precinct" : "district";
+    var opts = units.slice().sort(function (a, b) { return a.name.localeCompare(b.name, undefined, { numeric: true }); })
+      .map(function (u) { return '<option value="' + esc(u.id) + '">' + esc(u.name) + "</option>"; }).join("");
+    return '<label class="f picker">Choose a ' + kind + ' (or select one on the map)<select id="unitPick"><option value="">—</option>' + opts + "</select></label>";
+  }
+  function wirePicker() { var s = $("unitPick"); if (s) s.addEventListener("change", function () { var u = units.filter(function (x) { return x.id === s.value; })[0]; if (u) onUnitClick(u); }); }
+
+  function renderPrecinct(u) {
+    var p = u.props, y = st.y, cv = S.county[st.cc][y];
+    var h = '<p class="crumbs"><button type="button" class="link" data-act="county">← ' + esc(cname(st.cc)) + "</button></p>" +
+      "<h2>Precinct " + esc(u.name) + '</h2><p class="sub">' + esc(cname(st.cc)) + (p.d ? " · Legislative District " + p.d : "") + " · " + y + " lines · survey " + survey(y) + "</p>" +
+      headline(u.v, "eligible citizens");
+    if (p.b) h += '<p class="fn">Lines shown are from ' + p.b + " because the " + y + " precinct file was incomplete.</p>";
+    if (st.view === "change") h += '<div class="callout">' + esc(metric().label) + " since " + st.base + ": <strong>" + fmtChange(u.val, metric()) + "</strong>" + (u.why ? "<br>" + esc(u.why) + "." : "") + "</div>";
+    if (u.v[0] >= MIN_N) h += "<h3>Race and ethnicity</h3>" + compRows(u.v, [{ label: "County", v: cv }, { label: "WA", v: S.state[y] }]);
+    h += "<h3>This location over time</h3><div id=\"trend\"><p class=\"fn\">Loading…</p></div>" +
+      "<h3>Precincts like this one</h3><p class=\"fn\">Precincts anywhere in Washington with the most similar mix of eligible citizens in " + y + ".</p><div id=\"similar\"><button type=\"button\" data-act=\"similar\">Find similar precincts</button></div>" +
+      actionsHtml();
+    $("panel").innerHTML = h;
+    precinctHistory(u);
+  }
+  function precinctHistory(u) {
+    var last = S.years[S.years.length - 1], cc = st.cc;
+    Promise.all([load("data/h/" + cc + ".json"), topo("data/p/" + last + "/" + cc + ".json", "p")]).then(function (r) {
+      var hist = r[0], fc = r[1], pt = u.props.p;
+      var cur = u.props.id && hist[u.props.id] && st.y === last ? u.props.id : null;
+      if (!cur) { var f = fc.features.filter(function (f) { return contains(f, pt[0], pt[1]); })[0]; cur = f && f.properties.id; }
+      var row = cur && hist[cur]; var el = $("trend"); if (!el) return;
+      if (!row) { el.innerHTML = '<p class="fn">No history available for this spot.</p>'; return; }
+      trend(el, [
+        { label: "This spot's precinct", get: function (yy) { return row[yy] && row[yy][0]; }, hollow: function (yy) { return row[yy] && !row[yy][2]; } },
+        { label: S.counties[cc] + " County", get: function (yy) { return S.county[cc][yy]; }, ctx: true }
+      ], S.years, "Hollow points: that year's precinct had different lines than today's, so part of the change reflects new boundaries. Uses the precinct that covered this spot each year.");
+    });
+  }
+  function renderLd(u) {
+    var id = +u.id, y = st.y, era = ldEraFor();
+    var counties = Object.keys(S.countyLds[era] || {}).filter(function (cc) { return S.countyLds[era][cc].indexOf(id) >= 0; }).map(function (cc) { return S.counties[cc]; }).sort();
+    var v = u.v;
+    var h = '<p class="crumbs"><button type="button" class="link" data-act="county">← ' + esc(cname(st.cc)) + "</button></p>" +
+      "<h2>" + ldName(id) + '</h2><p class="sub">' + (st.view === "change" ? "Today's lines (2024 map)" : MAPS[era]) + " · survey " + survey(y, true) + "</p>" +
+      headline(v, "eligible citizens") +
+      '<p class="fn">Includes parts of ' + counties.length + " count" + (counties.length > 1 ? "ies" : "y") + ": " + esc(counties.join(", ")) + ".</p>";
+    if (st.view === "change") h += '<div class="callout">' + esc(metric().label) + " since " + st.base + ": <strong>" + fmtChange(u.val, metric()) + "</strong>, within today's lines.</div>";
+    if (v) h += "<h3>Race and ethnicity</h3>" + compRows(v, [{ label: "WA", v: st.view === "change" ? S.state[y] : sumLd(S.ld[y]) }]);
+    h += movesHtml(id, era);
+    h += "<h3>Today's district over time</h3><div id=\"trend\"></div>" + actionsHtml();
+    $("panel").innerHTML = h;
+    trend($("trend"), [{ label: "District " + id + " (today's lines)", get: function (yy) { return (S.ldNow[yy] || {})[id]; } }, { label: "Washington", get: function (yy) { return S.state[yy]; }, ctx: true }], S.years,
+      "Estimated by adding up each year's precincts inside today's (2024) district lines, so every year covers the same area.");
+  }
+  function sumLd(o) { var s = null; for (var k in o) s = s ? s.map(function (x, i) { return x + o[k][i]; }) : o[k].slice(); return s; }
+  function movesHtml(id, era) {
+    var mv = S.moves[era] && S.moves[era][id]; if (!mv) return "";
+    var tot = 0, k; for (k in mv) tot += mv[k];
+    var parts = Object.keys(mv).map(function (d) { return { d: d, n: mv[d], p: 100 * mv[d] / tot }; }).sort(function (a, b) { return b.n - a.n; });
+    var same = (mv[id] || 0) / tot;
+    if (same > 0.985) return "<h3>Redistricting</h3><p class=\"fn\">Lines here were essentially unchanged from the " + PREV[era] + " map.</p>";
+    var rows = parts.filter(function (x) { return x.p >= 1; }).map(function (x) { return "<li><span>District " + x.d + " under the " + PREV[era] + " map</span><strong>" + Math.round(x.p) + "%</strong></li>"; }).join("");
+    var why = era === "2024" ? " In 2023, a federal court found that the 2022 map's 15th District denied Latino voters an equal opportunity to elect their preferred candidates under the Voting Rights Act, and in 2024 it adopted new lines for the Yakima Valley region." : "";
+    return "<h3>Redistricting</h3><p class=\"fn\">Where the people now in District " + id + " were under the previous map (" + PREV[era] + "), using latest estimates." + why + "</p><ul class=\"similar\">" + rows + "</ul>" +
+      '<p class="fn"><button type="button" class="link" data-act="prev">' + (st.prev ? "Hide" : "Show") + " the " + PREV[era] + " lines on the map</button></p>";
+  }
+
+  // ---------- similar precincts ----------
+  function similar() {
+    var el = $("similar"), u = units.filter(function (x) { return x.id === st.sel; })[0]; if (!u) return;
+    el.innerHTML = '<p class="fn">Searching…</p>';
+    load("data/s/" + st.y + ".json").then(function (rows) {
+      var me = u.v, sh = function (v) { return GROUPS.map(function (g) { return 100 * v[g.i] / v[0]; }); }, a = sh(me);
+      var out = rows.filter(function (r) { return r[2][0] >= CAUTION_N && r[0] !== u.id; }).map(function (r) {
+        var b = sh(r[2]), d = 0; for (var i = 0; i < a.length; i++) d += (a[i] - b[i]) * (a[i] - b[i]);
+        return { r: r, d: Math.sqrt(d) };
+      }).sort(function (x, y) { return x.d - y.d; }).slice(0, 6);
+      if (u.v[0] < MIN_N) { el.innerHTML = '<p class="fn">Too few eligible citizens here to compare.</p>'; return; }
+      el.innerHTML = '<ul class="similar">' + out.map(function (o) {
+        var cc = o.r[0].slice(0, 2);
+        return '<li><span><button type="button" class="link" data-go="' + esc(o.r[0]) + '">' + esc(o.r[1]) + "</button>, " + esc(S.counties[cc]) + " County</span><span>" + fmtShare(100 * (o.r[2][0] - o.r[2][2]) / o.r[2][0]) + " people of color</span></li>";
+      }).join("") + '</ul><p class="fn">Similarity compares the shares of all seven groups. Precincts with under 200 eligible citizens are skipped.</p>';
+    });
+  }
+
+  // ---------- trend chart ----------
+  function trend(el, series, years, note) {
+    var m = metric(), W = 360, H = 170, L0 = 40, R0 = 64, T0 = 12, B0 = 24;
+    var pts = series.map(function (s) {
+      return years.map(function (y) { var v = s.get(y); var x = v && v[0] ? (m.kind === "count" ? v[0] : (v[0] < MIN_N ? null : m.f(v))) : null; return { y: y, x: x, hollow: s.hollow ? s.hollow(y) : false }; });
+    });
+    var all = []; pts.forEach(function (p) { p.forEach(function (q) { if (q.x != null) all.push(q.x); }); });
+    if (!all.length) { el.innerHTML = '<p class="fn">Not enough data to chart.</p>'; return; }
+    var lo = Math.min.apply(null, all), hi = Math.max.apply(null, all);
+    if (m.kind !== "count") { lo = Math.max(0, lo - (hi - lo) * 0.15 - 1); hi = Math.min(100, hi + (hi - lo) * 0.15 + 1); } else { var pad = (hi - lo) * 0.15 || hi * 0.1; lo = Math.max(0, lo - pad); hi = hi + pad; }
+    if (series.some(function (s) { return s.ctx; }) && m.kind === "count") { // counts at different scales: chart only the main series
+      pts = [pts[0]]; series = [series[0]];
+      all = pts[0].filter(function (q) { return q.x != null; }).map(function (q) { return q.x; }); lo = Math.min.apply(null, all) * 0.9; hi = Math.max.apply(null, all) * 1.08;
+    }
+    var X = function (i) { return L0 + i * (W - L0 - R0) / (years.length - 1); }, Y = function (v) { return T0 + (H - T0 - B0) * (1 - (v - lo) / (hi - lo || 1)); };
+    var ticks = 4, svg = '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(m.label + " by year, " + series.map(function (s) { return s.label; }).join(" and ")) + '">';
+    for (var t = 0; t <= ticks; t++) { var v = lo + (hi - lo) * t / ticks, yy = Y(v); svg += '<line x1="' + L0 + '" x2="' + (W - R0) + '" y1="' + yy + '" y2="' + yy + '" stroke="var(--border)" stroke-width="1"/><text x="' + (L0 - 6) + '" y="' + (yy + 4) + '" text-anchor="end" font-size="10" fill="var(--muted)">' + (m.kind === "count" ? fmtCount(v) : Math.round(v) + (m.kind === "share" ? "%" : "")) + "</text>"; }
+    var i22 = years.indexOf("2022");
+    if (i22 > 0) svg += '<rect x="' + X(i22) + '" y="' + T0 + '" width="' + (X(years.length - 1) - X(i22)) + '" height="' + (H - T0 - B0) + '" fill="var(--surface-2)"/><text x="' + ((X(i22) + X(years.length - 1)) / 2) + '" y="' + (T0 + 10) + '" text-anchor="middle" font-size="9" fill="var(--muted)">same survey</text>';
+    years.forEach(function (y, i) { if (i % 3 === 0 || i === years.length - 1) svg += '<text x="' + X(i) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="10" fill="var(--muted)">' + y + "</text>"; });
+    // end-of-line labels, nudged apart so close values don't overprint
+    var ends = pts.map(function (p, si) { for (var k = p.length - 1; k >= 0; k--) if (p[k].x != null) return { si: si, i: k, x: p[k].x, y: Y(p[k].x) + 4 }; return null; }).filter(Boolean)
+      .sort(function (a, b) { return a.y - b.y; });
+    for (var e = 1; e < ends.length; e++) if (ends[e].y - ends[e - 1].y < 13) ends[e].y = ends[e - 1].y + 13;
+    pts.forEach(function (p, si) {
+      var s = series[si], col = s.ctx ? "var(--line-2)" : "var(--accent)", d = "", started = false;
+      p.forEach(function (q, i) { if (q.x == null) { started = false; return; } d += (started ? "L" : "M") + X(i).toFixed(1) + " " + Y(q.x).toFixed(1); started = true; });
+      svg += '<path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="2"' + (s.ctx ? ' stroke-dasharray="4 3"' : "") + "/>";
+      if (!s.ctx) p.forEach(function (q, i) { if (q.x != null) svg += '<circle cx="' + X(i) + '" cy="' + Y(q.x) + '" r="4" fill="' + (q.hollow ? "var(--surface)" : col) + '" stroke="' + col + '" stroke-width="2"/>'; });
+    });
+    ends.forEach(function (en) { svg += '<text x="' + (X(en.i) + 8) + '" y="' + en.y + '" font-size="11" fill="var(--text-2)" font-weight="' + (series[en.si].ctx ? 400 : 700) + '">' + fmtVal(en.x, m) + "</text>"; });
+    svg += '<line id="xh" x1="0" x2="0" y1="' + T0 + '" y2="' + (H - B0) + '" stroke="var(--text-2)" stroke-width="1" visibility="hidden"/>';
+    svg += '<rect x="' + L0 + '" y="' + T0 + '" width="' + (W - L0 - R0) + '" height="' + (H - T0 - B0) + '" fill="transparent" class="hit"/></svg>';
+    var leg = series.length > 1 ? '<div class="chart-legend">' + series.map(function (s) { return '<span><i class="' + (s.ctx ? "dash" : "") + '" style="border-color:' + (s.ctx ? "var(--line-2)" : "var(--accent)") + '"></i>' + esc(s.label) + "</span>"; }).join("") + "</div>" : "";
+    var tbl = "<details><summary style=\"font-size:12px;font-family:var(--font-body);font-weight:600\">Show the numbers</summary><table class=\"groups\"><thead><tr><th scope=\"col\">Year</th><th scope=\"col\">Survey</th>" + series.map(function (s) { return '<th scope="col">' + esc(s.label) + "</th>"; }).join("") + "</tr></thead><tbody>" +
+      years.map(function (y, i) { return "<tr><td>" + y + "</td><td>" + survey(y) + "</td>" + pts.map(function (p) { return "<td>" + fmtVal(p[i].x, m) + (p[i].hollow ? "*" : "") + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody></table></details>";
+    el.innerHTML = '<div class="chart" tabindex="0" aria-describedby="trendNote">' + svg + '<div class="tip" hidden></div></div>' + leg + (note ? '<p class="fn" id="trendNote">' + esc(note) + "</p>" : "") + tbl;
+    var box = el.querySelector(".chart"), tip = box.querySelector(".tip"), xh = box.querySelector("#xh"), svgEl = box.querySelector("svg"), cur = years.length - 1;
+    function show(i) {
+      cur = i; xh.setAttribute("x1", X(i)); xh.setAttribute("x2", X(i)); xh.setAttribute("visibility", "visible");
+      tip.hidden = false;
+      tip.innerHTML = "<strong>" + years[i] + "</strong> <span style=\"color:var(--muted)\">survey " + survey(years[i]) + "</span>" + series.map(function (s, si) { return "<br>" + esc(s.label) + ": " + fmtVal(pts[si][i].x, m) + (pts[si][i].hollow ? " (different lines)" : ""); }).join("");
+      var r = svgEl.getBoundingClientRect(), px = X(i) / W * r.width;
+      tip.style.left = Math.min(Math.max(px - tip.offsetWidth / 2, 0), r.width - tip.offsetWidth) + "px"; tip.style.top = "-8px"; tip.style.transform = "translateY(-100%)";
+    }
+    function hide() { tip.hidden = true; xh.setAttribute("visibility", "hidden"); }
+    svgEl.addEventListener("mousemove", function (e) { var r = svgEl.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * W; var i = Math.round((x - L0) / ((W - L0 - R0) / (years.length - 1))); show(Math.max(0, Math.min(years.length - 1, i))); });
+    svgEl.addEventListener("mouseleave", hide);
+    box.addEventListener("keydown", function (e) { if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); show(Math.max(0, Math.min(years.length - 1, cur + (e.key === "ArrowLeft" ? -1 : 1)))); } });
+    box.addEventListener("focus", function () { show(cur); }); box.addEventListener("blur", hide);
+  }
+
+  // ---------- stories ----------
+  function stories() {
+    var y0 = S.years[0], y1 = S.years[S.years.length - 1], s0 = S.state[y0], s1 = S.state[y1], el = $("stories");
+    var poc = MBY.poc, list = [];
+    list.push({ t: "How much has Washington's electorate grown?", d: "From about " + (s0[0] / 1e6).toFixed(2) + " million eligible citizens (" + survey(y0) + " survey) to " + (s1[0] / 1e6).toFixed(2) + " million (" + survey(y1) + "), up " + Math.round(100 * (s1[0] / s0[0] - 1)) + "%. See which counties grew fastest.",
+      go: { cc: "", geo: "", m: "tot", view: "change", base: y0, y: y1 } });
+    list.push({ t: "Is the electorate becoming more diverse?", d: "People of color went from " + fmtShare(poc.f(s0)) + " to " + fmtShare(poc.f(s1)) + " of eligible citizens. Map the change by county.",
+      go: { cc: "", geo: "", m: "poc", view: "change", base: y0, y: y1 } });
+    var l15 = S.ld["2021"] && S.ld["2021"][15], l14 = S.ld[y1] && S.ld[y1][14];
+    if (l15 && l14) list.push({ t: "Why were Yakima Valley districts redrawn?", d: "District 15 on the 2022 map was " + fmtShare(MBY.hisp.f(l15)) + " Hispanic or Latino among eligible citizens, yet a federal court found it didn't give Latino voters an equal opportunity. On the 2024 map, District 14 is " + fmtShare(MBY.hisp.f(l14)) + ".",
+      go: { cc: "YA", geo: "d", m: "hisp", view: "snap", y: y1, sel: "14", prev: true } });
+    var g = Object.keys(S.county).map(function (cc) { return { cc: cc, x: S.county[cc][y1][0] / S.county[cc][y0][0] - 1 }; }).sort(function (a, b) { return b.x - a.x; })[0];
+    list.push({ t: "Which county grew fastest?", d: S.counties[g.cc] + " County: up " + Math.round(100 * g.x) + "% in eligible citizens since the " + survey(y0) + " survey. Explore its precincts.",
+      go: { cc: g.cc, geo: "p", m: "tot", view: "snap", y: y1 } });
+    var dv = Object.keys(S.county).map(function (cc) { return { cc: cc, x: diversity(S.county[cc][y1]) }; }).sort(function (a, b) { return b.x - a.x; })[0];
+    list.push({ t: "Where is the electorate most diverse?", d: S.counties[dv.cc] + " County has the highest diversity index (" + Math.round(dv.x) + " of 100). See it by legislative district.",
+      go: { cc: dv.cc, geo: "d", m: "div", view: "snap", y: y1 } });
+    el.innerHTML = list.map(function (s, i) { return '<button type="button" class="story" data-story="' + i + '"><strong>' + esc(s.t) + "</strong><span>" + esc(s.d) + "</span></button>"; }).join("");
+    el.onclick = function (e) { var b = e.target.closest("[data-story]"); if (!b) return; var go = list[+b.dataset.story].go; apply(Object.assign({ sel: "", prev: false }, go)); };
+  }
+
+  // ---------- interactions ----------
+  function onUnitClick(u, latlng) {
+    if (u.kind === "county") { apply({ cc: u.id, geo: st.geo, sel: "" }); return; }
+    st.sel = u.id; restyle(); renderPanel(); syncHash();
+    if (window.innerWidth < 960 && !latlng) $("panel").scrollIntoView({ behavior: "smooth" });
+  }
+  $("panel").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    var a = b.dataset.act;
+    if (a === "state") apply({ cc: "", geo: "", sel: "" });
+    else if (a === "county") { st.sel = ""; restyle(); renderPanel(); syncHash(); }
+    else if (a === "print") window.print();
+    else if (a === "link") { var url = location.href; (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(function () { b.textContent = "Link copied"; }, function () { prompt("Copy this link:", url); }); }
+    else if (a === "similar") similar();
+    else if (a === "prev") { st.prev = !st.prev; $("prevLines").checked = st.prev; renderUnits().then(renderPanel); syncHash(); }
+    else if (b.dataset.go) { var id = b.dataset.go; apply({ cc: id.slice(0, 2), geo: "p", sel: id, view: "snap" }); }
+  });
+
+  function yearsAvailable() { return st.geo === "d" && st.view !== "change" ? S.ldYears : S.years; }
+  function fillYears() {
+    var ys = yearsAvailable(), sel = $("year"), ld = st.geo === "d" && st.view !== "change";
+    if (ys.indexOf(st.y) < 0) st.y = ys[ys.length - 1];
+    var h = "", lastEra = null;
+    ys.slice().reverse().forEach(function (y) {
+      if (ld && S.ldEra[y] !== lastEra) { if (lastEra) h += "</optgroup>"; lastEra = S.ldEra[y]; h += '<optgroup label="' + esc(MAPS[lastEra].replace(/ \(.*/, "")) + '">'; }
+      h += '<option value="' + y + '">' + y + " · " + survey(y, ld) + " survey</option>";
+    });
+    if (lastEra) h += "</optgroup>";
+    sel.innerHTML = h; sel.value = st.y;
+    // base years: different survey from the chosen year
+    var bh = "";
+    S.years.forEach(function (y) {
+      if (+y >= +st.y) return;
+      var same = S.source[y] === S.source[st.y];
+      bh += '<option value="' + y + '"' + (same ? " disabled" : "") + ">since " + y + (same ? " (same survey)" : overlap(y, st.y) ? " (overlapping survey)" : "") + "</option>";
+    });
+    $("base").innerHTML = bh;
+    var okBase = S.years.filter(function (y) { return +y < +st.y && S.source[y] !== S.source[st.y]; });
+    if (okBase.indexOf(st.base) < 0) st.base = okBase[0] || "";
+    $("base").value = st.base;
+    $("viewChange").disabled = !okBase.length;
+    if (!okBase.length && st.view === "change") st.view = "snap";
+  }
+  function syncControls() {
+    $("county").value = st.cc;
+    $("metric").value = st.m;
+    fillYears();
+    $("viewSnap").setAttribute("aria-pressed", st.view === "snap"); $("viewChange").setAttribute("aria-pressed", st.view === "change");
+    $("baseWrap").hidden = st.view !== "change";
+    $("geoP").disabled = $("geoD").disabled = !st.cc;
+    $("geoP").setAttribute("aria-pressed", st.geo === "p"); $("geoD").setAttribute("aria-pressed", st.geo === "d");
+    $("s2hint").textContent = st.cc ? (st.geo ? "Switch any time." : "Pick one to continue.") : "Pick a county first.";
+    $("step1").classList.toggle("active", !st.cc);
+    $("step2").classList.toggle("active", !!st.cc && !st.geo); $("step2").classList.toggle("locked", !st.cc);
+    $("step3").classList.toggle("active", !!st.cc && !!st.geo);
+    $("prevWrap").hidden = st.geo !== "d"; $("prevLines").checked = st.prev;
+  }
+  function apply(patch) {
+    var prevCc = st.cc, prevGeo = st.geo;
+    Object.assign(st, patch);
+    if (!st.cc) st.geo = "";
+    if (st.geo === "p" && st.view === "change" && !("base" in patch) && +st.base < 2016) st.base = "2016"; // 2010 precinct codes don't carry forward
+    syncControls();
+    if (st.cc !== prevCc || st.geo !== prevGeo) renderUnits.fitted = null;
+    var done;
+    if (st.cc && st.geo) done = renderUnits();
+    else {
+      renderCounties();
+      if (st.cc) { var l = null; countyLayer.eachLayer(function (x) { if (x.feature.properties.cc === st.cc) l = x; }); if (l) map.fitBounds(l.getBounds(), { padding: [20, 20], animate: false }); }
+      else if (prevCc) map.fitBounds([[45.54, -124.8], [49.0, -116.9]], { animate: false });
+      done = Promise.resolve();
+    }
+    syncHash();
+    return done.then(function () { if (st.sel && !units.some(function (u) { return u.id === st.sel; })) st.sel = ""; restyle(); renderPanel(); });
+  }
+
+  // ---------- address search ----------
+  // Esri's World Geocoder (no key needed for one-off lookups that aren't stored); OpenStreetMap Nominatim as a fallback.
+  function geocode(q) {
+    var esri = "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?f=json&maxLocations=1&countryCode=USA&searchExtent=-124.9,45.5,-116.85,49.05&SingleLine=" + encodeURIComponent(q);
+    var osm = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=us&bounded=1&viewbox=-124.9,49.05,-116.85,45.5&q=" + encodeURIComponent(q);
+    return fetch(esri).then(function (r) { return r.json(); }).then(function (j) {
+      var c = j.candidates && j.candidates[0];
+      if (c && c.score >= 80) return { lon: c.location.x, lat: c.location.y, label: c.address };
+      throw new Error("no match");
+    }).catch(function () {
+      return fetch(osm).then(function (r) { return r.json(); }).then(function (res) { return res.length ? { lon: +res[0].lon, lat: +res[0].lat, label: res[0].display_name.split(",").slice(0, 3).join(",") } : null; });
+    });
+  }
+  $("addrForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var q = $("addr").value.trim(); if (!q) return;
+    var hint = $("addrHint"); hint.textContent = "Searching…";
+    geocode(q).then(function (res) {
+        if (!res) { hint.textContent = "No Washington match found. Try adding the city, e.g. \"123 Main St, Yakima\"."; return; }
+        var lon = res.lon, lat = res.lat;
+        var cf = COUNTY_FC.features.filter(function (f) { return contains(f, lon, lat); })[0];
+        if (!cf) { hint.textContent = "That address doesn't appear to be in Washington."; return; }
+        hint.textContent = "Found: " + res.label + ". This page doesn't store what you type.";
+        if (marker) map.removeLayer(marker);
+        marker = L.circleMarker([lat, lon], { pane: "ldlabels", radius: 7, color: "#ffffff", weight: 3, fillColor: cssv("--focus"), fillOpacity: 1 }).addTo(map).bindTooltip("Your search", { className: "tt" });
+        apply({ cc: cf.properties.cc, geo: st.geo || "p", sel: "" }).then(function () {
+          var u = units.filter(function (u) { return contains(u.feature, lon, lat); })[0];
+          if (u) { onUnitClick(u, true); map.setView([lat, lon], Math.max(map.getZoom(), st.geo === "p" ? 13 : 10)); }
+        });
+      })
+      .catch(function () { hint.textContent = "Address search is unavailable right now. Choose a county instead."; });
+  });
+
+  // ---------- controls ----------
+  $("county").addEventListener("change", function () { apply({ cc: this.value, sel: "" }); });
+  $("geoP").addEventListener("click", function () { apply({ geo: "p", sel: "" }); });
+  $("geoD").addEventListener("click", function () { apply({ geo: "d", sel: "" }); });
+  $("metric").addEventListener("change", function () { st.m = this.value; units.forEach(recompute); restyle(); renderPanel(); syncHash(); });
+  $("year").addEventListener("change", function () { apply({ y: this.value }); });
+  $("base").addEventListener("change", function () { apply({ base: this.value }); });
+  $("viewSnap").addEventListener("click", function () { apply({ view: "snap" }); });
+  $("viewChange").addEventListener("click", function () { apply({ view: "change" }); });
+  $("prevLines").addEventListener("change", function () { st.prev = this.checked; renderUnits().then(renderPanel); syncHash(); });
+  function recompute(u) {
+    var m = metric(), small = u.kind === "precinct";
+    if (st.view === "change") { if (u.vb || u.kind !== "precinct") u.val = changeVal(u.v, u.vb, m, small); }
+    else u.val = snapVal(u.v, m, small);
+  }
+
+  // ---------- URL ----------
+  function syncHash() {
+    var p = new URLSearchParams();
+    if (st.cc) p.set("c", st.cc); if (st.geo) p.set("g", st.geo); p.set("m", st.m); p.set("y", st.y);
+    if (st.view === "change") p.set("since", st.base); if (st.sel) p.set("s", st.sel); if (st.prev) p.set("prev", "1");
+    history.replaceState(null, "", "#" + p.toString());
+  }
+  function readHash() {
+    var p = new URLSearchParams(location.hash.slice(1)), o = {};
+    if (p.get("c") && S.counties[p.get("c")]) o.cc = p.get("c");
+    if (/^[pd]$/.test(p.get("g") || "")) o.geo = p.get("g");
+    if (MBY[p.get("m")]) o.m = p.get("m");
+    if (S.years.indexOf(p.get("y")) >= 0) o.y = p.get("y");
+    if (p.get("since")) { o.view = "change"; o.base = p.get("since"); }
+    if (p.get("s")) o.sel = p.get("s");
+    if (p.get("prev")) o.prev = true;
+    return o;
+  }
+
+  // ---------- start ----------
+  if (/[?&]embed=1/.test(location.search)) document.body.classList.add("embed");
+  initMap();
+  Promise.all([load("data/summary.json"), topo("data/counties.json", "c")]).then(function (r) {
+    S = r[0]; COUNTY_FC = r[1];
+    st.y = S.years[S.years.length - 1]; st.base = S.years[0];
+    $("county").innerHTML += Object.keys(S.counties).sort(function (a, b) { return S.counties[a].localeCompare(S.counties[b]); }).map(function (cc) { return '<option value="' + cc + '">' + esc(S.counties[cc]) + "</option>"; }).join("");
+    $("metric").innerHTML = '<optgroup label="Share of eligible citizens">' + METRICS.filter(function (m) { return m.kind === "share"; }).map(function (m) { return '<option value="' + m.key + '">' + esc(m.label) + "</option>"; }).join("") +
+      '</optgroup><optgroup label="Other">' + METRICS.filter(function (m) { return m.kind !== "share"; }).map(function (m) { return '<option value="' + m.key + '">' + esc(m.label) + "</option>"; }).join("") + "</optgroup>";
+    $("foot").innerHTML = "Data: American Community Survey five-year estimates of citizen voting-age population, prepared by the Washington elections data project, UW Center for Studies in Demography &amp; Ecology (data version " + esc(S.built) + "). Draft for review; not for citation.";
+    apply(readHash());
+  }).catch(function (e) { $("panel").innerHTML = "<p>Couldn't load the data. " + esc(e.message) + "</p>"; });
+})();
+</script>
+</body>
+</html>
