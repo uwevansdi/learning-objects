@@ -30,6 +30,15 @@
   :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
   .proto { border: 2px dashed var(--warn); background: var(--warn-soft); border-radius: 8px; padding: 10px 14px; margin: 12px 0; font-size: 14px; }
   .proto strong { color: var(--warn); }
+  /* Author slots: empty TILT sections for the instructor to write (purpose, task, criteria). Remove the guidance once filled. */
+  .slot { border: 2px dashed var(--warn); background: var(--warn-soft); border-radius: 8px; padding: 10px 14px; margin: 10px 0; }
+  .slot .slot-tag { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--warn); margin-bottom: 2px; }
+  .slot h3, .slot h4 { margin: 0 0 4px; }
+  .slot ul { margin: 4px 0 0; padding-left: 20px; font-size: 14px; color: var(--ink-2); }
+  .slot li { margin: 2px 0; font-style: italic; }
+  .slot.small { padding: 6px 10px; font-size: 13px; }
+  .slot.small ul { font-size: 13px; }
+  .brief-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0 14px; }
   .practice-banner { background: var(--accent); color: #fff; border-radius: 8px; padding: 8px 14px; font-weight: 700; margin: 10px 0; }
 
   .topbar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between; margin: 14px 0 10px; }
@@ -185,11 +194,57 @@
     <div class="row"><button class="btn primary" id="toStep2" disabled>Continue to community needs</button></div>
   </section>
 
+  <section id="stepBrief" class="card" aria-labelledby="briefTitle" hidden>
+    <h2 id="briefTitle">Before you start: why, what, and how you'll know it's good</h2>
+    <p class="hint" id="briefFor"></p>
+    <div class="proto" role="note"><strong>For Prof. Zhao:</strong> this page follows the TILT framework (Transparency in Learning and Teaching). Students read it before planning. Replace each dashed box with your own text; the questions inside are prompts for you, not student-facing copy.</div>
+
+    <div class="slot"><span class="slot-tag">Instructor writes · Purpose</span><h3>Why we're doing this</h3>
+      <ul>
+        <li>Why this exercise, in this week of the course? How does it connect to the readings (Allard, <em>Out of Reach</em>) and lecture?</li>
+        <li>Which skills will students practice? (Name them in terms students could list on a résumé.)</li>
+        <li>What knowledge should they come away with?</li>
+        <li>How might these skills matter beyond this course, in work, civic life, or their communities?</li>
+      </ul>
+    </div>
+
+    <div class="slot"><span class="slot-tag">Instructor writes · Task</span><h3>What you'll do, and how</h3>
+      <ul>
+        <li>What happens in each remaining step, and roughly how many minutes each should take in the 50-minute session?</li>
+        <li>How should the group work together and make decisions? What should each role do and when?</li>
+        <li>What is hard about this task on purpose (few stations, route rules, competing roles, the implementation challenge), and why is that difficulty part of the learning?</li>
+        <li>How much should students know about the implementation challenge in advance?</li>
+        <li>What should students avoid (common mistakes or shortcuts)?</li>
+      </ul>
+    </div>
+
+    <div class="slot"><span class="slot-tag">Instructor writes · Criteria</span><h3>How you'll know you're on track</h3>
+      <ul>
+        <li>What does a strong group plan look like? What does a weak one look like?</li>
+        <li>What can students check during the session to know they're on track?</li>
+        <li>How is the group plan graded (5%), and how does it feed the individual reflection (10%, due Feb 14)? Completion, rubric, or both?</li>
+        <li>Is there a checklist or rubric students can use before they submit?</li>
+      </ul>
+    </div>
+
+    <h3 style="margin-top:16px;">Role briefs</h3>
+    <div class="brief-grid" id="roleBriefs"></div>
+
+    <div class="slot"><span class="slot-tag">Instructor writes · Optional</span><h3>An example of strong work</h3>
+      <ul>
+        <li>A short annotated sample, such as a strong "what we changed and why" paragraph for a made-up community, with notes on what makes it strong.</li>
+      </ul>
+    </div>
+
+    <div class="row"><button class="btn primary" id="briefDone">Continue to community needs</button></div>
+  </section>
+
   <section id="step2" hidden>
     <div class="grid">
       <div id="mapSlot2"></div>
       <div class="card soft">
         <h2>Step 2 · Community needs and priorities</h2>
+        <div class="slot small"><span class="slot-tag">Instructor writes · This step</span><ul><li>Why this step: what it practices and why it matters.</li><li>You're done when: what students should have before moving on.</li></ul></div>
         <div id="profile"></div>
         <label class="field">Choose up to two priorities for your plan</label>
         <div class="prio" id="prios"></div>
@@ -218,6 +273,8 @@
     <div class="grid">
       <div class="card">
         <h2>Step 6 · Your group plan</h2>
+        <div class="slot small"><span class="slot-tag">Instructor writes · This step</span><ul><li>Why this step: what it practices and why it matters.</li><li>You're done when: what students should have before moving on.</li></ul></div>
+        <div class="slot small"><span class="slot-tag">Instructor writes · Criteria</span><ul><li>A short self-check students use before copying the plan: the criteria from the briefing, as yes/no questions.</li></ul></div>
         <p class="hint">This summary is ready to paste into your group's Word document. Add anything your worksheet asks for that isn't here.</p>
         <label class="field" for="lessons">What did the tradeoffs and the shock reveal about public-service delivery?</label>
         <textarea id="lessons" placeholder="Optional: a few sentences to start your individual reflections."></textarea>
@@ -356,15 +413,21 @@
 
   // ---- Steps ------------------------------------------------------------------------------------------------
   var STEP_NAMES = ["Community & roles", "Needs & priorities", "Plan", "Shock", "Revise", "Group plan"];
+  // The briefing sits between steps 1 and 2 as step 1.5, so step numbers, saved links and checks stay as they were.
+  var STEP_SLOT = '<div class="slot small"><span class="slot-tag">Instructor writes · This step</span><ul><li>Why this step: what it practices and why it matters.</li><li>You&rsquo;re done when: what students should have before moving on.</li></ul></div>';
+  var CHECK_SLOT = '<div class="slot small"><span class="slot-tag">Instructor writes · Criteria</span><ul><li>On-track questions students can ask themselves while planning (not scored).</li></ul></div>';
   function renderSteps() {
-    $("steps").innerHTML = STEP_NAMES.map(function (n, i) {
-      var s = i + 1; return '<li><button type="button" data-step="' + s + '"' + (s === st.step ? ' aria-current="step"' : '') + (s > st.maxStep ? " disabled" : "") + ' class="' + (s < st.step ? "done" : "") + '">' + s + ' · ' + n + '</button></li>';
+    var items = STEP_NAMES.map(function (n, i) { return { s: i + 1, label: (i + 1) + " · " + n }; });
+    items.splice(1, 0, { s: 1.5, label: "Briefing" });
+    $("steps").innerHTML = items.map(function (it) {
+      var s = it.s; return '<li><button type="button" data-step="' + s + '"' + (s === st.step ? ' aria-current="step"' : '') + (s > st.maxStep ? " disabled" : "") + ' class="' + (s < st.step ? "done" : "") + '">' + it.label + '</button></li>';
     }).join("");
   }
   $("steps").addEventListener("click", function (e) { var b = e.target.closest("button[data-step]"); if (b && !b.disabled) go(+b.getAttribute("data-step")); });
   function go(n) {
     st.step = n; st.maxStep = Math.max(st.maxStep, n); renderSteps();
-    $("mapcard").hidden = n === 1 || n === 6;
+    $("mapcard").hidden = n === 1 || n === 1.5 || n === 6;
+    $("stepBrief").hidden = n !== 1.5; if (n === 1.5) renderBrief();
     $("step1").hidden = n !== 1; $("step2").hidden = n !== 2; $("stepPlan").hidden = !(n >= 3 && n <= 5); $("step6").hidden = n !== 6;
     if (n === 2) { $("mapSlot2").appendChild($("mapcard")); renderProfile(); renderPrios(); }
     if (n >= 3 && n <= 5) $("mapSlot").appendChild($("mapcard"));
@@ -390,7 +453,16 @@
     return '<div class="role"><h3>' + r.name + '</h3><p>' + r.goal + '</p><div class="watch">Watches: ' + r.watch + '</div><label class="field" for="m-' + r.id + '">Member name (optional)</label><input type="text" id="m-' + r.id + '" data-role="' + r.id + '"></div>';
   }).join("");
   $("roles").addEventListener("input", function (e) { var r = e.target.getAttribute("data-role"); if (r) st.members[r] = e.target.value; });
-  $("toStep2").addEventListener("click", function () { go(2); });
+  $("toStep2").addEventListener("click", function () { go(1.5); });
+  $("briefDone").addEventListener("click", function () { go(2); });
+  function renderBrief() {
+    var M = COMMUNITIES.filter(function (c) { return c.id === st.comm; })[0];
+    $("briefFor").textContent = (M ? M.name + " · " : "") + ($("groupName").value || "Your group");
+    $("roleBriefs").innerHTML = ROLES.map(function (r) {
+      var who = st.members[r.id] ? " (" + esc(st.members[r.id]) + ")" : "";
+      return '<div class="slot small"><span class="slot-tag">Instructor writes · Role brief</span><h4>' + r.name + who + '</h4><ul><li>What this role argues for, and which numbers to bring to the group.</li><li>When to speak up, and what to concede.</li></ul></div>';
+    }).join("");
+  }
   $("practice").addEventListener("change", function () { st.practice = this.checked; $("practiceBanner").hidden = !st.practice; });
 
   // ---- Step 2 -------------------------------------------------------------------------------------------------
@@ -564,7 +636,7 @@
   function renderPanel(c, info, R) {
     var route = cur(), h = '<div class="card soft">';
     if (st.step === 3 || st.step === 5) {
-      h += '<h2>' + (st.step === 3 ? "Step 3 · Plan your line" : "Step 5 · Revise your line") + '</h2>';
+      h += '<h2>' + (st.step === 3 ? "Step 3 · Plan your line" : "Step 5 · Revise your line") + '</h2>' + STEP_SLOT + (st.step === 3 ? CHECK_SLOT : "");
       if (st.step === 5) h += '<div class="shock"><strong>' + SHOCKS[st.shock].title + '.</strong> ' + SHOCKS[st.shock].text() + '</div>';
       h += '<p class="hint" style="margin-top:6px;">Click candidate stations in the order the bus visits them. Priorities: ' + st.prios.map(function (p) { return PRIORITIES.filter(function (x) { return x.id === p; })[0].label.toLowerCase(); }).join(" and ") + '.</p>' +
         '<div class="row" style="margin-top:4px;"><span class="hint">Add new stations to the</span><span class="seg2" role="radiogroup" aria-label="Add new stations to"><label><input type="radio" name="addTo" value="start"' + (st.addTo === "start" ? " checked" : "") + '><span>start</span></label><label><input type="radio" name="addTo" value="end"' + (st.addTo === "end" ? " checked" : "") + '><span>end</span></label></span></div>' +
@@ -573,7 +645,7 @@
       h += '<div class="row">' + (st.step === 3 ? '<button class="btn primary" id="lockBtn"' + (info.valid ? "" : " disabled") + '>Lock in plan</button><button class="btn" id="clearBtn">Clear</button>'
         : '<button class="btn primary" id="finishBtn"' + (info.valid ? "" : " disabled") + '>Finish and write up</button>') + '</div>' + (info.valid ? "" : '<p class="hint" style="margin-top:6px;">Meet every rule to continue.</p>');
     } else {
-      h += '<h2>Step 4 · An implementation challenge</h2><p>Your plan is locked in. Before it can open, something changes.</p>' +
+      h += '<h2>Step 4 · An implementation challenge</h2>' + STEP_SLOT + '<p>Your plan is locked in. Before it can open, something changes.</p>' +
         '<label for="shockSel" class="field">Instructor picks the challenge:</label><select id="shockSel">' + Object.keys(SHOCKS).map(function (k) { return '<option value="' + k + '"' + (k === st.shock ? " selected" : "") + '>' + SHOCKS[k].title + '</option>'; }).join("") + '<option value="random">Surprise us</option></select>' +
         '<div class="row"><button class="btn primary" id="shockBtn">Reveal the challenge</button></div>' + scoreHtml(c, info, R, route);
     }
