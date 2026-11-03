@@ -5,3 +5,6 @@
 *.pptx
 *.xlsx
 ~$*
+
+# Internal inventory and SharePoint setup files: never publish
+inventory/
