@@ -11,8 +11,14 @@
 
 **Per community, the build:**
 1. Keeps the largest connected walkable network inside the study area. North of the Ship Canal also drops streets south of the canal.
-2. Picks up to 28 candidate stations: arterial intersections ranked by street class, with ties broken by tract density, spaced at least 700 m apart.
-3. Precomputes each station's 800 m walking area, the services inside it, and bus paths between station pairs within 3.2 km. Bus paths use streets only, with local streets weighted 1.6× so routes prefer arterials.
+2. Places candidate stations along corridors (v2, 10 Nov 2026).
+   - Every named arterial at least 1.2 km long is a corridor, so 15th Ave NW and 15th Ave NE stay separate.
+   - Along each corridor, a candidate goes about every 1 km (650–1,300 m), preferring arterial crossings and otherwise a named cross street.
+   - A candidate is dropped only when another one within 450 m already sits on the same corridor, or one is within 150 m.
+   - Result: every corridor can meet the 400 m–2 km spacing rule. The exceptions are stretches with no cross streets at all: Seaview Ave NW, Airport Way S by Boeing Field, and short industrial stretches of MLK and E Marginal Way.
+   - `OLD=1` reproduces the v1 method (top 28 arterial crossings, 700 m apart). It failed on Delridge, 15th Ave W/NW, NW 80th St and many others.
+   - The build prints a per-corridor gap report.
+3. Precomputes each station's 800 m walking area, the services inside it, and bus paths between station pairs within 2.6 km. Pairs farther apart can't be consecutive stops under the 2 km rule. Bus paths use streets only, with local streets weighted 1.6× so routes prefer arterials.
 4. Spreads each tract's residents along its residential streets.
 
 **Output format** is the same as the original transit draft (`../../transit-access/build/README.md`), plus:

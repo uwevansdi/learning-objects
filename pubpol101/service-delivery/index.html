@@ -654,7 +654,7 @@
   function renderLists(route, info, R) {
     var can = editable(); $("routeEmpty").hidden = route.length > 0;
     $("routelist").innerHTML = route.map(function (si, i) {
-      var gh = ""; if (i > 0) { var g = info.gaps[i - 1], bad = g == null || g < R.minGap || g > R.maxGap; gh = '<span class="gap' + (bad ? " bad" : "") + '">' + (g == null ? "Too far apart for a bus path" : km(g) + " from station " + i + (g < R.minGap ? " · too close" : g > R.maxGap ? " · too far" : "")) + '</span>'; }
+      var gh = ""; if (i > 0) { var g = info.gaps[i - 1], bad = g == null || g < R.minGap || g > R.maxGap; gh = '<span class="gap' + (bad ? " bad" : "") + '">' + (g == null ? "Too far apart (stations must be within 2 km)" : km(g) + " from station " + i + (g < R.minGap ? " · too close" : g > R.maxGap ? " · too far" : "")) + '</span>'; }
       return '<li><span>' + S[si].name + '</span><span class="ctl">' + (can ? '<button class="btn small" data-mv="' + i + '" data-d="-1"' + (i === 0 ? " disabled" : "") + ' aria-label="Move ' + S[si].name + ' earlier">↑</button><button class="btn small" data-mv="' + i + '" data-d="1"' + (i === route.length - 1 ? " disabled" : "") + ' aria-label="Move ' + S[si].name + ' later">↓</button><button class="btn small" data-rm="' + si + '" aria-label="Remove ' + S[si].name + '">✕</button>' : '') + '</span>' + gh + '</li>';
     }).join("");
     var order = S.map(function (s, i) { return i; }).sort(function (a, b) { return S[a].name.localeCompare(S[b].name); }), full = route.length >= R.maxSt;

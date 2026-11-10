@@ -4,7 +4,11 @@
 // dests.json (OpenStreetMap service locations). Output: <out dir>/data-<id>.js, each defining COMMUNITY_DATA["<id>"].
 const fs = require("fs"), path = require("path");
 const RAW = process.argv[2], OUT = process.argv[3];
-const WALK_M = 800, PAIR_MAX = 3200, LOCAL_PENALTY = 1.6, STOP_SPACING = 700, MAX_STOPS = 28, SNAP_MAX = 150;
+const WALK_M = 800, PAIR_MAX = 2600, LOCAL_PENALTY = 1.6, STOP_SPACING = 700, MAX_STOPS = 28, SNAP_MAX = 150;
+// Corridor stations (v2, 10 Nov 2026): every named arterial gets a candidate about every CORR_TARGET m, so any corridor a
+// bus could plausibly run along can meet the 400 m - 2 km spacing rule. OLD=1 reproduces the v1 selection for comparison.
+const CORR_MIN_LEN = 1200, CORR_LO = 650, CORR_TARGET = 1000, CORR_HI = 1300, MERGE_M = 450, DUP_M = 150, ON_M = 150;
+const OLD = process.env.OLD === "1";
 
 const COMMUNITIES = [
   { id: "north", name: "North of the Ship Canal", short: "Ballard to the University District",
@@ -75,13 +79,15 @@ function build(C) {
   const osm = JSON.parse(fs.readFileSync(path.join(dir, "osm.json"), "utf8"));
   const coord = new Map(); for (const e of osm.elements) if (e.type === "node") coord.set(e.id, [e.lon, e.lat]);
   const ways = osm.elements.filter(e => e.type === "way");
-  const adj = new Map(), artNames = new Map();
+  const adj = new Map(), artNames = new Map(), streetNames = new Map();
   const addEdge = (a, b, len, kind) => { if (!adj.has(a)) adj.set(a, []); if (!adj.has(b)) adj.set(b, []); adj.get(a).push({ to: b, len, kind }); adj.get(b).push({ to: a, len, kind }); };
   for (const w of ways) {
     const kind = KIND(w.tags.highway), art = ART(w.tags.highway) && w.tags.name, rank = /^(primary|secondary|trunk)$/.test(w.tags.highway) ? 2 : 1;
     for (let i = 0; i < w.nodes.length; i++) {
       const id = w.nodes[i], c = coord.get(id); if (!c || !inStudy(c[0], c[1])) continue;
       if (art) { if (!artNames.has(id)) artNames.set(id, new Map()); const m = artNames.get(id); m.set(w.tags.name, Math.max(m.get(w.tags.name) || 0, rank)); }
+      // every named street a bus could use, for labeling corridor stations at local cross streets (rank 0)
+      if (kind >= 1 && w.tags.name) { if (!streetNames.has(id)) streetNames.set(id, new Map()); const m = streetNames.get(id); m.set(w.tags.name, Math.max(m.get(w.tags.name) || 0, art ? rank : 0)); }
       if (i === 0) continue;
       const pid = w.nodes[i - 1], pc = coord.get(pid); if (!pc || !inStudy(pc[0], pc[1])) continue;
       if (pid !== id) addEdge(pid, id, hav(pc, c), kind);
@@ -114,9 +120,68 @@ function build(C) {
     const c = coord.get(id), score = names.slice(0, 2).reduce((s, n) => s + n[1], 0) * 1000 + densityAt(c);
     cands.push({ id, score, label: abbr(names[0][0]) + " & " + abbr(names[1][0]), c }); }
   cands.sort((a, b) => b.score - a.score || a.id - b.id);
-  const stopNodes = [];
-  for (const c of cands) { if (stopNodes.length >= MAX_STOPS) break; if (stopNodes.some(s => hav(s.c, c.c) < STOP_SPACING)) continue; stopNodes.push(c); }
+
+  // corridors: named arterials, one per street (direction suffixes kept, so 15th Ave NW and 15th Ave NE stay apart),
+  // each reduced to its longest connected run through the street network
+  const DIRS = /^(N|S|E|W|NE|NW|SE|SW)$/;
+  const corrKey = n => core(n) + "|" + n.split(" ").filter(w => DIRS.test(w)).sort().join("");
+  const corrAdj = new Map(), corrName = new Map();
+  for (const w of ways) { if (!ART(w.tags.highway) || !w.tags.name) continue; const k = corrKey(w.tags.name);
+    if (!corrAdj.has(k)) { corrAdj.set(k, new Map()); corrName.set(k, w.tags.name); } const g = corrAdj.get(k);
+    for (let i = 1; i < w.nodes.length; i++) { const a = w.nodes[i - 1], b = w.nodes[i]; if (!adj.has(a) || !adj.has(b)) continue; const d = hav(coord.get(a), coord.get(b));
+      if (!g.has(a)) g.set(a, []); if (!g.has(b)) g.set(b, []); g.get(a).push([b, d]); g.get(b).push([a, d]); } }
+  function farthest(g, src) { const dist = new Map([[src, 0]]), prev = new Map(), heap = [[0, src]];
+    while (heap.length) { const [d, u] = heapPop(heap); if (d > dist.get(u)) continue; for (const [v, len] of g.get(u)) { const nd = d + len; if (nd < (dist.has(v) ? dist.get(v) : Infinity)) { dist.set(v, nd); prev.set(v, u); heapPush(heap, nd, v); } } }
+    let far = src, fd = 0; for (const [n, d] of dist) if (d > fd) { fd = d; far = n; } return { far, fd, prev, dist }; }
+  const corridors = [];
+  for (const [k, g] of corrAdj) { const seen = new Set();
+    for (const start of g.keys()) { if (seen.has(start)) continue;
+      const a = farthest(g, start); for (const n of a.dist.keys()) seen.add(n);
+      const b = farthest(g, a.far); if (b.fd < CORR_MIN_LEN) continue;
+      const nodes = []; let n = b.far; while (n !== undefined) { nodes.push(n); n = b.prev.get(n); }
+      corridors.push({ key: k, name: abbr(corrName.get(k)), len: b.fd, nodes, s: nodes.map(x => b.fd - b.dist.get(x)) }); } }
+
+  let stopNodes = [];
+  if (OLD) {
+    for (const c of cands) { if (stopNodes.length >= MAX_STOPS) break; if (stopNodes.some(s => hav(s.c, c.c) < STOP_SPACING)) continue; stopNodes.push(c); }
+  } else {
+    // along each corridor, a station about every CORR_TARGET m: arterial crossings preferred, then any named cross street
+    const picks = [];
+    for (const [ki, K] of corridors.entries()) {
+      const elig = [];
+      K.nodes.forEach((id, i) => { const m = streetNames.get(id); if (!m) return;
+        const cross = [...m.entries()].filter(([nm]) => corrKey(nm) !== K.key && core(nm) !== core(corrName.get(K.key))).sort((x, y) => y[1] - x[1])[0];
+        if (cross) elig.push({ id, s: K.s[i], rank: cross[1], label: K.name + " & " + abbr(cross[0]), ki }); });
+      elig.sort((x, y) => x.s - y.s); if (!elig.length) continue;
+      let cur = elig.find(e => e.s <= 300) || elig[0]; picks.push(cur);
+      for (;;) {
+        const win = elig.filter(e => e.s >= cur.s + CORR_LO && e.s <= cur.s + CORR_HI);
+        const next = win.length ? win.sort((x, y) => (y.rank * 400 - Math.abs(y.s - cur.s - CORR_TARGET)) - (x.rank * 400 - Math.abs(x.s - cur.s - CORR_TARGET)))[0]
+          : elig.find(e => e.s > cur.s + CORR_LO);
+        if (!next) break; picks.push(next); cur = next; }
+    }
+    // arterial-arterial crossings first, then the rest. A pick is dropped only if a kept station within MERGE_M sits on
+    // the same corridor (so that corridor keeps a stop nearby), or if any kept station is within DUP_M.
+    const onCorr = (pt, ki) => corridors[ki].nodes.some(id => hav(coord.get(id), pt) <= ON_M);
+    const byId = new Map(); for (const p of picks) { const c = cands.find(x => x.id === p.id); const sc = c ? c.score : p.rank * 1000 + densityAt(coord.get(p.id));
+      const prev = byId.get(p.id), kis = new Set(prev ? prev.kis : []); kis.add(p.ki);
+      if (!prev || prev.score < sc) byId.set(p.id, { id: p.id, score: sc, label: c ? c.label : p.label, c: coord.get(p.id), kis }); else prev.kis = kis; }
+    for (const c of [...byId.values()].sort((a, b) => b.score - a.score || a.id - b.id)) {
+      if (stopNodes.some(s => hav(s.c, c.c) < DUP_M)) continue;
+      if ([...c.kis].every(ki => stopNodes.some(s => hav(s.c, c.c) < MERGE_M && onCorr(s.c, ki)))) continue;
+      stopNodes.push(c); }
+  }
   const keep = new Set(stopNodes.map(s => s.id));
+
+  // report: the largest gap between stations along each corridor (a station counts if within 150 m of the corridor)
+  const corrReport = corridors.map(K => { const on = [];
+    for (const s of stopNodes) { let bd = Infinity, bs = 0; K.nodes.forEach((id, i) => { const d = hav(coord.get(id), s.c); if (d < bd) { bd = d; bs = K.s[i]; } }); if (bd <= 150) on.push(bs); }
+    on.sort((a, b) => a - b); let gap = on.length ? 0 : K.len; // gaps between stations; a corridor's ends past its last station don't count
+    for (let i = 1; i < on.length; i++) gap = Math.max(gap, on[i] - on[i - 1]);
+    return { name: K.name, km: +(K.len / 1000).toFixed(1), stations: on.length, maxGapKm: +(gap / 1000).toFixed(1) }; });
+  const bad = corrReport.filter(r => r.maxGapKm > 2 || r.stations < 2);
+  console.log("  " + C.id + (OLD ? " (old)" : "") + ": " + stopNodes.length + " stations, " + corridors.length + " corridors >= " + CORR_MIN_LEN / 1000 + " km, " + bad.length + " with a gap > 2 km or under 2 stations");
+  bad.sort((a, b) => b.km - a.km).forEach(r => console.log("     ", r.name.padEnd(28), r.km + " km,", r.stations, "stations, max gap", r.maxGapKm + " km"));
 
   // contract degree-2 chains
   const deg = id => new Set(adj.get(id).map(e => e.to)).size, isJ = id => keep.has(id) || deg(id) !== 2;
