@@ -99,12 +99,20 @@
   #map text { font-family: inherit; pointer-events: none; }
   .stop { cursor: pointer; } .stop:focus { outline: none; } .stop:focus-visible .ring { stroke: var(--focus); stroke-width: 4; }
   /* services scoreboard: what the line reaches, plus the service key */
-  .svcbar { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--surface); font-size: 14px; }
-  .svcbar .svc-title { font-weight: 700; color: var(--ink); }
-  .svcbar .svc { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); }
-  .svcbar .svc b { font-size: 17px; color: var(--accent); }
-  .svcbar .svc-total { font-weight: 700; color: var(--ink); padding: 2px 10px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); }
-  .svcbar .svc-key { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--ink-3); }
+  /* services scoreboard: a box over the top-left of the map */
+  .mapwrap { position: relative; }
+  .svcbar { position: absolute; top: 10px; left: 10px; z-index: 3; width: 236px; display: flex; flex-direction: column; gap: 5px; padding: 10px 12px; font-size: 13px;
+    background: rgba(255, 255, 255, 0.95); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14); }
+  .svcbar .svc-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-weight: 700; color: var(--ink); line-height: 1.25; }
+  .svcbar .svc-head button { font: inherit; font-size: 12px; font-weight: 600; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+  .svcbar .svc { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--ink-2); }
+  .svcbar .svc span { display: inline-flex; align-items: center; gap: 7px; }
+  .svcbar .svc span:last-child, .svcbar .svc-total span:last-child { white-space: nowrap; }
+  .svcbar .svc b { font-size: 15px; color: var(--accent); }
+  .svcbar .svc-total { display: flex; justify-content: space-between; font-weight: 700; color: var(--ink); border-top: 1px solid var(--border); padding-top: 5px; }
+  .svcbar .svc-key { display: flex; flex-direction: column; gap: 3px; font-size: 11.5px; color: var(--ink-3); border-top: 1px solid var(--border); padding-top: 5px; }
+  .svcbar.collapsed .svc, .svcbar.collapsed .svc-total, .svcbar.collapsed .svc-key { display: none; }
+  @media (max-width: 700px) { .svcbar { position: static; width: auto; border-radius: 0; box-shadow: none; border-width: 0 0 1px; } }
   .maplegend { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; padding: 8px 12px; font-size: 13px; color: var(--ink-2); border-top: 1px solid var(--border); }
   .lg { display: inline-block; vertical-align: middle; margin-right: 5px; }
   .lg.cover { width: 18px; height: 7px; border-radius: 4px; background: var(--cover); box-shadow: inset 0 0 0 1px var(--edge); }
@@ -520,7 +528,7 @@
     '<label><input type="radio" name="layer" value="none" checked><span>No layer</span></label><label><input type="radio" name="layer" value="density"><span>Density</span></label>' +
     '<label><input type="radio" name="layer" value="poc"><span>People of color</span></label><label><input type="radio" name="layer" value="low"><span>Lower income</span></label><label><input type="radio" name="layer" value="walk"><span>Walkability</span></label><label><input type="radio" name="layer" value="idens"><span>Intersections</span></label></div>' +
     '<div class="zoom"><label class="toggle" style="font-size:13px;margin-right:6px;"><input type="checkbox" id="showAll"> Show all candidates</label><label class="toggle" style="font-size:13px;margin-right:6px;"><input type="checkbox" id="showDests" checked> Services</label><button type="button" id="zin" aria-label="Zoom in">+</button><button type="button" id="zout" aria-label="Zoom out">−</button><button type="button" id="zreset" style="width:auto;padding:0 8px;font-size:13px;">Reset</button></div></div>' +
-    '<div class="svcbar" id="svcbar" aria-live="polite"></div><svg id="map" role="group" aria-label="Map. Candidate stations are buttons; Tab moves between them and Enter adds or removes a station."></svg><div class="maplegend" id="legend"></div><div class="tooltip" id="tip"></div>';
+    '<div class="mapwrap"><svg id="map" role="group" aria-label="Map. Candidate stations are buttons; Tab moves between them and Enter adds or removes a station."></svg><div class="svcbar" id="svcbar" aria-live="polite"></div></div><div class="maplegend" id="legend"></div><div class="tooltip" id="tip"></div>';
   mapcard.hidden = true; document.body.appendChild(mapcard);
   var svg = mapcard.querySelector("#map"), view, W, H, layer = "none", showDests = true;
   var gTracts, gBase, coverEdge, coverFill, routeCase, routeLine, routeBad, gLabels, gDests, gStops, tractEls, stopEls, labelEls, destEls;
@@ -576,16 +584,19 @@
   var TOK = [null, { fill: "#d5dae3", ink: "#2f3644", h: 14, fs: 10 }, { fill: "#7d889c", ink: "#fff", h: 16, fs: 11 }, { fill: "#2f3644", ink: "#fff", h: 18, fs: 12.5 }];
   function tier(n) { return n >= 4 ? 3 : n >= 2 ? 2 : n ? 1 : 0; }
   // services scoreboard: within a walk of the line (or, before a line exists, what the community has)
-  function renderSvcBar(c, route) {
-    var has = route.length > 0, tot = 0, got = 0, chips = Object.keys(CAT).map(function (k) {
+  var svcCollapsed = false, svcRoute = [];
+  function renderSvcBar(c, route) { svcRoute = route;
+    var has = route.length > 0, tot = 0, got = 0, rows = Object.keys(CAT).map(function (k) {
       tot += TOT.dest[k]; got += c.dest[k];
-      var ic = '<i class="lg ' + k + '"></i>', name = { food: "Food assistance", health: "Clinics", civic: "Libraries &amp; centers" }[k];
-      return '<span class="svc">' + ic + name + ' ' + (has ? '<b>' + c.dest[k] + '</b> of ' + TOT.dest[k] : '<b>' + TOT.dest[k] + '</b>') + '</span>'; }).join("");
-    $("svcbar").innerHTML = '<span class="svc-title">' + (has ? "Services within a walk of your line" : "Services in this community") + '</span>' + chips +
-      (has ? '<span class="svc-total">' + got + ' of ' + tot + ' services</span>' : "") +
-      '<span class="svc-key">' + tokenLegend() + '<span>Zoom in to see each location (filled = reached)</span></span>'; }
+      var name = { food: "Food assistance", health: "Clinics", civic: "Libraries &amp; centers" }[k];
+      return '<div class="svc"><span><i class="lg ' + k + '"></i>' + name + '</span><span>' + (has ? '<b>' + c.dest[k] + '</b>&nbsp;of ' + TOT.dest[k] : '<b>' + TOT.dest[k] + '</b>') + '</span></div>'; }).join("");
+    var bar = $("svcbar"); bar.classList.toggle("collapsed", svcCollapsed);
+    bar.innerHTML = '<div class="svc-head"><span>' + (has ? "Services your line reaches" : "Services in this community") + '</span><button type="button" id="svcToggle" aria-expanded="' + !svcCollapsed + '">' + (svcCollapsed ? "Show" : "Hide") + '</button></div>' + rows +
+      (has ? '<div class="svc-total"><span>Total</span><span>' + got + ' of ' + tot + '</span></div>' : "") +
+      '<div class="svc-key">' + tokenLegend() + '<span>Zoom in to see locations</span></div>';
+    $("svcToggle").onclick = function () { svcCollapsed = !svcCollapsed; renderSvcBar(lastCov, svcRoute); }; }
   function tokenLegend() {
-    return '<span><i class="lg tok t1">+1</i><i class="lg tok t2" style="margin-left:3px">+2</i><i class="lg tok t3" style="margin-left:3px">+4</i>&nbsp;Services a candidate would add (faded: not in range for the next stop)</span>'; }
+    return '<span><i class="lg tok t1">+1</i><i class="lg tok t2" style="margin-left:3px">+2</i><i class="lg tok t3" style="margin-left:3px">+4</i></span><span>Services a stop would add · faded = out of range</span>'; }
   function applyView() {
     if (!view) return; svg.setAttribute("viewBox", view.x + " " + view.y + " " + view.w + " " + view.h);
     var u = mpp();
@@ -611,7 +622,8 @@
   mapcard.querySelector("#showDests").onchange = function () { showDests = this.checked; applyView(); };
   mapcard.querySelector("#showAll").onchange = function () { showAllCands = this.checked; render(); };
   function svgPt(e) { var r = svg.getBoundingClientRect(); return [view.x + (e.clientX - r.left) / r.width * view.w, view.y + (e.clientY - r.top) / r.height * view.h]; }
-  svg.addEventListener("wheel", function (e) { e.preventDefault(); var p = svgPt(e); zoomAt(e.deltaY < 0 ? 0.85 : 1 / 0.85, p[0], p[1]); }, { passive: false });
+  svg.addEventListener("wheel", function (e) { e.preventDefault(); var p = svgPt(e), dy = e.deltaY * (e.deltaMode === 1 ? 33 : e.deltaMode === 2 ? 400 : 1);
+    zoomAt(Math.min(1.12, Math.max(0.89, Math.exp(dy * 0.0012))), p[0], p[1]); }, { passive: false }); // about 11% per wheel notch
   var drag = null;
   svg.addEventListener("pointerdown", function (e) { if (e.target.closest(".stop")) return; drag = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y }; svg.setPointerCapture(e.pointerId); svg.classList.add("dragging"); });
   svg.addEventListener("pointermove", function (e) {
