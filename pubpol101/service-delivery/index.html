@@ -98,6 +98,13 @@
   #map.dragging { cursor: grabbing; }
   #map text { font-family: inherit; pointer-events: none; }
   .stop { cursor: pointer; } .stop:focus { outline: none; } .stop:focus-visible .ring { stroke: var(--focus); stroke-width: 4; }
+  /* services scoreboard: what the line reaches, plus the service key */
+  .svcbar { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--surface); font-size: 14px; }
+  .svcbar .svc-title { font-weight: 700; color: var(--ink); }
+  .svcbar .svc { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); }
+  .svcbar .svc b { font-size: 17px; color: var(--accent); }
+  .svcbar .svc-total { font-weight: 700; color: var(--ink); padding: 2px 10px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); }
+  .svcbar .svc-key { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--ink-3); }
   .maplegend { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; padding: 8px 12px; font-size: 13px; color: var(--ink-2); border-top: 1px solid var(--border); }
   .lg { display: inline-block; vertical-align: middle; margin-right: 5px; }
   .lg.cover { width: 18px; height: 7px; border-radius: 4px; background: var(--cover); box-shadow: inset 0 0 0 1px var(--edge); }
@@ -513,7 +520,7 @@
     '<label><input type="radio" name="layer" value="none" checked><span>No layer</span></label><label><input type="radio" name="layer" value="density"><span>Density</span></label>' +
     '<label><input type="radio" name="layer" value="poc"><span>People of color</span></label><label><input type="radio" name="layer" value="low"><span>Lower income</span></label><label><input type="radio" name="layer" value="walk"><span>Walkability</span></label><label><input type="radio" name="layer" value="idens"><span>Intersections</span></label></div>' +
     '<div class="zoom"><label class="toggle" style="font-size:13px;margin-right:6px;"><input type="checkbox" id="showAll"> Show all candidates</label><label class="toggle" style="font-size:13px;margin-right:6px;"><input type="checkbox" id="showDests" checked> Services</label><button type="button" id="zin" aria-label="Zoom in">+</button><button type="button" id="zout" aria-label="Zoom out">−</button><button type="button" id="zreset" style="width:auto;padding:0 8px;font-size:13px;">Reset</button></div></div>' +
-    '<svg id="map" role="group" aria-label="Map. Candidate stations are buttons; Tab moves between them and Enter adds or removes a station."></svg><div class="maplegend" id="legend"></div><div class="tooltip" id="tip"></div>';
+    '<div class="svcbar" id="svcbar" aria-live="polite"></div><svg id="map" role="group" aria-label="Map. Candidate stations are buttons; Tab moves between them and Enter adds or removes a station."></svg><div class="maplegend" id="legend"></div><div class="tooltip" id="tip"></div>';
   mapcard.hidden = true; document.body.appendChild(mapcard);
   var svg = mapcard.querySelector("#map"), view, W, H, layer = "none", showDests = true;
   var gTracts, gBase, coverEdge, coverFill, routeCase, routeLine, routeBad, gLabels, gDests, gStops, tractEls, stopEls, labelEls, destEls;
@@ -568,6 +575,15 @@
   // three tiers: +1, +2-3, +4 or more
   var TOK = [null, { fill: "#d5dae3", ink: "#2f3644", h: 14, fs: 10 }, { fill: "#7d889c", ink: "#fff", h: 16, fs: 11 }, { fill: "#2f3644", ink: "#fff", h: 18, fs: 12.5 }];
   function tier(n) { return n >= 4 ? 3 : n >= 2 ? 2 : n ? 1 : 0; }
+  // services scoreboard: within a walk of the line (or, before a line exists, what the community has)
+  function renderSvcBar(c, route) {
+    var has = route.length > 0, tot = 0, got = 0, chips = Object.keys(CAT).map(function (k) {
+      tot += TOT.dest[k]; got += c.dest[k];
+      var ic = '<i class="lg ' + k + '"></i>', name = { food: "Food assistance", health: "Clinics", civic: "Libraries &amp; centers" }[k];
+      return '<span class="svc">' + ic + name + ' ' + (has ? '<b>' + c.dest[k] + '</b> of ' + TOT.dest[k] : '<b>' + TOT.dest[k] + '</b>') + '</span>'; }).join("");
+    $("svcbar").innerHTML = '<span class="svc-title">' + (has ? "Services within a walk of your line" : "Services in this community") + '</span>' + chips +
+      (has ? '<span class="svc-total">' + got + ' of ' + tot + ' services</span>' : "") +
+      '<span class="svc-key">' + tokenLegend() + '<span>Zoom in to see each location (filled = reached)</span></span>'; }
   function tokenLegend() {
     return '<span><i class="lg tok t1">+1</i><i class="lg tok t2" style="margin-left:3px">+2</i><i class="lg tok t3" style="margin-left:3px">+4</i>&nbsp;Services a candidate would add (faded: not in range for the next stop)</span>'; }
   function applyView() {
@@ -615,7 +631,7 @@
   };
   function renderLayer() {
     var L = LAYERS[layer], h = '<span><i class="lg route"></i>Bus line</span><span><i class="lg st"></i>Station</span><span><i class="lg end"></i>End of line</span><span><i class="lg cover"></i>10-minute walk</span><span><i class="lg cand"></i>Candidate</span>' +
-      '<span><i class="lg food"></i>Food assistance</span><span><i class="lg health"></i>Clinic</span><span><i class="lg civic"></i>Library or center</span><span class="hint">Filled = within a walk of a station</span>' + tokenLegend() + '<span class="hint">Zoom in to see service locations</span>';
+      '';
     if (!L) { tractEls.forEach(function (p) { p.setAttribute("fill", "transparent"); }); $("legend").innerHTML = h; return; }
     var vals = T.map(L.val), s = vals.filter(function (v) { return v != null; }).sort(function (a, b) { return a - b; }), br = [0.2, 0.4, 0.6, 0.8].map(function (q) { return s[Math.floor(q * (s.length - 1))]; });
     tractEls.forEach(function (p, i) { var v = vals[i], b = 0; if (v == null) { p.setAttribute("fill", "url(#naHatch)"); p.setAttribute("fill-opacity", 0.9); return; } while (b < 4 && v > br[b]) b++; p.setAttribute("fill", RAMP[b]); p.setAttribute("fill-opacity", 0.75); });
@@ -665,7 +681,7 @@
   function render() {
     if (!D) return;
     var route = st.step >= 3 ? cur() : [], R = rules(), info = routeInfo(route, R, st.step >= 5 && SHOCKS[st.shock].requireTract), c = coverage(route);
-    lastCov = c; drawCoverage(c); drawRoute(route); var opts = nextOptions(route, R, info.len);
+    lastCov = c; drawCoverage(c); drawRoute(route); var opts = nextOptions(route, R, info.len); renderSvcBar(c, route);
     stopEls.forEach(function (g, i) {
       var pos = route.indexOf(i), on = pos >= 0, end = on && (pos === 0 || pos === route.length - 1) && route.length > 1, ring = g.querySelector(".ring"), txt = g.querySelector("text");
       // off-range candidates: no circle, not clickable; a faded token at the spot still shows where value lies
