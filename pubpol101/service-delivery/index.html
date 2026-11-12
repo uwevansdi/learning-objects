@@ -105,7 +105,9 @@
     background: rgba(255, 255, 255, 0.95); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14); }
   .svcbar .svc-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-weight: 700; color: var(--ink); line-height: 1.25; }
   .svcbar .svc-head button { font: inherit; font-size: 12px; font-weight: 600; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
-  .svcbar .svc { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--ink-2); }
+  .svcbar .svc { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--ink-2); width: calc(100% + 8px); margin: 0 -4px; padding: 2px 4px; border: 0; border-radius: 5px; background: none; font: inherit; text-align: left; cursor: pointer; }
+  .svcbar .svc:hover, .svcbar .svc.on { background: #efeaf8; }
+  .svcbar .svc[aria-pressed="true"] { box-shadow: inset 0 0 0 1.5px var(--accent); }
   .svcbar .svc span { display: inline-flex; align-items: center; gap: 7px; }
   .svcbar .svc span:last-child, .svcbar .svc-total span:last-child { white-space: nowrap; }
   .svcbar .svc b { font-size: 15px; color: var(--accent); }
@@ -567,6 +569,7 @@
       b.appendChild(el("rect", { class: "halo", rx: 1, fill: "#fff" })); // white halo, then a thin dark outline, to lift it off the map
       b.appendChild(el("rect", { class: "tok", rx: 1, stroke: "#1f2430", "stroke-width": 1, "vector-effect": "non-scaling-stroke" }));
       b.appendChild(el("text", { "text-anchor": "middle", "dominant-baseline": "central", "font-weight": 700 }));
+      b.appendChild(el("g", { class: "types" })); // one small mark per type of service the stop would add
       g.appendChild(b);
       gStops.appendChild(g); return g;
     });
@@ -584,17 +587,23 @@
   var TOK = [null, { fill: "#d5dae3", ink: "#2f3644", h: 14, fs: 10 }, { fill: "#7d889c", ink: "#fff", h: 16, fs: 11 }, { fill: "#2f3644", ink: "#fff", h: 18, fs: 12.5 }];
   function tier(n) { return n >= 4 ? 3 : n >= 2 ? 2 : n ? 1 : 0; }
   // services scoreboard: within a walk of the line (or, before a line exists, what the community has)
-  var svcCollapsed = false, svcRoute = [];
+  var svcCollapsed = false, svcRoute = [], hlCat = null, hlPinned = false;
+  function setHl(cat) { hlCat = cat; applyView();
+    $("svcbar").querySelectorAll("button.svc").forEach(function (b) { b.classList.toggle("on", b.dataset.cat === hlCat); b.setAttribute("aria-pressed", hlPinned && b.dataset.cat === hlCat ? "true" : "false"); }); }
   function renderSvcBar(c, route) { svcRoute = route;
     var has = route.length > 0, tot = 0, got = 0, rows = Object.keys(CAT).map(function (k) {
       tot += TOT.dest[k]; got += c.dest[k];
       var name = { food: "Food assistance", health: "Clinics", civic: "Libraries &amp; centers" }[k];
-      return '<div class="svc"><span><i class="lg ' + k + '"></i>' + name + '</span><span>' + (has ? '<b>' + c.dest[k] + '</b>&nbsp;of ' + TOT.dest[k] : '<b>' + TOT.dest[k] + '</b>') + '</span></div>'; }).join("");
+      return '<button type="button" class="svc' + (hlCat === k ? " on" : "") + '" data-cat="' + k + '" aria-pressed="' + (hlPinned && hlCat === k) + '" aria-label="' + name.replace("&amp;", "and") + ': show where these are and which stops add them"><span><i class="lg ' + k + '"></i>' + name + '</span><span>' + (has ? '<b>' + c.dest[k] + '</b>&nbsp;of ' + TOT.dest[k] : '<b>' + TOT.dest[k] + '</b>') + '</span></button>'; }).join("");
     var bar = $("svcbar"); bar.classList.toggle("collapsed", svcCollapsed);
     bar.innerHTML = '<div class="svc-head"><span>' + (has ? "Services your line reaches" : "Services in this community") + '</span><button type="button" id="svcToggle" aria-expanded="' + !svcCollapsed + '">' + (svcCollapsed ? "Show" : "Hide") + '</button></div>' + rows +
       (has ? '<div class="svc-total"><span>Total</span><span>' + got + ' of ' + tot + '</span></div>' : "") +
-      '<div class="svc-key">' + tokenLegend() + '<span>Zoom in to see locations</span></div>';
-    $("svcToggle").onclick = function () { svcCollapsed = !svcCollapsed; renderSvcBar(lastCov, svcRoute); }; }
+      '<div class="svc-key">' + tokenLegend() + '<span>Point at a service type to find it; click to keep it on</span><span>Zoom in to see all locations</span></div>';
+    $("svcToggle").onclick = function () { svcCollapsed = !svcCollapsed; renderSvcBar(lastCov, svcRoute); };
+    bar.querySelectorAll("button.svc").forEach(function (b) { var k = b.dataset.cat;
+      var on = function () { if (!hlPinned) setHl(k); }, off = function () { if (!hlPinned) setHl(null); };
+      b.onmouseenter = on; b.onmouseleave = off; b.onfocus = on; b.onblur = off;
+      b.onclick = function () { if (hlPinned && hlCat === k) { hlPinned = false; setHl(null); } else { hlPinned = true; setHl(k); } }; }); }
   function tokenLegend() {
     return '<span><i class="lg tok t1">+1</i><i class="lg tok t2" style="margin-left:3px">+2</i><i class="lg tok t3" style="margin-left:3px">+4</i></span><span>Services a stop would add · faded = out of range</span>'; }
   function applyView() {
@@ -605,11 +614,21 @@
       var h = T.h * u, w = (n >= 10 ? 2.1 : 1.55) * h, far = g.getAttribute("data-far") === "1", bx = far ? S[i].xy[0] : S[i].xy[0] + 8 * u + w / 2, by = far ? S[i].xy[1] : S[i].xy[1] - 8 * u, r = b.querySelector(".tok"), hl = b.querySelector(".halo"), t = b.querySelector("text"), p = 2 * u;
       hl.setAttribute("x", bx - w / 2 - p); hl.setAttribute("y", by - h / 2 - p); hl.setAttribute("width", w + 2 * p); hl.setAttribute("height", h + 2 * p); hl.setAttribute("rx", 5 * u);
       r.setAttribute("x", bx - w / 2); r.setAttribute("y", by - h / 2); r.setAttribute("width", w); r.setAttribute("height", h); r.setAttribute("rx", 3.5 * u); r.setAttribute("fill", T.fill);
-      t.setAttribute("x", bx); t.setAttribute("y", by); t.setAttribute("font-size", T.fs * u); t.setAttribute("fill", T.ink); });
+      t.setAttribute("x", bx); t.setAttribute("y", by); t.setAttribute("font-size", T.fs * u); t.setAttribute("fill", T.ink);
+      var cats = ["food", "health", "civic"].filter(function (k) { return fresh[i].some(function (di) { return D.dests[di].cat === k; }); });
+      var sz = 3.9 * u, gap = 10.5 * u, ty = by + h / 2 + p + 5.5 * u, tx0 = bx - (cats.length - 1) * gap / 2, mk = 'stroke="var(--edge)" stroke-width="1" vector-effect="non-scaling-stroke"';
+      b.querySelector(".types").innerHTML = '<rect x="' + (tx0 - 6 * u) + '" y="' + (ty - 5.4 * u) + '" width="' + ((cats.length - 1) * gap + 12 * u) + '" height="' + 10.8 * u + '" rx="' + 5.4 * u + '" fill="#fff" fill-opacity="0.9"/>' +
+        cats.map(function (k, j) { var x = tx0 + j * gap, f = CAT[k].color;
+          if (k === "food") return '<circle cx="' + x + '" cy="' + ty + '" r="' + sz + '" fill="' + f + '" ' + mk + '/>';
+          if (k === "health") return '<rect x="' + (x - sz) + '" y="' + (ty - sz) + '" width="' + 2 * sz + '" height="' + 2 * sz + '" fill="' + f + '" ' + mk + '/>';
+          return '<polygon points="' + x + ',' + (ty - sz * 1.25) + ' ' + (x + sz * 1.15) + ',' + (ty + sz * 0.95) + ' ' + (x - sz * 1.15) + ',' + (ty + sz * 0.95) + '" fill="' + f + '" ' + mk + '/>'; }).join("");
+      var match = hlCat && fresh[i].some(function (di) { return D.dests[di].cat === hlCat; });
+      b.style.opacity = hlCat ? (match ? (far ? 0.9 : 1) : 0.12) : (far ? 0.5 : ""); });
     labelEls.forEach(function (t) { t.setAttribute("font-size", 12.5 * u); t.style.strokeWidth = (4 * u) + "px"; });
     gDests.style.display = showDests ? "" : "none";
     var zoomed = view.w <= W * 0.55; // zoomed in far enough for service icons to have room
-    destEls.forEach(function (g, i) { g.innerHTML = zoomed ? destShape(D.dests[i], u, lastCov && lastCov.dset[i]) : ""; });
+    destEls.forEach(function (g, i) { var show = zoomed ? !hlCat || D.dests[i].cat === hlCat : hlCat && D.dests[i].cat === hlCat;
+      g.innerHTML = show ? destShape(D.dests[i], u, lastCov && lastCov.dset[i]) : ""; });
   }
   function zoomAt(f, cx, cy) {
     var nw = Math.min(W, Math.max(W / 8, view.w * f)), nh = nw * H / W; if (cx == null) { cx = view.x + view.w / 2; cy = view.y + view.h / 2; }
@@ -700,7 +719,7 @@
       var far = !on && opts && !opts.has(i), hasTok = !on && S[i].dests.some(function (di) { return !c.dset[di]; });
       g.style.display = far && !hasTok ? "none" : ""; g.setAttribute("data-far", far ? "1" : "0");
       g.style.pointerEvents = far ? "none" : ""; g.setAttribute("tabindex", far ? "-1" : "0"); if (far) g.setAttribute("aria-hidden", "true"); else g.removeAttribute("aria-hidden");
-      g.querySelector(".ring").style.display = far ? "none" : ""; g.querySelector(".badge").style.opacity = far ? 0.5 : "";
+      g.querySelector(".ring").style.display = far ? "none" : "";
       g.setAttribute("data-on", on ? "1" : "0"); ring.setAttribute("fill", end ? "var(--gold)" : on ? "var(--route)" : "#fff"); ring.setAttribute("stroke", end ? "var(--edge)" : "var(--route)");
       txt.textContent = on ? String(pos + 1) : ""; txt.setAttribute("fill", end ? "var(--edge)" : "#fff");
       var add = on ? [] : S[i].dests.filter(function (di) { return !c.dset[di]; }), b = g.querySelector(".badge"); fresh[i] = add;
