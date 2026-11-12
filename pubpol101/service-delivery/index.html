@@ -105,8 +105,9 @@
   .lg.st { width: 13px; height: 13px; border-radius: 50%; background: var(--route); }
   .lg.end { width: 13px; height: 13px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 1.5px var(--edge); }
   .lg.cand { width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2px solid var(--route); }
-  .lg.badge { min-width: 16px; height: 16px; border-radius: 8px; background: var(--route); color: #fff; font-size: 10px; font-weight: 700; font-style: normal; display: inline-grid; place-items: center; padding: 0 4px; }
-  .lg.badge.done { background: #a9a59b; }
+  /* service tokens: what a candidate would add; slate, a color nothing else on the map uses */
+  .lg.tok { height: 15px; border-radius: 4px; font-size: 10px; font-weight: 700; font-style: normal; display: inline-grid; place-items: center; padding: 0 4px; box-shadow: 0 0 0 1px #fff; }
+  .lg.tok.t1 { background: #d5dae3; color: #2f3644; font-size: 9px; height: 13px; } .lg.tok.t2 { background: #7d889c; color: #fff; } .lg.tok.t3 { background: #2f3644; color: #fff; font-size: 11px; height: 17px; }
   .lg.na { width: 14px; height: 12px; border-radius: 3px; background: repeating-linear-gradient(45deg, #b9b4a9 0 3px, #ece9e2 3px 7px); }
   .lg.food { width: 12px; height: 12px; border-radius: 50%; background: var(--food); box-shadow: 0 0 0 1.5px var(--edge); }
   .lg.health { width: 11px; height: 11px; background: var(--health); box-shadow: 0 0 0 1.5px var(--edge); }
@@ -546,10 +547,10 @@
       g.appendChild(el("circle", { class: "hit", cx: s.xy[0], cy: s.xy[1], r: 1, fill: "transparent" }));
       g.appendChild(el("circle", { class: "ring", cx: s.xy[0], cy: s.xy[1], r: 1, fill: "#fff", stroke: "var(--route)", "stroke-width": 2, "vector-effect": "non-scaling-stroke" }));
       g.appendChild(el("text", { x: s.xy[0], y: s.xy[1], "text-anchor": "middle", "dominant-baseline": "central", fill: "#fff", "font-weight": 700 }));
-      // badge: how many services are within a 10-minute walk; grey once the line already reaches all of them
+      // token: services within a 10-minute walk that the line doesn't reach yet, as "+N"; size and shade rise with N
       var b = el("g", { class: "badge", "aria-hidden": "true" });
-      b.appendChild(el("circle", { r: 1, stroke: "#fff", "stroke-width": 1.5, "vector-effect": "non-scaling-stroke" }));
-      var bt = el("text", { "text-anchor": "middle", "dominant-baseline": "central", fill: "#fff", "font-weight": 700 }); bt.textContent = s.dests.length; b.appendChild(bt);
+      b.appendChild(el("rect", { rx: 1, stroke: "#fff", "stroke-width": 1.5, "vector-effect": "non-scaling-stroke" }));
+      b.appendChild(el("text", { "text-anchor": "middle", "dominant-baseline": "central", "font-weight": 700 }));
       g.appendChild(b);
       gStops.appendChild(g); return g;
     });
@@ -562,13 +563,20 @@
     if (d.cat === "health") return '<rect x="' + (x - s) + '" y="' + (y - s) + '" width="' + 2 * s + '" height="' + 2 * s + '" fill="' + fill + '" ' + stroke + '/>';
     return '<polygon points="' + x + ',' + (y - s * 1.2) + ' ' + (x + s * 1.1) + ',' + (y + s * 0.9) + ' ' + (x - s * 1.1) + ',' + (y + s * 0.9) + '" fill="' + fill + '" ' + stroke + '/>';
   }
-  var lastCov = null;
+  var lastCov = null, fresh = [];
+  // three tiers: +1, +2-3, +4 or more
+  var TOK = [null, { fill: "#d5dae3", ink: "#2f3644", h: 14, fs: 10 }, { fill: "#7d889c", ink: "#fff", h: 16, fs: 11 }, { fill: "#2f3644", ink: "#fff", h: 18, fs: 12.5 }];
+  function tier(n) { return n >= 4 ? 3 : n >= 2 ? 2 : n ? 1 : 0; }
+  function tokenLegend() {
+    return '<span><i class="lg tok t1">+1</i><i class="lg tok t2" style="margin-left:3px">+2</i><i class="lg tok t3" style="margin-left:3px">+4</i>&nbsp;Services a candidate would add</span>'; }
   function applyView() {
     if (!view) return; svg.setAttribute("viewBox", view.x + " " + view.y + " " + view.w + " " + view.h);
     var u = mpp();
     stopEls.forEach(function (g, i) { var on = g.getAttribute("data-on") === "1"; g.querySelector(".hit").setAttribute("r", 14 * u); g.querySelector(".ring").setAttribute("r", (on ? 9 : 7) * u); g.querySelector("text").setAttribute("font-size", 10.5 * u);
-      var b = g.querySelector(".badge"), bx = S[i].xy[0] + 9 * u, by = S[i].xy[1] - 9 * u; b.querySelector("circle").setAttribute("cx", bx); b.querySelector("circle").setAttribute("cy", by); b.querySelector("circle").setAttribute("r", 8.5 * u);
-      b.querySelector("text").setAttribute("x", bx); b.querySelector("text").setAttribute("y", by); b.querySelector("text").setAttribute("font-size", 11 * u); });
+      var b = g.querySelector(".badge"), n = (fresh[i] || []).length, T = TOK[tier(n)]; if (!T) return;
+      var h = T.h * u, w = (n >= 10 ? 2.1 : 1.55) * h, bx = S[i].xy[0] + 8 * u + w / 2, by = S[i].xy[1] - 8 * u, r = b.querySelector("rect"), t = b.querySelector("text");
+      r.setAttribute("x", bx - w / 2); r.setAttribute("y", by - h / 2); r.setAttribute("width", w); r.setAttribute("height", h); r.setAttribute("rx", 3.5 * u); r.setAttribute("fill", T.fill);
+      t.setAttribute("x", bx); t.setAttribute("y", by); t.setAttribute("font-size", T.fs * u); t.setAttribute("fill", T.ink); });
     labelEls.forEach(function (t) { t.setAttribute("font-size", 12.5 * u); t.style.strokeWidth = (4 * u) + "px"; });
     gDests.style.display = showDests ? "" : "none";
     var zoomed = view.w <= W * 0.55; // zoomed in far enough for service icons to have room
@@ -604,7 +612,7 @@
   };
   function renderLayer() {
     var L = LAYERS[layer], h = '<span><i class="lg route"></i>Bus line</span><span><i class="lg st"></i>Station</span><span><i class="lg end"></i>End of line</span><span><i class="lg cover"></i>10-minute walk</span><span><i class="lg cand"></i>Candidate</span>' +
-      '<span><i class="lg food"></i>Food assistance</span><span><i class="lg health"></i>Clinic</span><span><i class="lg civic"></i>Library or center</span><span class="hint">Filled = within a walk of a station</span><span><i class="lg badge">3</i>Services a candidate reaches</span><span><i class="lg badge done">3</i>All already reached by your line</span><span class="hint">Zoom in to see service locations</span>';
+      '<span><i class="lg food"></i>Food assistance</span><span><i class="lg health"></i>Clinic</span><span><i class="lg civic"></i>Library or center</span><span class="hint">Filled = within a walk of a station</span>' + tokenLegend() + '<span class="hint">Zoom in to see service locations</span>';
     if (!L) { tractEls.forEach(function (p) { p.setAttribute("fill", "transparent"); }); $("legend").innerHTML = h; return; }
     var vals = T.map(L.val), s = vals.filter(function (v) { return v != null; }).sort(function (a, b) { return a - b; }), br = [0.2, 0.4, 0.6, 0.8].map(function (q) { return s[Math.floor(q * (s.length - 1))]; });
     tractEls.forEach(function (p, i) { var v = vals[i], b = 0; if (v == null) { p.setAttribute("fill", "url(#naHatch)"); p.setAttribute("fill-opacity", 0.9); return; } while (b < 4 && v > br[b]) b++; p.setAttribute("fill", RAMP[b]); p.setAttribute("fill-opacity", 0.75); });
@@ -649,9 +657,9 @@
       var pos = route.indexOf(i), on = pos >= 0, end = on && (pos === 0 || pos === route.length - 1) && route.length > 1, ring = g.querySelector(".ring"), txt = g.querySelector("text");
       g.setAttribute("data-on", on ? "1" : "0"); ring.setAttribute("fill", end ? "var(--gold)" : on ? "var(--route)" : "#fff"); ring.setAttribute("stroke", end ? "var(--edge)" : "var(--route)");
       txt.textContent = on ? String(pos + 1) : ""; txt.setAttribute("fill", end ? "var(--edge)" : "#fff");
-      var fresh = newServices(i, c), b = g.querySelector(".badge");
-      b.style.display = on || !S[i].dests.length ? "none" : ""; b.querySelector("circle").setAttribute("fill", fresh ? "var(--route)" : "#a9a59b");
-      g.setAttribute("aria-label", S[i].name + (on ? ", station " + (pos + 1) : ", candidate") + ". About " + num(solo[i]) + " residents and " + soloDest[i] + " services within a 10-minute walk" + (on || !soloDest[i] ? "." : ", " + fresh + " not yet reached by your line."));
+      var add = on ? [] : S[i].dests.filter(function (di) { return !c.dset[di]; }), b = g.querySelector(".badge"); fresh[i] = add;
+      b.style.display = add.length ? "" : "none"; b.querySelector("text").textContent = "+" + add.length;
+      g.setAttribute("aria-label", S[i].name + (on ? ", station " + (pos + 1) : ", candidate") + ". About " + num(solo[i]) + " residents and " + soloDest[i] + " services within a 10-minute walk" + (on || !soloDest[i] ? "." : ", " + add.length + " not yet reached by your line."));
     });
     applyView();
     if (st.step >= 3 && st.step <= 5) { renderPanel(c, info, R); renderLists(route, info, R); }
