@@ -569,13 +569,13 @@
   var TOK = [null, { fill: "#d5dae3", ink: "#2f3644", h: 14, fs: 10 }, { fill: "#7d889c", ink: "#fff", h: 16, fs: 11 }, { fill: "#2f3644", ink: "#fff", h: 18, fs: 12.5 }];
   function tier(n) { return n >= 4 ? 3 : n >= 2 ? 2 : n ? 1 : 0; }
   function tokenLegend() {
-    return '<span><i class="lg tok t1">+1</i><i class="lg tok t2" style="margin-left:3px">+2</i><i class="lg tok t3" style="margin-left:3px">+4</i>&nbsp;Services a candidate would add</span>'; }
+    return '<span><i class="lg tok t1">+1</i><i class="lg tok t2" style="margin-left:3px">+2</i><i class="lg tok t3" style="margin-left:3px">+4</i>&nbsp;Services a candidate would add (faded: not in range for the next stop)</span>'; }
   function applyView() {
     if (!view) return; svg.setAttribute("viewBox", view.x + " " + view.y + " " + view.w + " " + view.h);
     var u = mpp();
     stopEls.forEach(function (g, i) { var on = g.getAttribute("data-on") === "1"; g.querySelector(".hit").setAttribute("r", 14 * u); g.querySelector(".ring").setAttribute("r", (on ? 9 : 7) * u); g.querySelector("text").setAttribute("font-size", 10.5 * u);
       var b = g.querySelector(".badge"), n = (fresh[i] || []).length, T = TOK[tier(n)]; if (!T) return;
-      var h = T.h * u, w = (n >= 10 ? 2.1 : 1.55) * h, bx = S[i].xy[0] + 8 * u + w / 2, by = S[i].xy[1] - 8 * u, r = b.querySelector(".tok"), hl = b.querySelector(".halo"), t = b.querySelector("text"), p = 2 * u;
+      var h = T.h * u, w = (n >= 10 ? 2.1 : 1.55) * h, far = g.getAttribute("data-far") === "1", bx = far ? S[i].xy[0] : S[i].xy[0] + 8 * u + w / 2, by = far ? S[i].xy[1] : S[i].xy[1] - 8 * u, r = b.querySelector(".tok"), hl = b.querySelector(".halo"), t = b.querySelector("text"), p = 2 * u;
       hl.setAttribute("x", bx - w / 2 - p); hl.setAttribute("y", by - h / 2 - p); hl.setAttribute("width", w + 2 * p); hl.setAttribute("height", h + 2 * p); hl.setAttribute("rx", 5 * u);
       r.setAttribute("x", bx - w / 2); r.setAttribute("y", by - h / 2); r.setAttribute("width", w); r.setAttribute("height", h); r.setAttribute("rx", 3.5 * u); r.setAttribute("fill", T.fill);
       t.setAttribute("x", bx); t.setAttribute("y", by); t.setAttribute("font-size", T.fs * u); t.setAttribute("fill", T.ink); });
@@ -668,7 +668,11 @@
     lastCov = c; drawCoverage(c); drawRoute(route); var opts = nextOptions(route, R, info.len);
     stopEls.forEach(function (g, i) {
       var pos = route.indexOf(i), on = pos >= 0, end = on && (pos === 0 || pos === route.length - 1) && route.length > 1, ring = g.querySelector(".ring"), txt = g.querySelector("text");
-      g.style.display = on || !opts || opts.has(i) ? "" : "none";
+      // off-range candidates: no circle, not clickable; a faded token at the spot still shows where value lies
+      var far = !on && opts && !opts.has(i), hasTok = !on && S[i].dests.some(function (di) { return !c.dset[di]; });
+      g.style.display = far && !hasTok ? "none" : ""; g.setAttribute("data-far", far ? "1" : "0");
+      g.style.pointerEvents = far ? "none" : ""; g.setAttribute("tabindex", far ? "-1" : "0"); if (far) g.setAttribute("aria-hidden", "true"); else g.removeAttribute("aria-hidden");
+      g.querySelector(".ring").style.display = far ? "none" : ""; g.querySelector(".badge").style.opacity = far ? 0.5 : "";
       g.setAttribute("data-on", on ? "1" : "0"); ring.setAttribute("fill", end ? "var(--gold)" : on ? "var(--route)" : "#fff"); ring.setAttribute("stroke", end ? "var(--edge)" : "var(--route)");
       txt.textContent = on ? String(pos + 1) : ""; txt.setAttribute("fill", end ? "var(--edge)" : "#fff");
       var add = on ? [] : S[i].dests.filter(function (di) { return !c.dset[di]; }), b = g.querySelector(".badge"); fresh[i] = add;
