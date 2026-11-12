@@ -512,7 +512,7 @@
   mapcard.innerHTML = '<h2 class="sr-only">Map</h2><div class="maptools"><div class="seg" role="radiogroup" aria-label="Map layer">' +
     '<label><input type="radio" name="layer" value="none" checked><span>No layer</span></label><label><input type="radio" name="layer" value="density"><span>Density</span></label>' +
     '<label><input type="radio" name="layer" value="poc"><span>People of color</span></label><label><input type="radio" name="layer" value="low"><span>Lower income</span></label><label><input type="radio" name="layer" value="walk"><span>Walkability</span></label><label><input type="radio" name="layer" value="idens"><span>Intersections</span></label></div>' +
-    '<div class="zoom"><label class="toggle" style="font-size:13px;margin-right:6px;"><input type="checkbox" id="showDests" checked> Services</label><button type="button" id="zin" aria-label="Zoom in">+</button><button type="button" id="zout" aria-label="Zoom out">−</button><button type="button" id="zreset" style="width:auto;padding:0 8px;font-size:13px;">Reset</button></div></div>' +
+    '<div class="zoom"><label class="toggle" style="font-size:13px;margin-right:6px;"><input type="checkbox" id="showAll"> Show all candidates</label><label class="toggle" style="font-size:13px;margin-right:6px;"><input type="checkbox" id="showDests" checked> Services</label><button type="button" id="zin" aria-label="Zoom in">+</button><button type="button" id="zout" aria-label="Zoom out">−</button><button type="button" id="zreset" style="width:auto;padding:0 8px;font-size:13px;">Reset</button></div></div>' +
     '<svg id="map" role="group" aria-label="Map. Candidate stations are buttons; Tab moves between them and Enter adds or removes a station."></svg><div class="maplegend" id="legend"></div><div class="tooltip" id="tip"></div>';
   mapcard.hidden = true; document.body.appendChild(mapcard);
   var svg = mapcard.querySelector("#map"), view, W, H, layer = "none", showDests = true;
@@ -593,6 +593,7 @@
   mapcard.querySelector("#zout").onclick = function () { zoomAt(1 / 0.7); };
   mapcard.querySelector("#zreset").onclick = function () { view = { x: 0, y: 0, w: W, h: H }; applyView(); };
   mapcard.querySelector("#showDests").onchange = function () { showDests = this.checked; applyView(); };
+  mapcard.querySelector("#showAll").onchange = function () { showAllCands = this.checked; render(); };
   function svgPt(e) { var r = svg.getBoundingClientRect(); return [view.x + (e.clientX - r.left) / r.width * view.w, view.y + (e.clientY - r.top) / r.height * view.h]; }
   svg.addEventListener("wheel", function (e) { e.preventDefault(); var p = svgPt(e); zoomAt(e.deltaY < 0 ? 0.85 : 1 / 0.85, p[0], p[1]); }, { passive: false });
   var drag = null;
@@ -647,6 +648,16 @@
 
   // ---- Planning panel -----------------------------------------------------------------------------------------
   function cur() { return st.step >= 5 ? st.r2 : st.r1; }
+  // Candidates that could be the next stop: 400 m - 2 km by bus from the end being added to, and within the length
+  // limit. null = show every candidate (no stations yet, or "Show all candidates"). Locked steps show only the line.
+  var showAllCands = false;
+  function nextOptions(route, R, len) {
+    if (showAllCands || (editable() && !route.length) || st.step < 3) return null;
+    var ok = new Set(); if (!editable() || route.length >= R.maxSt) return ok;
+    var end = st.addTo === "start" ? route[0] : route[route.length - 1];
+    S.forEach(function (x, i) { if (route.indexOf(i) >= 0) return; var p = pathBetween(end, i);
+      if (p && p.len >= R.minGap && p.len <= R.maxGap && (len || 0) + p.len <= R.maxLen) ok.add(i); });
+    return ok; }
   function newServices(i, c) { return S[i].dests.filter(function (di) { return !c.dset[di]; }).length; }
   function serviceMix(i) { var n = { food: 0, health: 0, civic: 0 }; S[i].dests.forEach(function (di) { n[D.dests[di].cat]++; });
     return [[n.food, "food assistance"], [n.health, n.health === 1 ? "clinic" : "clinics"], [n.civic, n.civic === 1 ? "library or center" : "libraries or centers"]].filter(function (x) { return x[0]; }).map(function (x) { return x[0] + " " + x[1]; }).join(", "); }
@@ -654,9 +665,10 @@
   function render() {
     if (!D) return;
     var route = st.step >= 3 ? cur() : [], R = rules(), info = routeInfo(route, R, st.step >= 5 && SHOCKS[st.shock].requireTract), c = coverage(route);
-    lastCov = c; drawCoverage(c); drawRoute(route);
+    lastCov = c; drawCoverage(c); drawRoute(route); var opts = nextOptions(route, R, info.len);
     stopEls.forEach(function (g, i) {
       var pos = route.indexOf(i), on = pos >= 0, end = on && (pos === 0 || pos === route.length - 1) && route.length > 1, ring = g.querySelector(".ring"), txt = g.querySelector("text");
+      g.style.display = on || !opts || opts.has(i) ? "" : "none";
       g.setAttribute("data-on", on ? "1" : "0"); ring.setAttribute("fill", end ? "var(--gold)" : on ? "var(--route)" : "#fff"); ring.setAttribute("stroke", end ? "var(--edge)" : "var(--route)");
       txt.textContent = on ? String(pos + 1) : ""; txt.setAttribute("fill", end ? "var(--edge)" : "#fff");
       var add = on ? [] : S[i].dests.filter(function (di) { return !c.dset[di]; }), b = g.querySelector(".badge"); fresh[i] = add;
@@ -664,7 +676,7 @@
       g.setAttribute("aria-label", S[i].name + (on ? ", station " + (pos + 1) : ", candidate") + ". About " + num(solo[i]) + " residents and " + soloDest[i] + " services within a 10-minute walk" + (on || !soloDest[i] ? "." : ", " + add.length + " not yet reached by your line."));
     });
     applyView();
-    if (st.step >= 3 && st.step <= 5) { renderPanel(c, info, R); renderLists(route, info, R); }
+    if (st.step >= 3 && st.step <= 5) { renderPanel(c, info, R); renderLists(route, info, R, opts); }
   }
   function checksHtml(info) { return '<ul class="checks">' + info.checks.map(function (k) { return '<li class="' + (k.ok ? "ok" : "no") + '"><span class="ic" aria-hidden="true">' + (k.ok ? "✓" : "✗") + '</span><span>' + k.text + ' <small>(' + k.now + ')</small><span class="sr-only">' + (k.ok ? " met" : " not met") + '</span></span></li>'; }).join("") + '</ul>'; }
   function scoreHtml(c, info, R, route) {
@@ -697,14 +709,18 @@
     }
     $("panel").innerHTML = h + '</div>';
   }
-  function renderLists(route, info, R) {
+  function renderLists(route, info, R, opts) {
     var can = editable(); $("routeEmpty").hidden = route.length > 0;
     $("routelist").innerHTML = route.map(function (si, i) {
       var gh = ""; if (i > 0) { var g = info.gaps[i - 1], bad = g == null || g < R.minGap || g > R.maxGap; gh = '<span class="gap' + (bad ? " bad" : "") + '">' + (g == null ? "Too far apart (stations must be within 2 km)" : km(g) + " from station " + i + (g < R.minGap ? " · too close" : g > R.maxGap ? " · too far" : "")) + '</span>'; }
       return '<li><span>' + S[si].name + '</span><span class="ctl">' + (can ? '<button class="btn small" data-mv="' + i + '" data-d="-1"' + (i === 0 ? " disabled" : "") + ' aria-label="Move ' + S[si].name + ' earlier">↑</button><button class="btn small" data-mv="' + i + '" data-d="1"' + (i === route.length - 1 ? " disabled" : "") + ' aria-label="Move ' + S[si].name + ' later">↓</button><button class="btn small" data-rm="' + si + '" aria-label="Remove ' + S[si].name + '">✕</button>' : '') + '</span>' + gh + '</li>';
     }).join("");
     var order = S.map(function (s, i) { return i; }).sort(function (a, b) { return S[a].name.localeCompare(S[b].name); }), full = route.length >= R.maxSt;
-    $("cands").innerHTML = order.map(function (i) { var on = route.indexOf(i) >= 0;
+    if (opts) order = order.filter(function (i) { return route.indexOf(i) >= 0 || opts.has(i); });
+    var note = !opts ? "" : full ? "Your line has the most stations allowed. Remove one to see others." :
+      opts.size ? "Showing the " + opts.size + " stations that could come next: 400 m–2 km from your line’s " + (st.addTo === "start" ? "start" : "end") + ". Switch start/end, or tick “Show all candidates,” to see others." :
+      "No candidate fits 400 m–2 km from your line’s " + (st.addTo === "start" ? "start" : "end") + " within the length limit. Switch start/end or remove a station.";
+    $("cands").innerHTML = (note ? '<p class="hint" style="padding:8px 10px;margin:0">' + note + '</p>' : "") + order.map(function (i) { var on = route.indexOf(i) >= 0;
       return '<div><span>' + S[i].name + '</span><small>' + num(solo[i]) + ' residents · ' + soloDest[i] + ' services</small>' + (on ? '<button class="btn small" data-rm="' + i + '"' + (can ? "" : " disabled") + '>Remove</button>' : '<button class="btn small" data-add="' + i + '"' + (can && !full ? "" : " disabled") + ' aria-label="Add ' + S[i].name + '">Add</button>') + '</div>'; }).join("");
   }
   function add(i) { var r = cur(); if (!editable() || r.indexOf(i) >= 0 || r.length >= rules().maxSt) return; if (st.addTo === "start") r.unshift(i); else r.push(i); render(); }
