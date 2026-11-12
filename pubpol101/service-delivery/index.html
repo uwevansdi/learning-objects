@@ -113,6 +113,7 @@
   .svcbar .svc b { font-size: 15px; color: var(--accent); }
   .svcbar .svc-total { display: flex; justify-content: space-between; font-weight: 700; color: var(--ink); border-top: 1px solid var(--border); padding-top: 5px; }
   .svcbar .svc-key { display: flex; flex-direction: column; gap: 3px; font-size: 11.5px; color: var(--ink-3); border-top: 1px solid var(--border); padding-top: 5px; }
+  .svcbar.beside { box-shadow: none; background: var(--surface); }
   .svcbar.collapsed .svc, .svcbar.collapsed .svc-total, .svcbar.collapsed .svc-key { display: none; }
   @media (max-width: 700px) { .svcbar { position: static; width: auto; border-radius: 0; box-shadow: none; border-width: 0 0 1px; } }
   .maplegend { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; padding: 8px 12px; font-size: 13px; color: var(--ink-2); border-top: 1px solid var(--border); }
@@ -593,8 +594,15 @@
   function placeSvcBar() {
     var bar = $("svcbar"), wrap = bar.parentNode; ["top", "bottom", "left", "right"].forEach(function (k) { bar.style[k] = ""; });
     if (window.innerWidth <= 700 || !S) return;
+    svg.style.marginLeft = svg.style.marginRight = H > W ? "auto" : "";
     var wr = wrap.getBoundingClientRect(), sr = svg.getBoundingClientRect(), bw = bar.offsetWidth, bh = bar.offsetHeight, m = 10, pad = 14;
     if (sr.width < 50 || sr.height < 50) return; // map not visible yet; try again on the next render
+    // tall maps leave space at the sides: if it fits, align the map left and put the box beside it, covering nothing
+    bar.classList.remove("beside"); bar.style.width = ""; svg.style.marginLeft = svg.style.marginRight = H > W ? "auto" : "";
+    var room = wr.width - sr.width - 2 * m; // free width beside the map once it is aligned left
+    if (H > W && room >= 190) {
+      svg.style.marginLeft = "0"; svg.style.marginRight = "auto"; sr = svg.getBoundingClientRect(); bar.style.width = Math.min(bw, room) + "px";
+      bar.classList.add("beside"); bar.style.left = (sr.right - wr.left + m) + "px"; bar.style.top = (sr.top - wr.top + m) + "px"; svcCorner = "beside"; return; }
     var ox = sr.left - wr.left, oy = sr.top - wr.top;
     var corners = { tl: [ox + m, oy + m], tr: [ox + sr.width - bw - m, oy + m], bl: [ox + m, oy + sr.height - bh - m], br: [ox + sr.width - bw - m, oy + sr.height - bh - m] };
     var best = "tl", bestN = Infinity;
