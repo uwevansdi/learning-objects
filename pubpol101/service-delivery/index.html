@@ -101,7 +101,7 @@
   /* services scoreboard: what the line reaches, plus the service key */
   /* services scoreboard: a box over the top-left of the map */
   .mapwrap { position: relative; }
-  .svcbar { position: absolute; top: 10px; left: 10px; z-index: 3; width: 236px; display: flex; flex-direction: column; gap: 5px; padding: 10px 12px; font-size: 13px;
+  .svcbar { position: absolute; top: 10px; left: 10px; z-index: 3; /* corner set by placeSvcBar() */ width: 236px; display: flex; flex-direction: column; gap: 5px; padding: 10px 12px; font-size: 13px;
     background: rgba(255, 255, 255, 0.95); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14); }
   .svcbar .svc-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-weight: 700; color: var(--ink); line-height: 1.25; }
   .svcbar .svc-head button { font: inherit; font-size: 12px; font-weight: 600; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
@@ -536,7 +536,7 @@
   var gTracts, gBase, coverEdge, coverFill, routeCase, routeLine, routeBad, gLabels, gDests, gStops, tractEls, stopEls, labelEls, destEls;
   function el(name, attrs) { var e = document.createElementNS(NS, name); for (var k in attrs) e.setAttribute(k, attrs[k]); return e; }
   function polyD(g) { var d = "M" + g[0] + "," + g[1]; for (var i = 2; i < g.length; i += 2) d += "L" + g[i] + "," + g[i + 1]; return d; }
-  function buildMap() {
+  function buildMap() { svcCorner = null;
     W = M.width; H = M.height; view = { x: 0, y: 0, w: W, h: H }; svg.style.aspectRatio = W + " / " + H; svg.innerHTML = "";
     // tall communities (e.g., Southeast Seattle) are capped at most of the screen height and centered
     svg.style.maxWidth = H > W ? "calc(78vh * " + (W / H).toFixed(3) + ")" : ""; svg.style.margin = H > W ? "0 auto" : "";
@@ -587,7 +587,26 @@
   var TOK = [null, { fill: "#d5dae3", ink: "#2f3644", h: 14, fs: 10 }, { fill: "#7d889c", ink: "#fff", h: 16, fs: 11 }, { fill: "#2f3644", ink: "#fff", h: 18, fs: 12.5 }];
   function tier(n) { return n >= 4 ? 3 : n >= 2 ? 2 : n ? 1 : 0; }
   // services scoreboard: within a walk of the line (or, before a line exists, what the community has)
-  var svcCollapsed = false, svcRoute = [], hlCat = null, hlPinned = false;
+  var svcCollapsed = false, svcRoute = [], hlCat = null, hlPinned = false, svcCorner = null;
+  // the box goes in the corner of the full map view that hides the fewest candidate stops (top-left wins ties);
+  // chosen once per community and on resize, so it doesn't move while a line is being built
+  function placeSvcBar() {
+    var bar = $("svcbar"), wrap = bar.parentNode; ["top", "bottom", "left", "right"].forEach(function (k) { bar.style[k] = ""; });
+    if (window.innerWidth <= 700 || !S) return;
+    var wr = wrap.getBoundingClientRect(), sr = svg.getBoundingClientRect(), bw = bar.offsetWidth, bh = bar.offsetHeight, m = 10, pad = 14;
+    if (sr.width < 50 || sr.height < 50) return; // map not visible yet; try again on the next render
+    var ox = sr.left - wr.left, oy = sr.top - wr.top;
+    var corners = { tl: [ox + m, oy + m], tr: [ox + sr.width - bw - m, oy + m], bl: [ox + m, oy + sr.height - bh - m], br: [ox + sr.width - bw - m, oy + sr.height - bh - m] };
+    var best = "tl", bestN = Infinity;
+    ["tl", "tr", "bl", "br"].forEach(function (k) { var c = corners[k], n = 0;
+      S.forEach(function (st) { var px = ox + st.xy[0] / W * sr.width, py = oy + st.xy[1] / H * sr.height;
+        if (px > c[0] - pad && px < c[0] + bw + pad && py > c[1] - pad && py < c[1] + bh + pad) n++; });
+      if (n < bestN) { bestN = n; best = k; } });
+    svcCorner = best;
+    var left = corners[best][0], top = corners[best][1];
+    bar.style.left = Math.max(0, left) + "px";
+    if (best[0] === "t") bar.style.top = Math.max(0, top) + "px"; else { bar.style.top = "auto"; bar.style.bottom = (wr.height - (oy + sr.height) + m) + "px"; } }
+  window.addEventListener("resize", function () { svcCorner = null; if (lastCov) renderSvcBar(lastCov, svcRoute); });
   function setHl(cat) { hlCat = cat; applyView();
     $("svcbar").querySelectorAll("button.svc").forEach(function (b) { b.classList.toggle("on", b.dataset.cat === hlCat); b.setAttribute("aria-pressed", hlPinned && b.dataset.cat === hlCat ? "true" : "false"); }); }
   function renderSvcBar(c, route) { svcRoute = route;
@@ -600,6 +619,7 @@
       (has ? '<div class="svc-total"><span>Total</span><span>' + got + ' of ' + tot + '</span></div>' : "") +
       '<div class="svc-key">' + tokenLegend() + '<span>Point at a service type to find it; click to keep it on</span><span>Zoom in to see all locations</span></div>';
     $("svcToggle").onclick = function () { svcCollapsed = !svcCollapsed; renderSvcBar(lastCov, svcRoute); };
+    if (!svcCorner) placeSvcBar();
     bar.querySelectorAll("button.svc").forEach(function (b) { var k = b.dataset.cat;
       var on = function () { if (!hlPinned) setHl(k); }, off = function () { if (!hlPinned) setHl(null); };
       b.onmouseenter = on; b.onmouseleave = off; b.onfocus = on; b.onblur = off;
