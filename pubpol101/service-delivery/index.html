@@ -354,7 +354,7 @@
     { id: "services", label: "Connect residents to services", hint: "Put food assistance, clinics, and libraries within a walk of a station." },
     { id: "fast", label: "Keep the line fast and lean", hint: "Fewer stations and a shorter, more direct route." }
   ];
-  var RULES = { maxSt: 6, minSt: 4, minGap: 400, maxGap: 2000, maxLen: 9000, maxDir: 1.5, speedKmh: 18 };
+  var RULES = { maxSt: 6, minSt: 4, minGap: 400, maxGap: 2000, maxLen: 9000, maxDir: 2, speedKmh: 18 }; // directness cap loosened from 1.5x (12 Nov 2026): allows L- and U-shaped coverage routes, blocks zigzags
   var SHOCKS = {
     stations: { title: "Station cost overrun", text: function () { return "Construction bids came in high. The line can now have only 5 stations."; }, rules: { maxSt: 5 } },
     length: { title: "Operating budget cut", text: function () { return "Service hours were cut. The route can be no longer than 6.5 km end to end."; }, rules: { maxLen: 6500 } },
