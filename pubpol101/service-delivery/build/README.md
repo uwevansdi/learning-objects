@@ -33,7 +33,7 @@
 
 **Known gaps:**
 - OpenStreetMap undercounts food banks and pantries; a local directory would be better.
-- The highest-poverty tract used by the "community meeting" shock can be student-heavy near UW. Set `MANDATE_TRACT` in the page to choose it instead.
+- The highest-poverty area can be student housing near UW, so North of the Ship Canal's "community meeting" target is fixed on central Ballard in the page's `MANDATE_AREA`. Other communities can be set there too.
 
 ## Hills (v4, 12 Nov 2026)
 
