@@ -34,3 +34,16 @@
 **Known gaps:**
 - OpenStreetMap undercounts food banks and pantries; a local directory would be better.
 - The highest-poverty tract used by the "community meeting" shock can be student-heavy near UW. Set `MANDATE_TRACT` in the page to choose it instead.
+
+## Hills (v4, 12 Nov 2026)
+
+- **Input:** `elev.bin` and `elev.json` in the raw folder. To make them:
+  1. Download the USGS 3DEP 1-arc-second tile `USGS_1_n48w123.tif` from the USGS National Map.
+  2. Run `node dem-cut.mjs <tile> <raw dir>/elev`. It needs `npm install geotiff@2.1.3` and writes elevation in decimeters.
+- **Method:** walking cost on each street segment = length × (flat speed ÷ slope speed), from Tobler's hiking function, averaged over the uphill and downhill directions.
+  - Slopes are capped at ±40%.
+  - Bridges, tunnels and raised layers count as level, so a deck over low ground doesn't read as a cliff.
+  - A 10-minute walk is still 800 m on flat ground.
+- **Effect:** with hills, an average walk area keeps 92% of its residents in West Seattle and 95% in both north communities. The steepest stations lose 20–30% (Admiral Way, Beacon Hill). Southeast's community average isn't computed because one station has no residents on flat ground.
+- **Comparison:** `FLAT=1` turns hills off.
+- **Walkability index dropped:** the EPA National Walkability Index is no longer shown. It weights distance to existing transit and job mix, ignores hills and residential density, and ranked a sparse, steep, partly industrial block group (99-4, with Harbor Island) at the Seattle median. Intersection density remains as "Street connectivity".

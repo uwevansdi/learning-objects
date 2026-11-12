@@ -317,8 +317,8 @@
     <ul>
       <li><strong>Streets and services:</strong> © OpenStreetMap contributors, Open Database License. Walking uses streets, stairways, and trails; the bus uses streets only and prefers arterials. Service locations include food banks and pantries, health clinics, and libraries and community centers mapped in OpenStreetMap; coverage is incomplete and should be checked against local directories.</li>
       <li><strong>Population:</strong> American Community Survey 2020–2024 five-year estimates by census block group, prepared by Prof. Zhao: total population, people of color, and people below 200% of the poverty level ("lower income"). Residents are spread evenly along each block group's streets. Block-group estimates have wide margins of error. Where Census measures poverty for fewer than 80% of residents (mostly dorms), the poverty rate isn't shown.</li>
-      <li><strong>Walkability and intersections:</strong> U.S. EPA Smart Location Database (2017–2019 data, on 2010 block groups), assigned to 2020 block groups by Prof. Zhao, so neighboring block groups can share a value. The walkability index (1–20) includes distance to existing transit stops, so it's shown for context only and doesn't affect the scorecard, which measures actual walking distance to the stations you place.</li>
-      <li><strong>Walking and travel:</strong> a 10-minute walk is 800 meters along the street network. Trip times assume an average bus speed of 18 km/h including stops. Hills are not yet accounted for.</li>
+      <li><strong>Street connectivity:</strong> street intersections per square mile, from the U.S. EPA Smart Location Database (2017–2019 data, on 2010 block groups), assigned to 2020 block groups by Prof. Zhao, so neighboring block groups can share a value. A common proxy for walkability, shown for context; it doesn't affect the scorecard.</li>
+      <li><strong>Walking and travel:</strong> a 10-minute walk is 800 meters along the street network on flat ground, and less on hills. Walking time on each street follows Tobler's hiking function on U.S. Geological Survey elevation data (1 arc-second, about 30 m), averaged over walking uphill and down; bridges count as level. Trip times assume an average bus speed of 18 km/h including stops.</li>
       <li><strong>Candidate stations</strong> sit about every kilometer along each named arterial, at a cross street, chosen automatically. Prof. Zhao may replace them with his own list.</li>
       <li><strong>Privacy.</strong> This page collects no data. Group names and notes stay in this browser tab and go only into the summary you copy or download.</li>
       <li><strong>Accessibility.</strong> Every step works by keyboard. Stations can be added, removed, and reordered from the lists; the scorecard states every result in text.</li>
@@ -529,7 +529,7 @@
   var mapcard = document.createElement("section"); mapcard.className = "card mapcard"; mapcard.id = "mapcard";
   mapcard.innerHTML = '<h2 class="sr-only">Map</h2><div class="maptools"><div class="seg" role="radiogroup" aria-label="Map layer">' +
     '<label><input type="radio" name="layer" value="none" checked><span>No layer</span></label><label><input type="radio" name="layer" value="density"><span>Density</span></label>' +
-    '<label><input type="radio" name="layer" value="poc"><span>People of color</span></label><label><input type="radio" name="layer" value="low"><span>Lower income</span></label><label><input type="radio" name="layer" value="walk"><span>Walkability</span></label><label><input type="radio" name="layer" value="idens"><span>Intersections</span></label></div>' +
+    '<label><input type="radio" name="layer" value="poc"><span>People of color</span></label><label><input type="radio" name="layer" value="low"><span>Lower income</span></label><label><input type="radio" name="layer" value="idens"><span>Street connectivity</span></label></div>' +
     '<div class="zoom"><label class="toggle" style="font-size:13px;margin-right:6px;"><input type="checkbox" id="showAll"> Show all candidates</label><label class="toggle" style="font-size:13px;margin-right:6px;"><input type="checkbox" id="showDests" checked> Services</label><button type="button" id="zin" aria-label="Zoom in">+</button><button type="button" id="zout" aria-label="Zoom out">−</button><button type="button" id="zreset" style="width:auto;padding:0 8px;font-size:13px;">Reset</button></div></div>' +
     '<div class="mapwrap"><svg id="map" role="group" aria-label="Map. Candidate stations are buttons; Tab moves between them and Enter adds or removes a station."></svg><div class="svcbar" id="svcbar" aria-live="polite"></div></div><div class="maplegend" id="legend"></div><div class="tooltip" id="tip"></div>';
   mapcard.hidden = true; document.body.appendChild(mapcard);
@@ -685,8 +685,7 @@
     density: { label: "Residents per acre", val: function (t) { return t.density; }, fmt: function (v) { return v.toFixed(0); } },
     poc: { label: "Share people of color", val: function (t) { return t.pocShare; }, fmt: function (v) { return Math.round(v * 100) + "%"; } },
     low: { label: "Share below 200% of poverty", val: function (t) { return t.lowShare; }, fmt: function (v) { return Math.round(v * 100) + "%"; }, na: "Mostly dorms or group housing (not measured)" },
-    walk: { label: "EPA walkability index (1–20)", val: function (t) { return t.walk || null; }, fmt: function (v) { return v.toFixed(0); } },
-    idens: { label: "Street intersections per sq. mile (EPA)", val: function (t) { return t.idens || null; }, fmt: function (v) { return v.toFixed(0); } }
+    idens: { label: "Street connectivity: intersections per sq. mile (EPA)", val: function (t) { return t.idens || null; }, fmt: function (v) { return v.toFixed(0); } }
   };
   function renderLayer() {
     var L = LAYERS[layer], h = '<span><i class="lg route"></i>Bus line</span><span><i class="lg st"></i>Station</span><span><i class="lg end"></i>End of line</span><span><i class="lg cover"></i>10-minute walk</span><span><i class="lg cand"></i>Candidate</span>' +
@@ -696,7 +695,7 @@
     tractEls.forEach(function (p, i) { var v = vals[i], b = 0; if (v == null) { p.setAttribute("fill", "url(#naHatch)"); p.setAttribute("fill-opacity", 0.9); return; } while (b < 4 && v > br[b]) b++; p.setAttribute("fill", RAMP[b]); p.setAttribute("fill-opacity", 0.75); });
     var hasNa = vals.some(function (v) { return v == null; });
     $("legend").innerHTML = h + '<span>' + L.label + ': ' + L.fmt(s[0]) + '<span class="ramp" aria-hidden="true">' + RAMP.map(function (c) { return '<i style="background:' + c + '"></i>'; }).join("") + '</span>' + L.fmt(s[s.length - 1]) + '</span>' +
-      (hasNa && L.na ? '<span><i class="lg na"></i>' + L.na + '</span>' : "") + (layer === "walk" ? '<span class="hint">Includes distance to existing transit, so it favors places already served.</span>' : "");
+      (hasNa && L.na ? '<span><i class="lg na"></i>' + L.na + '</span>' : "") + (layer === "idens" ? '<span class="hint">More intersections mean shorter, more direct walks: a common proxy for walkability. Doesn’t reflect hills or sidewalks.</span>' : "");
   }
   mapcard.querySelectorAll("input[name=layer]").forEach(function (r) { r.addEventListener("change", function () { layer = r.value; renderLayer(); }); });
 
@@ -828,7 +827,7 @@
       html = "<strong>" + S[i].name + "</strong><br>About " + num(solo[i]) + " residents within a 10-minute walk<br>" + (soloDest[i] ? soloDest[i] + " services: " + serviceMix(i) + (onL ? "" : "<br>" + (fr ? fr + " not yet reached by your line" : "All already reached by your line")) : "No services within a walk"); }
     else if (dg) { var d = D.dests[+dg.getAttribute("data-d")]; html = "<strong>" + esc(d.name) + "</strong><br>" + CAT[d.cat].label + (lastCov && lastCov.dset[+dg.getAttribute("data-d")] ? "<br>Within a walk of a station" : ""); }
     else if (layer !== "none" && t.getAttribute && t.getAttribute("data-t") != null) { var tr = T[+t.getAttribute("data-t")]; html = "<strong>Block group " + tr.name + "</strong><br>" + num(tr.pop) + " residents · " + tr.density.toFixed(0) + " per acre<br>" + pct(tr.pocShare) + " people of color · " + (tr.gq ? "poverty not measured for most residents (dorms or group housing)" : pct(tr.lowShare) + " below 200% of poverty") +
-      (tr.walk ? "<br>Walkability " + tr.walk.toFixed(1) + " of 20 · " + num(tr.idens) + " intersections per sq. mi." : ""); }
+      (tr.idens ? "<br>Street connectivity: " + num(tr.idens) + " intersections per sq. mi." : ""); }
     if (!html) { tip.classList.remove("show"); return; }
     tip.innerHTML = html; tip.classList.add("show"); tip.style.left = Math.min(e.clientX - r.left + 12, r.width - 280) + "px"; tip.style.top = (e.clientY - r.top + 12) + "px";
   }

@@ -9,6 +9,17 @@ const WALK_M = 800, PAIR_MAX = 2600, LOCAL_PENALTY = 1.6, STOP_SPACING = 700, MA
 // bus could plausibly run along can meet the 400 m - 2 km spacing rule. OLD=1 reproduces the v1 selection for comparison.
 const CORR_MIN_LEN = 1200, CORR_LO = 650, CORR_TARGET = 1000, CORR_HI = 1300, MERGE_M = 450, DUP_M = 150, ON_M = 150;
 const OLD = process.env.OLD === "1";
+// Hills (v4, 12 Nov 2026): walking time uses Tobler's hiking function on the USGS 1-arc-second DEM (<raw dir>/elev.bin,
+// made by dem-cut.mjs). A segment costs its length times flat speed / slope speed, averaged over both directions, so a
+// 10-minute walk still means 800 m on flat ground and less on steep streets. Bridges and tunnels count as level.
+// FLAT=1 turns this off for comparison.
+const FLAT = process.env.FLAT === "1";
+const tobler = sl => 6 * Math.exp(-3.5 * Math.abs(sl + 0.05)); // km/h for slope rise/run
+function loadElev(raw) { const f = path.join(raw, "elev.json"); if (FLAT || !fs.existsSync(f)) return null;
+  const g = JSON.parse(fs.readFileSync(f, "utf8")), b = fs.readFileSync(path.join(raw, "elev.bin")), a = new Int16Array(b.buffer, b.byteOffset, b.length / 2);
+  return (lon, lat) => { const x = (lon - g.lon0) / g.dlon - 0.5, y = (lat - g.lat0) / g.dlat - 0.5, i = Math.max(0, Math.min(g.w - 2, Math.floor(x))), j = Math.max(0, Math.min(g.h - 2, Math.floor(y))), fx = x - i, fy = y - j;
+    const v = (ii, jj) => a[jj * g.w + ii] / 10; return (v(i, j) * (1 - fx) + v(i + 1, j) * fx) * (1 - fy) + (v(i, j + 1) * (1 - fx) + v(i + 1, j + 1) * fx) * fy; }; }
+const ELEV = loadElev(RAW);
 
 const COMMUNITIES = [
   { id: "north", name: "North of the Ship Canal", short: "Ballard to the University District",
@@ -80,7 +91,7 @@ function build(C) {
   const coord = new Map(); for (const e of osm.elements) if (e.type === "node") coord.set(e.id, [e.lon, e.lat]);
   const ways = osm.elements.filter(e => e.type === "way");
   const adj = new Map(), artNames = new Map(), streetNames = new Map();
-  const addEdge = (a, b, len, kind) => { if (!adj.has(a)) adj.set(a, []); if (!adj.has(b)) adj.set(b, []); adj.get(a).push({ to: b, len, kind }); adj.get(b).push({ to: a, len, kind }); };
+  const addEdge = (a, b, len, kind, level) => { if (!adj.has(a)) adj.set(a, []); if (!adj.has(b)) adj.set(b, []); adj.get(a).push({ to: b, len, kind, level }); adj.get(b).push({ to: a, len, kind, level }); };
   for (const w of ways) {
     const kind = KIND(w.tags.highway), art = ART(w.tags.highway) && w.tags.name, rank = /^(primary|secondary|trunk)$/.test(w.tags.highway) ? 2 : 1;
     for (let i = 0; i < w.nodes.length; i++) {
@@ -90,7 +101,7 @@ function build(C) {
       if (kind >= 1 && w.tags.name) { if (!streetNames.has(id)) streetNames.set(id, new Map()); const m = streetNames.get(id); m.set(w.tags.name, Math.max(m.get(w.tags.name) || 0, art ? rank : 0)); }
       if (i === 0) continue;
       const pid = w.nodes[i - 1], pc = coord.get(pid); if (!pc || !inStudy(pc[0], pc[1])) continue;
-      if (pid !== id) addEdge(pid, id, hav(pc, c), kind);
+      if (pid !== id) addEdge(pid, id, hav(pc, c), kind, (w.tags.bridge && w.tags.bridge !== "no") || (w.tags.tunnel && w.tags.tunnel !== "no") || w.tags.layer > 0 ? 1 : 0);
     }
   }
   // largest connected component
@@ -193,13 +204,18 @@ function build(C) {
   const edges = [], seen = new Set(), ek = (a, b) => a < b ? a + "_" + b : b + "_" + a;
   for (const u of adj.keys()) { if (!isJ(u)) continue;
     for (const first of adj.get(u)) { if (seen.has(ek(u, first.to))) continue;
-      let prev = u, cur = first.to, len = first.len, kind = first.kind, drive = first.kind >= 1, pts = [coord.get(u), coord.get(cur)]; seen.add(ek(u, cur));
+      let prev = u, cur = first.to, len = first.len, kind = first.kind, drive = first.kind >= 1, pts = [coord.get(u), coord.get(cur)], lvl = [first.level]; seen.add(ek(u, cur));
       while (!isJ(cur)) { const nx = adj.get(cur).find(e => e.to !== prev && !seen.has(ek(cur, e.to))); if (!nx) break;
-        seen.add(ek(cur, nx.to)); len += nx.len; kind = Math.max(kind, nx.kind); drive = drive && nx.kind >= 1; prev = cur; cur = nx.to; pts.push(coord.get(cur)); }
-      edges.push({ u, v: cur, len, kind, drive, pts }); } }
+        seen.add(ek(cur, nx.to)); len += nx.len; kind = Math.max(kind, nx.kind); drive = drive && nx.kind >= 1; prev = cur; cur = nx.to; pts.push(coord.get(cur)); lvl.push(nx.level); }
+      edges.push({ u, v: cur, len, kind, drive, pts, lvl }); } }
   const nodeIdx = new Map(); let ni = 0; const nodeCoord = [];
   for (const e of edges) for (const id of [e.u, e.v]) if (!nodeIdx.has(id)) { nodeIdx.set(id, ni++); nodeCoord.push(coord.get(id)); }
   const gadj = Array.from({ length: ni }, () => []);
+  const flatV = tobler(0);
+  edges.forEach(e => { e.cost = e.len; if (!ELEV) return; let c = 0;
+    for (let i = 1; i < e.pts.length; i++) { const p = e.pts[i - 1], q = e.pts[i], L = hav(p, q); if (e.lvl[i - 1] || L < 1) { c += L; continue; }
+      const sl = Math.max(-0.4, Math.min(0.4, (ELEV(q[0], q[1]) - ELEV(p[0], p[1])) / L)); c += L * (flatV / tobler(sl) + flatV / tobler(-sl)) / 2; }
+    e.cost = Math.max(e.len, c); });
   edges.forEach((e, k) => { const a = nodeIdx.get(e.u), b = nodeIdx.get(e.v); e.a = a; e.b = b; gadj[a].push([b, e.len, k]); gadj[b].push([a, e.len, k]); });
 
   const tractLen = new Array(tracts.length).fill(0);
@@ -220,12 +236,13 @@ function build(C) {
   // walk areas from each station
   function walk(src) { const dist = new Map([[src, 0]]), heap = [[0, src]];
     while (heap.length) { const [d, u] = heapPop(heap); if (d > dist.get(u)) continue;
-      for (const [v, len] of gadj[u]) { const nd = d + len; if (nd <= WALK_M && nd < (dist.has(v) ? dist.get(v) : Infinity)) { dist.set(v, nd); heapPush(heap, nd, v); } } }
+      for (const [v, len, k] of gadj[u]) { const nd = d + edges[k].cost; if (nd <= WALK_M && nd < (dist.has(v) ? dist.get(v) : Infinity)) { dist.set(v, nd); heapPush(heap, nd, v); } } }
     return dist; }
   const stopsOut = stopNodes.map(s => {
     const dist = walk(nodeIdx.get(s.id)), cover = [];
     edges.forEach((e, k) => { const da = dist.get(e.a), db = dist.get(e.b);
-      let fa = da == null ? 0 : Math.min(e.len, WALK_M - da), fb = db == null ? 0 : Math.min(e.len, WALK_M - db);
+      const r = e.cost / e.len; // walking cost per meter of this street
+      let fa = da == null ? 0 : Math.min(e.len, (WALK_M - da) / r), fb = db == null ? 0 : Math.min(e.len, (WALK_M - db) / r);
       if (fa <= 0 && fb <= 0) return; if (fa + fb >= e.len) { fa = e.len; fb = 0; }
       cover.push([k, Math.round(Math.max(0, fa)), Math.round(Math.max(0, fb))]); });
     const reach = []; dests.forEach((d, di) => { const dd = dist.get(d.node); if (dd != null && dd + d.snap <= WALK_M) reach.push(di); });
@@ -258,6 +275,7 @@ function build(C) {
   const file = path.join(OUT, "data-" + C.id + ".js");
   fs.writeFileSync(file, "/* Generated by build-communities.js — draft data. */\nwindow.COMMUNITY_DATA = window.COMMUNITY_DATA || {};\nwindow.COMMUNITY_DATA[" + JSON.stringify(C.id) + "] = " + JSON.stringify(data) + ";\n");
   const pop = data.tracts.reduce((a, t) => a + t.pop, 0), dc = { food: 0, health: 0, civic: 0 }; data.dests.forEach(d => dc[d.cat]++);
+  const cov = stopsOut.map(st => st.cover.reduce((a, c) => a + c[1] + c[2], 0)); console.log("  walk-area street length per station, average km:", (cov.reduce((a, b) => a + b, 0) / cov.length / 1000).toFixed(2), ELEV ? "(hills)" : "(flat)");
   const noStreets = data.tracts.filter(t => !t.streetLen && t.pop); // residents who couldn't be placed on any street
   if (noStreets.length) console.log("  block groups with no streets to place residents on:", noStreets.map(t => t.name + " (" + t.pop + ")").join(", "));
   console.log(C.id.padEnd(13), "edges", edges.length, "| tracts", data.tracts.length, "| pop", pop, "| stops", stopsOut.length, "| paths", routes.length,
