@@ -4,7 +4,12 @@
 
 **Inputs per community folder** (not stored in this repo):
 - `osm.json`: walkable ways and their nodes, from the OpenStreetMap Overpass API (© OpenStreetMap contributors, ODbL).
-- `tracts.geojson`: census tracts with population, people of color, and people below 200% of poverty, from the City of Seattle Racial and Social Equity Composite Index (ArcGIS FeatureServer).
+- `blockgroups.geojson` (one file for all communities, in the raw folder itself; v3, 12 Nov 2026): Prof. Zhao's Seattle block groups (`pubpol101_seattle_bg_2024.geojson`).
+  - ACS 2020–2024 population, people of color, poverty universe and people below 200% of poverty.
+  - EPA Smart Location Database walkability index and intersection density, joined from 2010 to 2020 block groups.
+  - Checked against the City of Seattle RSE tract data used before: rolled up to tracts, all four counts match exactly for all 130 tracts in the study areas.
+  - Block groups where poverty is measured for under 80% of residents (mostly UW dorms) get no poverty rate in the page. Their low-income counts still use the people Census counted.
+  - The "community meeting" target for North of the Ship Canal is fixed on central Ballard (530330047023, 27% below 200%) in the page's `MANDATE_AREA`, because its highest-poverty block groups are student housing.
 - `dests.json`: service locations from OpenStreetMap (`amenity` food_bank, social_facility, clinic, library, community_centre; `healthcare` clinic or centre). Shelters and other residential social facilities are excluded on purpose.
 
 **Run:** `node build-communities.js <raw folder> .. [community id]`

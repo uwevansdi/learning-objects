@@ -105,6 +105,7 @@
   .lg.st { width: 13px; height: 13px; border-radius: 50%; background: var(--route); }
   .lg.end { width: 13px; height: 13px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 1.5px var(--edge); }
   .lg.cand { width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2px solid var(--route); }
+  .lg.na { width: 14px; height: 12px; border-radius: 3px; background: repeating-linear-gradient(45deg, #b9b4a9 0 3px, #ece9e2 3px 7px); }
   .lg.food { width: 12px; height: 12px; border-radius: 50%; background: var(--food); box-shadow: 0 0 0 1.5px var(--edge); }
   .lg.health { width: 11px; height: 11px; background: var(--health); box-shadow: 0 0 0 1.5px var(--edge); }
   .lg.civic { width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent; border-bottom: 12px solid var(--civic); }
@@ -172,7 +173,7 @@
   <p class="eyebrow">Geography, Capacity, and Public-Service Delivery</p>
   <h1>Public Service Delivery Exercise: plan transit for your community</h1>
   <p class="lede">Your group is a planning team for one Seattle community. With limited resources, design a new bus line: decide what your community needs most, choose stations along a route the bus can actually run, and see who can walk to it and which services they can reach. Partway through, an implementation challenge will force you to revise. At the end, copy your plan into your group's Word document.</p>
-  <div class="proto" role="note"><strong>Draft for discussion with Prof. Zhao.</strong> Streets and service locations come from OpenStreetMap; population, race, and income come from census tracts. Community notes, roles, rules, and shocks are placeholders to align with the instructor's worksheet and community profiles.</div>
+  <div class="proto" role="note"><strong>Draft for discussion with Prof. Zhao.</strong> Streets and service locations come from OpenStreetMap; population, race, and income come from census block groups prepared by Prof. Zhao. Community notes, roles, rules, and shocks are placeholders to align with the instructor's worksheet and community profiles.</div>
   <div class="practice-banner" id="practiceBanner" hidden>Practice run · Plans made in practice mode are marked "Practice" and are not for submission.</div>
 
   <div class="topbar">
@@ -294,9 +295,10 @@
     <summary>About this draft and its data</summary>
     <ul>
       <li><strong>Streets and services:</strong> © OpenStreetMap contributors, Open Database License. Walking uses streets, stairways, and trails; the bus uses streets only and prefers arterials. Service locations include food banks and pantries, health clinics, and libraries and community centers mapped in OpenStreetMap; coverage is incomplete and should be checked against local directories.</li>
-      <li><strong>Population:</strong> City of Seattle, Racial and Social Equity Composite Index (2026 release, ACS 5-year estimates), by census tract: total population, people of color, and people below 200% of the poverty level ("lower income"). Residents are spread evenly along each tract's residential streets.</li>
+      <li><strong>Population:</strong> American Community Survey 2020–2024 five-year estimates by census block group, prepared by Prof. Zhao: total population, people of color, and people below 200% of the poverty level ("lower income"). Residents are spread evenly along each block group's streets. Block-group estimates have wide margins of error. Where Census measures poverty for fewer than 80% of residents (mostly dorms), the poverty rate isn't shown.</li>
+      <li><strong>Walkability and intersections:</strong> U.S. EPA Smart Location Database, joined by Prof. Zhao from 2010 to 2020 block groups, so neighboring block groups can share a value. The walkability index (1–20) includes distance to existing transit stops, so it's shown for context only and doesn't affect the scorecard, which measures actual walking distance to the stations you place.</li>
       <li><strong>Walking and travel:</strong> a 10-minute walk is 800 meters along the street network. Trip times assume an average bus speed of 18 km/h including stops. Hills are not yet accounted for.</li>
-      <li><strong>Candidate stations</strong> are major arterial intersections at least 700 meters apart, chosen automatically. Prof. Zhao may replace them with his own list.</li>
+      <li><strong>Candidate stations</strong> sit about every kilometer along each named arterial, at a cross street, chosen automatically. Prof. Zhao may replace them with his own list.</li>
       <li><strong>Privacy.</strong> This page collects no data. Group names and notes stay in this browser tab and go only into the summary you copy or download.</li>
       <li><strong>Accessibility.</strong> Every step works by keyboard. Stations can be added, removed, and reordered from the lists; the scorecard states every result in text.</li>
       <li><strong>Built with:</strong> Prof. Alex Zhao, PUBPOL 101 · <strong>Maintained by:</strong> Evans Digital · Draft 0.1</li>
@@ -335,7 +337,7 @@
   var SHOCKS = {
     stations: { title: "Station cost overrun", text: function () { return "Construction bids came in high. The line can now have only 5 stations."; }, rules: { maxSt: 5 } },
     length: { title: "Operating budget cut", text: function () { return "Service hours were cut. The route can be no longer than 6.5 km end to end."; }, rules: { maxLen: 6500 } },
-    mandate: { title: "Community meeting", text: function () { var t = mandateTract(); return "At a public meeting, residents of census tract " + t.name + " (where " + pct(t.lowShare) + " live below 200% of the poverty level) said the plan skips them. The council now requires at least one station within a 10-minute walk of their neighborhood."; }, rules: {}, requireTract: true }
+    mandate: { title: "Community meeting", text: function () { var t = mandateTract(); return "At a public meeting, residents " + (/^near /.test(t.place) ? "of the neighborhood " + t.place : "of " + t.place) + " (block group " + t.name + ", where " + pct(t.lowShare) + " live below 200% of the poverty level) said the plan skips them. The council now requires at least one station within a 10-minute walk of their neighborhood."; }, rules: {}, requireTract: true }
   };
   var CAT = { food: { label: "Food assistance", color: "var(--food)" }, health: { label: "Health clinics", color: "var(--health)" }, civic: { label: "Libraries and community centers", color: "var(--civic)" } };
 
@@ -361,8 +363,10 @@
     TOT = { pop: 0, poc: 0, low: 0, dest: { food: 0, health: 0, civic: 0 } };
     T.forEach(function (t) {
       t.area = t.rings.reduce(function (a, r) { return a + ringArea(r); }, 0);
-      t.density = t.pop / (t.area / 4046.86); t.pocShare = t.pop ? t.poc / t.pop : 0; t.lowShare = t.povBase ? t.low / t.povBase : 0;
-      t.perM = t.streetLen ? t.pop / t.streetLen : 0; TOT.pop += t.pop; TOT.poc += t.poc; TOT.low += t.lowShare * t.pop;
+      t.density = t.pop / (t.area / 4046.86); t.pocShare = t.pop ? t.poc / t.pop : 0;
+      // group housing (dorms, care facilities): Census measures poverty for under 80% of residents, so the rate isn't shown
+      t.gq = t.povBase < 0.8 * t.pop; t.lowShare = t.povBase && !t.gq ? t.low / t.povBase : null; t.lowOfPop = t.pop ? t.low / t.pop : 0;
+      t.perM = t.streetLen ? t.pop / t.streetLen : 0; TOT.pop += t.pop; TOT.poc += t.poc; TOT.low += t.low;
     });
     D.dests.forEach(function (d) { TOT.dest[d.cat]++; });
     solo = S.map(function (s, i) { return coverage([i]).pop; });
@@ -370,12 +374,22 @@
     buildMap();
   }
   function ringArea(r) { var a = 0; for (var i = 0, j = r.length - 2; i < r.length; j = i, i += 2) a += (r[j] * r[i + 1] - r[i] * r[j + 1]); return Math.abs(a) / 2; }
-  // Tract named in the "community meeting" shock. The instructor should set these: the default (highest share below
-  // 200% of poverty) can land on student-heavy tracts near UW, where low incomes reflect enrollment more than need.
-  var MANDATE_TRACT = { north: null, southeast: null, west: null, northseattle: null };   // e.g., north: "53033004700"
+  // Block group named in the "community meeting" shock. North of the Ship Canal is fixed on central Ballard (decided
+  // 12 Nov 2026): its highest-poverty block groups are student housing near UW, where low incomes reflect enrollment.
+  // Elsewhere the default is the highest share below 200% of poverty among block groups of 800+ residents, skipping
+  // group housing. Set a community here to override it.
+  var MANDATE_AREA = { north: { geoid: "530330047023", place: "central Ballard" } };
+  function nearestPlace(t) { var r = t.rings[0], x = 0, y = 0, n = r.length / 2, best = null, bd = Infinity;
+    for (var i = 0; i < r.length; i += 2) { x += r[i]; y += r[i + 1]; } x /= n; y /= n;
+    (M.labels || []).forEach(function (l) { var d = Math.hypot(l[1] - x, l[2] - y); if (d < bd) { bd = d; best = l[0]; } });
+    return best ? "near " + best : "block group " + t.name; }
+  function highestPoverty() { var best = null;
+    T.forEach(function (t, i) { if (t.pop >= 800 && t.lowShare != null && (!best || t.lowShare > best.lowShare)) best = Object.assign({ idx: i }, t); });
+    return best; }
   function mandateTract() {
-    var want = MANDATE_TRACT[M.id], best = null;
-    T.forEach(function (t, i) { if (want ? t.geoid === want : (t.pop >= 1500 && (!best || t.lowShare > best.lowShare))) best = Object.assign({ idx: i }, t); });
+    var want = MANDATE_AREA[M.id], best = null;
+    if (want) T.forEach(function (t, i) { if (t.geoid === want.geoid) best = Object.assign({ idx: i, place: want.place }, t); });
+    if (!best) { best = highestPoverty(); best.place = nearestPlace(best); }
     return best;
   }
 
@@ -386,7 +400,7 @@
     var pop = 0, poc = 0, low = 0, tractHit = {};
     for (var k = 0; k < NE; k++) {
       if (!a[k] && !b[k]) continue; var t = E.t[k]; if (t < 0) continue; tractHit[t] = 1; if (!E.k[k]) continue;
-      var people = Math.min(E.len[k], a[k] + b[k]) * T[t].perM; pop += people; poc += people * T[t].pocShare; low += people * T[t].lowShare;
+      var people = Math.min(E.len[k], a[k] + b[k]) * T[t].perM; pop += people; poc += people * T[t].pocShare; low += people * T[t].lowOfPop;
     }
     var dest = { food: 0, health: 0, civic: 0 }; Object.keys(dset).forEach(function (di) { dest[D.dests[di].cat]++; });
     return { a: a, b: b, pop: pop, poc: poc, low: low, rate: pop / TOT.pop, pocRate: poc / TOT.poc, whiteRate: (pop - poc) / (TOT.pop - TOT.poc),
@@ -407,7 +421,7 @@
       { ok: route.length > 1 && !missing && len <= R.maxLen, text: "Route " + km(R.maxLen) + " or shorter", now: route.length < 2 ? "–" : missing ? "incomplete" : km(len) },
       { ok: dir != null && dir <= R.maxDir, text: "Direct: at most " + R.maxDir + "× the straight-line distance", now: dir == null ? "–" : dir.toFixed(2) + "×" }
     ];
-    if (needTract) { var mt = mandateTract(), hit = coverage(route).tractHit[mt.idx]; checks.push({ ok: !!hit, text: "Serves census tract " + mt.name + " (council requirement)", now: hit ? "within a walk" : "not yet" }); }
+    if (needTract) { var mt = mandateTract(), hit = coverage(route).tractHit[mt.idx]; checks.push({ ok: !!hit, text: "Serves " + mt.place + " (block group " + mt.name + ", council requirement)", now: hit ? "within a walk" : "not yet" }); }
     return { gaps: gaps, len: len, missing: missing, dir: dir, checks: checks, valid: checks.every(function (c) { return c.ok; }), minutes: len / 1000 / R.speedKmh * 60 };
   }
 
@@ -468,14 +482,14 @@
   // ---- Step 2 -------------------------------------------------------------------------------------------------
   function renderProfile() {
     var low = 0, base = 0; T.forEach(function (t) { low += t.low; base += t.povBase; });
-    var dense = T.slice().sort(function (a, b) { return b.density - a.density; })[0], mt = mandateTract();
+    var dense = T.slice().sort(function (a, b) { return b.density - a.density; })[0], mt = highestPoverty();
     $("profile").innerHTML = '<h3>' + M.name + '</h3><p class="hint">' + M.short + '</p>' +
       '<div class="kv"><span>Residents in the study area</span><strong>' + num(TOT.pop) + '</strong></div>' +
       '<div class="kv"><span>People of color</span><strong>' + pct(TOT.poc / TOT.pop) + '</strong></div>' +
       '<div class="kv"><span>Below 200% of the poverty level</span><strong>' + pct(low / base) + '</strong></div>' +
       '<div class="kv"><span>Food assistance · clinics · libraries and centers</span><strong>' + TOT.dest.food + ' · ' + TOT.dest.health + ' · ' + TOT.dest.civic + '</strong></div>' +
-      '<div class="kv"><span>Densest tract</span><strong>' + dense.name + ' · ' + Math.round(dense.density) + '/acre</strong></div>' +
-      '<div class="kv"><span>Highest-poverty tract</span><strong>' + mt.name + ' · ' + pct(mt.lowShare) + '</strong></div>' +
+      '<div class="kv"><span>Densest block group</span><strong>' + dense.name + ' · ' + Math.round(dense.density) + '/acre</strong></div>' +
+      '<div class="kv"><span>Highest-poverty block group</span><strong>' + mt.name + ' · ' + pct(mt.lowShare) + '</strong></div>' +
       '<p class="hint" style="margin-top:8px;"><em>Instructor community notes: [to come from Prof. Zhao\'s community profiles]</em></p>' +
       '<p class="hint">Use the map layers to see where people live, where incomes are lower, and where services are.</p>';
   }
@@ -492,9 +506,9 @@
 
   // ---- Map ----------------------------------------------------------------------------------------------------
   var mapcard = document.createElement("section"); mapcard.className = "card mapcard"; mapcard.id = "mapcard";
-  mapcard.innerHTML = '<h2 class="sr-only">Map</h2><div class="maptools"><div class="seg" role="radiogroup" aria-label="Census layer">' +
+  mapcard.innerHTML = '<h2 class="sr-only">Map</h2><div class="maptools"><div class="seg" role="radiogroup" aria-label="Map layer">' +
     '<label><input type="radio" name="layer" value="none" checked><span>No layer</span></label><label><input type="radio" name="layer" value="density"><span>Density</span></label>' +
-    '<label><input type="radio" name="layer" value="poc"><span>People of color</span></label><label><input type="radio" name="layer" value="low"><span>Lower income</span></label></div>' +
+    '<label><input type="radio" name="layer" value="poc"><span>People of color</span></label><label><input type="radio" name="layer" value="low"><span>Lower income</span></label><label><input type="radio" name="layer" value="walk"><span>Walkability</span></label><label><input type="radio" name="layer" value="idens"><span>Intersections</span></label></div>' +
     '<div class="zoom"><label class="toggle" style="font-size:13px;margin-right:6px;"><input type="checkbox" id="showDests" checked> Services</label><button type="button" id="zin" aria-label="Zoom in">+</button><button type="button" id="zout" aria-label="Zoom out">−</button><button type="button" id="zreset" style="width:auto;padding:0 8px;font-size:13px;">Reset</button></div></div>' +
     '<svg id="map" role="group" aria-label="Map. Candidate stations are buttons; Tab moves between them and Enter adds or removes a station."></svg><div class="maplegend" id="legend"></div><div class="tooltip" id="tip"></div>';
   mapcard.hidden = true; document.body.appendChild(mapcard);
@@ -506,6 +520,9 @@
     W = M.width; H = M.height; view = { x: 0, y: 0, w: W, h: H }; svg.style.aspectRatio = W + " / " + H; svg.innerHTML = "";
     // tall communities (e.g., Southeast Seattle) are capped at most of the screen height and centered
     svg.style.maxWidth = H > W ? "calc(78vh * " + (W / H).toFixed(3) + ")" : ""; svg.style.margin = H > W ? "0 auto" : "";
+    // hatch for areas whose poverty rate isn’t measured (mostly dorms)
+    var defs = el("defs", {}), pat = el("pattern", { id: "naHatch", width: 70, height: 70, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" });
+    pat.appendChild(el("rect", { width: 70, height: 70, fill: "#ece9e2" })); pat.appendChild(el("rect", { width: 24, height: 70, fill: "#b9b4a9" })); defs.appendChild(pat); svg.appendChild(defs);
     gTracts = el("g", {}); gBase = el("g", {}); var gCover = el("g", {}), gRoute = el("g", {}); gLabels = el("g", {}); gDests = el("g", {}); gStops = el("g", {});
     [gTracts, gBase, gCover, gRoute, gLabels, gDests, gStops].forEach(function (g) { svg.appendChild(g); });
     tractEls = T.map(function (t, i) { var p = el("path", { d: t.rings.map(function (r) { return polyD(r) + "Z"; }).join(""), fill: "transparent", "data-t": i }); gTracts.appendChild(p); return p; });
@@ -571,15 +588,19 @@
   var LAYERS = {
     density: { label: "Residents per acre", val: function (t) { return t.density; }, fmt: function (v) { return v.toFixed(0); } },
     poc: { label: "Share people of color", val: function (t) { return t.pocShare; }, fmt: function (v) { return Math.round(v * 100) + "%"; } },
-    low: { label: "Share below 200% of poverty", val: function (t) { return t.lowShare; }, fmt: function (v) { return Math.round(v * 100) + "%"; } }
+    low: { label: "Share below 200% of poverty", val: function (t) { return t.lowShare; }, fmt: function (v) { return Math.round(v * 100) + "%"; }, na: "Mostly dorms or group housing (not measured)" },
+    walk: { label: "EPA walkability index (1–20)", val: function (t) { return t.walk || null; }, fmt: function (v) { return v.toFixed(0); } },
+    idens: { label: "Street intersections per sq. mile (EPA)", val: function (t) { return t.idens || null; }, fmt: function (v) { return v.toFixed(0); } }
   };
   function renderLayer() {
     var L = LAYERS[layer], h = '<span><i class="lg route"></i>Bus line</span><span><i class="lg st"></i>Station</span><span><i class="lg end"></i>End of line</span><span><i class="lg cover"></i>10-minute walk</span><span><i class="lg cand"></i>Candidate</span>' +
       '<span><i class="lg food"></i>Food assistance</span><span><i class="lg health"></i>Clinic</span><span><i class="lg civic"></i>Library or center</span><span class="hint">Filled = within a walk of a station</span>';
     if (!L) { tractEls.forEach(function (p) { p.setAttribute("fill", "transparent"); }); $("legend").innerHTML = h; return; }
-    var vals = T.map(L.val), s = vals.slice().sort(function (a, b) { return a - b; }), br = [0.2, 0.4, 0.6, 0.8].map(function (q) { return s[Math.floor(q * (s.length - 1))]; });
-    tractEls.forEach(function (p, i) { var v = vals[i], b = 0; while (b < 4 && v > br[b]) b++; p.setAttribute("fill", RAMP[b]); p.setAttribute("fill-opacity", 0.75); });
-    $("legend").innerHTML = h + '<span>' + L.label + ': ' + L.fmt(s[0]) + '<span class="ramp" aria-hidden="true">' + RAMP.map(function (c) { return '<i style="background:' + c + '"></i>'; }).join("") + '</span>' + L.fmt(s[s.length - 1]) + '</span>';
+    var vals = T.map(L.val), s = vals.filter(function (v) { return v != null; }).sort(function (a, b) { return a - b; }), br = [0.2, 0.4, 0.6, 0.8].map(function (q) { return s[Math.floor(q * (s.length - 1))]; });
+    tractEls.forEach(function (p, i) { var v = vals[i], b = 0; if (v == null) { p.setAttribute("fill", "url(#naHatch)"); p.setAttribute("fill-opacity", 0.9); return; } while (b < 4 && v > br[b]) b++; p.setAttribute("fill", RAMP[b]); p.setAttribute("fill-opacity", 0.75); });
+    var hasNa = vals.some(function (v) { return v == null; });
+    $("legend").innerHTML = h + '<span>' + L.label + ': ' + L.fmt(s[0]) + '<span class="ramp" aria-hidden="true">' + RAMP.map(function (c) { return '<i style="background:' + c + '"></i>'; }).join("") + '</span>' + L.fmt(s[s.length - 1]) + '</span>' +
+      (hasNa && L.na ? '<span><i class="lg na"></i>' + L.na + '</span>' : "") + (layer === "walk" ? '<span class="hint">Includes distance to existing transit, so it favors places already served.</span>' : "");
   }
   mapcard.querySelectorAll("input[name=layer]").forEach(function (r) { r.addEventListener("change", function () { layer = r.value; renderLayer(); }); });
 
@@ -685,7 +706,8 @@
     var t = e.target, g = t.closest && t.closest(".stop"), dg = t.closest && t.closest("[data-d]"), r = mapcard.getBoundingClientRect(), html = "";
     if (g) { var i = +g.getAttribute("data-s"); html = "<strong>" + S[i].name + "</strong><br>About " + num(solo[i]) + " residents and " + soloDest[i] + " services within a 10-minute walk"; }
     else if (dg) { var d = D.dests[+dg.getAttribute("data-d")]; html = "<strong>" + esc(d.name) + "</strong><br>" + CAT[d.cat].label + (lastCov && lastCov.dset[+dg.getAttribute("data-d")] ? "<br>Within a walk of a station" : ""); }
-    else if (layer !== "none" && t.getAttribute && t.getAttribute("data-t") != null) { var tr = T[+t.getAttribute("data-t")]; html = "<strong>Census tract " + tr.name + "</strong><br>" + num(tr.pop) + " residents · " + tr.density.toFixed(0) + " per acre<br>" + pct(tr.pocShare) + " people of color · " + pct(tr.lowShare) + " below 200% of poverty"; }
+    else if (layer !== "none" && t.getAttribute && t.getAttribute("data-t") != null) { var tr = T[+t.getAttribute("data-t")]; html = "<strong>Block group " + tr.name + "</strong><br>" + num(tr.pop) + " residents · " + tr.density.toFixed(0) + " per acre<br>" + pct(tr.pocShare) + " people of color · " + (tr.gq ? "poverty not measured for most residents (dorms or group housing)" : pct(tr.lowShare) + " below 200% of poverty") +
+      (tr.walk ? "<br>Walkability " + tr.walk.toFixed(1) + " of 20 · " + num(tr.idens) + " intersections per sq. mi." : ""); }
     if (!html) { tip.classList.remove("show"); return; }
     tip.innerHTML = html; tip.classList.add("show"); tip.style.left = Math.min(e.clientX - r.left + 12, r.width - 280) + "px"; tip.style.top = (e.clientY - r.top + 12) + "px";
   }
