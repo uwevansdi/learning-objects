@@ -106,7 +106,7 @@
   .lg.end { width: 13px; height: 13px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 1.5px var(--edge); }
   .lg.cand { width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2px solid var(--route); }
   /* service tokens: what a candidate would add; slate, a color nothing else on the map uses */
-  .lg.tok { height: 15px; border-radius: 4px; font-size: 10px; font-weight: 700; font-style: normal; display: inline-grid; place-items: center; padding: 0 4px; box-shadow: 0 0 0 1px #fff; }
+  .lg.tok { height: 15px; border-radius: 4px; font-size: 10px; font-weight: 700; font-style: normal; display: inline-grid; place-items: center; padding: 0 4px; box-shadow: 0 0 0 1px #1f2430, 0 0 0 3px #fff; }
   .lg.tok.t1 { background: #d5dae3; color: #2f3644; font-size: 9px; height: 13px; } .lg.tok.t2 { background: #7d889c; color: #fff; } .lg.tok.t3 { background: #2f3644; color: #fff; font-size: 11px; height: 17px; }
   .lg.na { width: 14px; height: 12px; border-radius: 3px; background: repeating-linear-gradient(45deg, #b9b4a9 0 3px, #ece9e2 3px 7px); }
   .lg.food { width: 12px; height: 12px; border-radius: 50%; background: var(--food); box-shadow: 0 0 0 1.5px var(--edge); }
@@ -549,7 +549,8 @@
       g.appendChild(el("text", { x: s.xy[0], y: s.xy[1], "text-anchor": "middle", "dominant-baseline": "central", fill: "#fff", "font-weight": 700 }));
       // token: services within a 10-minute walk that the line doesn't reach yet, as "+N"; size and shade rise with N
       var b = el("g", { class: "badge", "aria-hidden": "true" });
-      b.appendChild(el("rect", { rx: 1, stroke: "#fff", "stroke-width": 1.5, "vector-effect": "non-scaling-stroke" }));
+      b.appendChild(el("rect", { class: "halo", rx: 1, fill: "#fff" })); // white halo, then a thin dark outline, to lift it off the map
+      b.appendChild(el("rect", { class: "tok", rx: 1, stroke: "#1f2430", "stroke-width": 1, "vector-effect": "non-scaling-stroke" }));
       b.appendChild(el("text", { "text-anchor": "middle", "dominant-baseline": "central", "font-weight": 700 }));
       g.appendChild(b);
       gStops.appendChild(g); return g;
@@ -574,13 +575,14 @@
     var u = mpp();
     stopEls.forEach(function (g, i) { var on = g.getAttribute("data-on") === "1"; g.querySelector(".hit").setAttribute("r", 14 * u); g.querySelector(".ring").setAttribute("r", (on ? 9 : 7) * u); g.querySelector("text").setAttribute("font-size", 10.5 * u);
       var b = g.querySelector(".badge"), n = (fresh[i] || []).length, T = TOK[tier(n)]; if (!T) return;
-      var h = T.h * u, w = (n >= 10 ? 2.1 : 1.55) * h, bx = S[i].xy[0] + 8 * u + w / 2, by = S[i].xy[1] - 8 * u, r = b.querySelector("rect"), t = b.querySelector("text");
+      var h = T.h * u, w = (n >= 10 ? 2.1 : 1.55) * h, bx = S[i].xy[0] + 8 * u + w / 2, by = S[i].xy[1] - 8 * u, r = b.querySelector(".tok"), hl = b.querySelector(".halo"), t = b.querySelector("text"), p = 2 * u;
+      hl.setAttribute("x", bx - w / 2 - p); hl.setAttribute("y", by - h / 2 - p); hl.setAttribute("width", w + 2 * p); hl.setAttribute("height", h + 2 * p); hl.setAttribute("rx", 5 * u);
       r.setAttribute("x", bx - w / 2); r.setAttribute("y", by - h / 2); r.setAttribute("width", w); r.setAttribute("height", h); r.setAttribute("rx", 3.5 * u); r.setAttribute("fill", T.fill);
       t.setAttribute("x", bx); t.setAttribute("y", by); t.setAttribute("font-size", T.fs * u); t.setAttribute("fill", T.ink); });
     labelEls.forEach(function (t) { t.setAttribute("font-size", 12.5 * u); t.style.strokeWidth = (4 * u) + "px"; });
     gDests.style.display = showDests ? "" : "none";
     var zoomed = view.w <= W * 0.55; // zoomed in far enough for service icons to have room
-    destEls.forEach(function (g, i) { var reached = lastCov && lastCov.dset[i]; g.innerHTML = zoomed || reached ? destShape(D.dests[i], u, reached) : ""; });
+    destEls.forEach(function (g, i) { g.innerHTML = zoomed ? destShape(D.dests[i], u, lastCov && lastCov.dset[i]) : ""; });
   }
   function zoomAt(f, cx, cy) {
     var nw = Math.min(W, Math.max(W / 8, view.w * f)), nh = nw * H / W; if (cx == null) { cx = view.x + view.w / 2; cy = view.y + view.h / 2; }
