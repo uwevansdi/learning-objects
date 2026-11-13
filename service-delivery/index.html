@@ -1,0 +1,985 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Public Service Delivery Exercise</title>
+<meta name="description" content="Group exercise: plan a bus line for an assigned Seattle community, weigh who it reaches and which services residents can get to, respond to an implementation shock, and export the group plan. Evans School.">
+<style>
+  :root {
+    color-scheme: light;
+    --surface: #ffffff; --surface-2: #f6f5f2; --border: #d9d7d0;
+    --ink: #1b1b1a; --ink-2: #4a4945; --ink-3: #6a6964; --grid: #ebeae6;
+    --street: #c4c1b8; --arterial: #9d9a91;
+    --route: #4b2e83; --edge: #32006e; --cover: #2ad2c9; --gold: #ffc700;
+    --food: #aadb1e; --health: #e93cac; --civic: #85754d;
+    --accent: #4b2e83; --accent-soft: #efeaf7;
+    --good: #1d6b3a; --good-soft: #e7f3eb; --warn: #8a4b00; --warn-soft: #fbf0e1;
+    --focus: #4b2e83; --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--surface); color: var(--ink); font-size: 16px; line-height: 1.5; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 20px 16px 32px; }
+  .eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; margin: 0 0 4px; }
+  h1 { font-size: 27px; line-height: 1.2; margin: 0 0 8px; }
+  h2 { font-size: 19px; margin: 0 0 8px; }
+  h3 { font-size: 15px; margin: 0 0 6px; }
+  p { margin: 0 0 10px; }
+  .lede { color: var(--ink-2); max-width: 80ch; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .proto { border: 2px dashed var(--warn); background: var(--warn-soft); border-radius: 8px; padding: 10px 14px; margin: 12px 0; font-size: 14px; }
+  .proto strong { color: var(--warn); }
+  /* Author slots: empty TILT sections for the instructor to write (purpose, task, criteria). Remove the guidance once filled. */
+  .slot { border: 2px dashed var(--warn); background: var(--warn-soft); border-radius: 8px; padding: 10px 14px; margin: 10px 0; }
+  .slot .slot-tag { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--warn); margin-bottom: 2px; }
+  .slot h3, .slot h4 { margin: 0 0 4px; }
+  .slot ul { margin: 4px 0 0; padding-left: 20px; font-size: 14px; color: var(--ink-2); }
+  .slot li { margin: 2px 0; font-style: italic; }
+  .slot.small { padding: 6px 10px; font-size: 13px; }
+  .slot.small ul { font-size: 13px; }
+  /* TILT sections (purpose, task, criteria): text by Prof. Zhao */
+  .tilt { border-left: 4px solid var(--accent); background: var(--surface-2); border-radius: 8px; padding: 12px 16px; margin: 12px 0; }
+  .tilt h3 { margin: 0 0 6px; } .tilt h4 { margin: 12px 0 4px; font-size: 15px; }
+  .tilt p { margin: 6px 0; } .tilt ul, .tilt ol { margin: 6px 0; padding-left: 22px; } .tilt li { margin: 4px 0; }
+  .tilt .eyebrow2 { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+  .tilt.small { padding: 8px 12px; font-size: 14px; } .tilt.small p { margin: 4px 0; }
+  .tilt details summary { cursor: pointer; font-weight: 600; color: var(--accent); margin-top: 4px; }
+  .tilt blockquote { margin: 8px 0; padding: 8px 12px; background: var(--surface); border-radius: 6px; font-style: italic; }
+  .role-brief h4 { margin: 0 0 4px; } .role-brief p { margin: 4px 0; font-size: 14px; }
+  .brief-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0 14px; }
+  .practice-banner { background: var(--accent); color: #fff; border-radius: 8px; padding: 8px 14px; font-weight: 700; margin: 10px 0; }
+
+  .topbar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between; margin: 14px 0 10px; }
+  .steps { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+  .steps button { font: inherit; font-size: 14px; font-weight: 600; border-radius: 999px; padding: 5px 13px; border: 1px solid var(--border); color: var(--ink-3); background: var(--surface); cursor: pointer; }
+  .steps button[aria-current="step"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .steps button.done { color: var(--accent); border-color: var(--accent); }
+  .steps button:disabled { opacity: .45; cursor: not-allowed; }
+  .toggle { display: flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .toggle input { width: 17px; height: 17px; accent-color: var(--accent); }
+
+  .card { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; background: var(--surface); position: relative; }
+  .card.soft { background: var(--surface-2); }
+  .hint { font-size: 13px; color: var(--ink-3); margin: 0; }
+  button.btn { font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 8px; padding: 8px 14px; border: 1px solid var(--accent); background: var(--surface); color: var(--accent); }
+  button.btn.primary { background: var(--accent); color: #fff; }
+  button.btn.small { font-size: 13px; padding: 4px 9px; }
+  button.btn:disabled { opacity: .45; cursor: not-allowed; }
+  button.btn:hover:not(:disabled) { filter: brightness(0.95); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
+  label.field { display: block; font-size: 13px; font-weight: 700; color: var(--ink-2); margin: 10px 0 4px; }
+  input[type=text], textarea, select { font: inherit; font-size: 15px; border: 1px solid var(--border); border-radius: 8px; padding: 7px 9px; background: var(--surface); width: 100%; }
+  textarea { min-height: 70px; resize: vertical; }
+  .status { font-size: 14px; color: var(--good); font-weight: 600; }
+
+  /* step 1 */
+  .comms { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-top: 8px; }
+  .comm { text-align: left; font: inherit; cursor: pointer; border: 2px solid var(--border); border-radius: var(--radius); background: var(--surface); padding: 12px 14px; }
+  .comm[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .comm strong { display: block; font-size: 16px; }
+  .comm span { display: block; font-size: 13px; color: var(--ink-3); }
+  .comm dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin: 8px 0 0; font-size: 13px; }
+  .comm dt { color: var(--ink-3); } .comm dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-top: 8px; }
+  .role { border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; border-top: 4px solid var(--accent); }
+  .role h3 { margin: 0 0 4px; }
+  .role p { font-size: 14px; color: var(--ink-2); margin: 0 0 6px; }
+  .role .watch { font-size: 13px; color: var(--ink-3); }
+  .members { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; }
+  @media (max-width: 640px) { .members { grid-template-columns: 1fr; } }
+
+  /* plan layout */
+  .grid { display: grid; gap: 16px; grid-template-columns: minmax(0, 1.9fr) minmax(320px, 1fr); align-items: start; }
+  @media (max-width: 920px) { .grid { grid-template-columns: 1fr; } }
+  .mapcard { padding: 0; overflow: hidden; }
+  .maptools { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+  .seg { display: flex; flex-wrap: wrap; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface); }
+  .seg label { position: relative; font-size: 13px; }
+  .seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .seg span { display: block; padding: 6px 10px; white-space: nowrap; }
+  .seg input:checked + span { background: var(--accent); color: #fff; font-weight: 600; }
+  .seg label + label span { border-left: 1px solid var(--border); }
+  .seg input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: -3px; }
+  .zoom { display: flex; gap: 4px; align-items: center; }
+  .zoom button { font: inherit; font-size: 16px; font-weight: 700; width: 34px; height: 32px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; }
+  #map { display: block; width: 100%; height: auto; background: #fbfaf7; touch-action: none; cursor: grab; }
+  #map.dragging { cursor: grabbing; }
+  #map text { font-family: inherit; pointer-events: none; }
+  .stop { cursor: pointer; } .stop:focus { outline: none; } .stop:focus-visible .ring { stroke: var(--focus); stroke-width: 4; }
+  /* services scoreboard: what the line reaches, plus the service key */
+  /* services scoreboard: a box over the top-left of the map */
+  .mapwrap { position: relative; }
+  .svcbar { position: absolute; top: 10px; left: 10px; z-index: 3; /* corner set by placeSvcBar() */ width: 236px; display: flex; flex-direction: column; gap: 5px; padding: 10px 12px; font-size: 13px;
+    background: rgba(255, 255, 255, 0.95); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14); }
+  .svcbar .svc-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-weight: 700; color: var(--ink); line-height: 1.25; }
+  .svcbar .svc-head button { font: inherit; font-size: 12px; font-weight: 600; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+  .svcbar .svc { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--ink-2); width: calc(100% + 8px); margin: 0 -4px; padding: 2px 4px; border: 0; border-radius: 5px; background: none; font: inherit; text-align: left; cursor: pointer; }
+  .svcbar .svc:hover, .svcbar .svc.on { background: #efeaf8; }
+  .svcbar .svc[aria-pressed="true"] { box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .svcbar .svc span { display: inline-flex; align-items: center; gap: 7px; }
+  .svcbar .svc span:last-child, .svcbar .svc-total span:last-child { white-space: nowrap; }
+  .svcbar .svc b { font-size: 15px; color: var(--accent); }
+  .svcbar .svc-total { display: flex; justify-content: space-between; font-weight: 700; color: var(--ink); border-top: 1px solid var(--border); padding-top: 5px; }
+  .svcbar .svc-key { display: flex; flex-direction: column; gap: 3px; font-size: 11.5px; color: var(--ink-3); border-top: 1px solid var(--border); padding-top: 5px; }
+  .svcbar.beside { box-shadow: none; background: var(--surface); }
+  .svcbar.collapsed .svc, .svcbar.collapsed .svc-total, .svcbar.collapsed .svc-key { display: none; }
+  @media (max-width: 700px) { .svcbar { position: static; width: auto; border-radius: 0; box-shadow: none; border-width: 0 0 1px; } }
+  .maplegend { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; padding: 8px 12px; font-size: 13px; color: var(--ink-2); border-top: 1px solid var(--border); }
+  .lg { display: inline-block; vertical-align: middle; margin-right: 5px; }
+  .lg.cover { width: 18px; height: 7px; border-radius: 4px; background: var(--cover); box-shadow: inset 0 0 0 1px var(--edge); }
+  .lg.route { width: 18px; height: 5px; border-radius: 3px; background: var(--route); }
+  .lg.st { width: 13px; height: 13px; border-radius: 50%; background: var(--route); }
+  .lg.end { width: 13px; height: 13px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 1.5px var(--edge); }
+  .lg.cand { width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2px solid var(--route); }
+  /* service tokens: what a candidate would add; slate, a color nothing else on the map uses */
+  .lg.tok { height: 15px; border-radius: 4px; font-size: 10px; font-weight: 700; font-style: normal; display: inline-grid; place-items: center; padding: 0 4px; box-shadow: 0 0 0 1px #1f2430, 0 0 0 3px #fff; }
+  .lg.tok.t1 { background: #d5dae3; color: #2f3644; font-size: 9px; height: 13px; } .lg.tok.t2 { background: #7d889c; color: #fff; } .lg.tok.t3 { background: #2f3644; color: #fff; font-size: 11px; height: 17px; }
+  .lg.na { width: 14px; height: 12px; border-radius: 3px; background: repeating-linear-gradient(45deg, #b9b4a9 0 3px, #ece9e2 3px 7px); }
+  .lg.food { width: 12px; height: 12px; border-radius: 50%; background: var(--food); box-shadow: 0 0 0 1.5px var(--edge); }
+  .lg.health { width: 11px; height: 11px; background: var(--health); box-shadow: 0 0 0 1.5px var(--edge); }
+  .lg.civic { width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent; border-bottom: 12px solid var(--civic); }
+  .ramp { display: inline-flex; vertical-align: middle; margin: 0 6px; } .ramp i { display: block; width: 18px; height: 10px; }
+  .tooltip { position: absolute; pointer-events: none; z-index: 5; background: var(--ink); color: #fff; font-size: 13px; line-height: 1.4; padding: 6px 9px; border-radius: 6px; opacity: 0; transition: opacity .12s; max-width: 270px; }
+  .tooltip.show { opacity: 1; }
+
+  .checks { list-style: none; padding: 0; margin: 8px 0 0; font-size: 14px; }
+  .checks li { display: flex; gap: 8px; align-items: baseline; padding: 3px 0; }
+  .checks .ic { font-weight: 800; width: 1.2em; flex: none; text-align: center; }
+  .checks li.ok .ic { color: var(--good); } .checks li.no .ic { color: var(--warn); }
+  .checks small { color: var(--ink-3); }
+  .score { margin-top: 12px; }
+  .score section { border-top: 1px solid var(--border); padding: 8px 0 4px; }
+  .score h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--accent); margin: 0 0 4px; }
+  .kv { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; padding: 2px 0; }
+  .kv strong { font-variant-numeric: tabular-nums; }
+  .bar { height: 10px; background: var(--grid); border-radius: 5px; overflow: hidden; margin: 2px 0 4px; } .bar div { height: 100%; border-radius: 5px; }
+  .shock { border-left: 4px solid var(--warn); background: var(--warn-soft); border-radius: 8px; padding: 10px 12px; margin-top: 10px; font-size: 14px; }
+  .shock strong { color: var(--warn); }
+  .seg2 { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; font-size: 13px; }
+  .seg2 label { position: relative; } .seg2 input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .seg2 span { display: block; padding: 4px 10px; } .seg2 input:checked + span { background: var(--accent); color: #fff; font-weight: 600; }
+
+  .lists { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 760px) { .lists { grid-template-columns: 1fr; } }
+  .routelist { list-style: none; margin: 8px 0 0; padding: 0; counter-reset: st; }
+  .routelist li { display: grid; grid-template-columns: 1.7em 1fr auto; gap: 8px; align-items: center; padding: 6px 8px; border-bottom: 1px solid var(--grid); font-size: 14px; }
+  .routelist li::before { counter-increment: st; content: counter(st); width: 1.6em; height: 1.6em; border-radius: 50%; background: var(--route); color: #fff; font-size: 12px; font-weight: 700; display: grid; place-items: center; }
+  .routelist .gap { grid-column: 2 / 4; font-size: 12px; color: var(--ink-3); margin-top: -4px; }
+  .routelist .gap.bad { color: var(--warn); font-weight: 600; }
+  .routelist .ctl { display: flex; gap: 4px; }
+  .cands { max-height: 320px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px; }
+  .cands div { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; padding: 6px 10px; border-bottom: 1px solid var(--grid); font-size: 14px; }
+  .cands small { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+  .prio { display: grid; gap: 6px; margin-top: 6px; }
+  .prio label { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 15px; }
+  .prio label.on { border-color: var(--accent); background: var(--accent-soft); }
+  .prio input { margin-top: 4px; width: 17px; height: 17px; accent-color: var(--accent); flex: none; }
+  .prio small { display: block; color: var(--ink-3); font-size: 13px; }
+
+  .cmp { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; margin-top: 8px; }
+  .cmp th, .cmp td { padding: 6px 6px; border-bottom: 1px solid var(--grid); text-align: right; }
+  .cmp th:first-child, .cmp td:first-child { text-align: left; }
+  .cmp thead th { font-size: 12px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .03em; }
+  .summary-preview { border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; background: var(--surface); max-height: 520px; overflow-y: auto; font-size: 14px; }
+  .summary-preview h1 { font-size: 20px; color: var(--ink); } .summary-preview h2 { font-size: 16px; margin-top: 12px; }
+
+  details { margin-top: 22px; border-top: 1px solid var(--border); padding-top: 12px; font-size: 14px; color: var(--ink-2); }
+  summary { cursor: pointer; font-weight: 600; color: var(--ink); }
+  details ul { padding-left: 20px; } details li { margin-bottom: 4px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  [hidden] { display: none !important; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+<link rel="stylesheet" href="../assets/brand.css">
+</head>
+<body>
+<header class="brandbar"><div class="brandbar-inner"><img class="sig-h" src="../assets/evans-signature-horizontal.png" alt="Evans School of Public Policy and Governance, University of Washington" width="1156" height="200"><span class="unit">Group exercise</span></div></header>
+<main class="wrap">
+  <p class="eyebrow">Geography, Capacity, and Public-Service Delivery</p>
+  <h1>Public Service Delivery Exercise: plan transit for your community</h1>
+  <p class="lede">Your group is a planning team for one Seattle community. With limited resources, design a new bus line: decide what your community needs most, choose stations along a route the bus can actually run, and see who can walk to it and which services they can reach. Partway through, an implementation challenge will force you to revise. At the end, copy your plan into your group's Word document.</p>
+  <div class="practice-banner" id="practiceBanner" hidden>Practice run · Plans made in practice mode are marked "Practice" and are not for submission.</div>
+
+  <div class="topbar">
+    <ol class="steps" id="steps" aria-label="Exercise steps"></ol>
+    <label class="toggle"><input type="checkbox" id="practice"> Practice mode</label>
+  </div>
+
+  <section id="step1" class="card" aria-labelledby="s1Title" hidden>
+    <h2 id="s1Title">Step 1 · Your community and roles</h2>
+    <p>Choose the community your instructor assigned to your group.</p>
+    <div class="comms" id="comms" role="group" aria-label="Communities"></div>
+    <div class="members" style="margin-top:14px;">
+      <div><label class="field" for="groupName">Group name or number</label><input type="text" id="groupName" placeholder="e.g., Group 4"></div>
+      <div><label class="field" for="section">Section or class (optional)</label><input type="text" id="section" placeholder="e.g., AB"></div>
+    </div>
+    <h3 style="margin-top:16px;">Roles</h3>
+    <p class="hint">Each member takes a role and watches that part of the scorecard. Your plan has to work for everyone, so expect to negotiate.</p>
+    <div class="roles" id="roles"></div>
+    <div class="row"><button class="btn primary" id="toStep2" disabled>Continue to community needs</button></div>
+  </section>
+
+  <section id="stepBrief" class="card" aria-labelledby="briefTitle" hidden>
+    <h2 id="briefTitle">Before you start: why, what, and how you'll know it's good</h2>
+    <p class="hint" id="briefFor"></p>
+    <div class="tilt"><span class="eyebrow2">Purpose</span><h3>Why we're doing this</h3>
+      <p>Public services are not distributed equally across communities. Where people live, what resources governments have available, and how public administrators make decisions all influence whether residents can access government services.</p>
+      <p>This exercise explores administrative capacity, geographic inequality, and public service delivery, and why the geographic relationship between communities and public services matters for understanding inequality.</p>
+      <p>Today, you will take the perspective of a public planning team responsible for designing a new bus route in a Seattle community. Your challenge is to decide how to serve residents with different needs while working with limited resources.</p>
+      <p>By completing this exercise, you will practice skills used in public administration and policy analysis:</p>
+      <ul>
+        <li><strong>Analyzing evidence:</strong> Using maps and demographic information to identify community needs.</li>
+        <li><strong>Evaluating policy tradeoffs:</strong> Comparing competing goals, including efficiency, equity, and accessibility.</li>
+        <li><strong>Allocating limited resources:</strong> Developing a feasible service plan under budget and infrastructure constraints.</li>
+        <li><strong>Collaborative decision-making:</strong> Negotiating among competing priorities and explaining your choices.</li>
+        <li><strong>Adapting to implementation challenges:</strong> Revising a policy decision when circumstances change.</li>
+      </ul>
+      <p>By the end, you should be able to explain why implementing a public service is more complicated than deciding that the service should exist.</p>
+      <p>These skills reflect real-world decisions made by government agencies, nonprofit organizations, and our communities.</p>
+    </div>
+
+    <div class="tilt"><span class="eyebrow2">Task</span><h3>What you'll do, and how</h3>
+      <p>You are part of a team tasked with designing a new bus line for one Seattle community. Your goal is to develop a feasible plan that considers the different needs of the residents who depend on public transit while working with limited resources.</p>
+      <p>You will complete the following steps over 60 minutes:</p>
+      <ol>
+        <li><strong>Community and roles (5 minutes).</strong> Review your assigned community and role. Each member should understand their responsibilities before the group begins planning.</li>
+        <li><strong>Needs and priorities (5 minutes).</strong> Examine the map and community information. Identify up to two priorities that will guide your decisions.</li>
+        <li><strong>Develop your service plan (15 minutes).</strong> Select bus stations and construct a route that follows the available street network and meets the resource constraints. Each group member should explain how the plan performs according to their assigned responsibilities.</li>
+        <li><strong>Implementation challenge (5 minutes).</strong> Your team will receive new information that affects its ability to carry out the original plan. Review the challenge and identify which aspects of your proposal are affected.</li>
+        <li><strong>Revise your plan (12 minutes).</strong> Decide how to respond to the new conditions. Compare your revised plan to your original proposal and explain what changed, who benefits, and who might be disadvantaged.</li>
+        <li><strong>Finalize, export and submit (8 minutes).</strong> Complete your group worksheet using your final plan and the reasoning behind your decisions. Make sure the worksheet identifies each element of this exercise. Export your completed work and submit to Canvas.</li>
+        <li><strong>Class debrief (10 minutes).</strong> We will discuss what the exercise reveals about administrative discretion, resource constraints, geography, and equity in public service delivery.</li>
+      </ol>
+      <h4>Working together</h4>
+      <p>Each group member brings an important perspective, but your final proposal must be a collective decision.</p>
+      <p>Listen to the concerns of each role, compare the available evidence, and negotiate when priorities conflict. You do not need unanimous enthusiasm for every decision, but everyone should understand and be able to explain the group's reasoning.</p>
+      <h4>What makes this difficult?</h4>
+      <p>You cannot maximize every goal simultaneously. A route that reaches more residents may be longer, more expensive, or less effective at connecting underserved neighborhoods to essential services.</p>
+      <p>The implementation challenge will introduce an additional constraint that you cannot fully anticipate. This is intentional as public administrators often adapt policies to changing conditions.</p>
+      <p>There is no single correct route. Your task is to develop and defend a reasonable plan.</p>
+      <p>Avoid choosing stations solely to maximize one score, ignoring resource constraints, or assuming that all residents have the same transportation needs.</p>
+      <h4>What happens afterward?</h4>
+      <p>After the group exercise, your instructor may ask each student to complete an individual reflection connecting your group's decisions to course concepts, such as administrative capacity, discretion, equity, and public service delivery.</p>
+    </div>
+
+    <div class="tilt"><span class="eyebrow2">Criteria</span><h3>How you'll know you're on track</h3>
+      <p>The purpose of this exercise is to practice making public service delivery decisions under realistic administrative constraints. There is no single correct solution, and your group is not expected to develop a fully feasible service plan within the allotted time.</p>
+      <p>As you work through the exercise, keep the following questions in mind:</p>
+      <ul>
+        <li><strong>Community needs:</strong> Have we identified our community's most important service-delivery challenges and supported our choices with evidence?</li>
+        <li><strong>Feasibility:</strong> Have we made a reasonable effort to develop a plan that accounts for available resources and constraints?</li>
+        <li><strong>Tradeoffs:</strong> Can we explain how our choices affect coverage, equitable access, service availability, and travel time?</li>
+        <li><strong>Adaptation:</strong> Have we responded to the implementation challenge and explained why we changed or retained our decisions?</li>
+        <li><strong>Communication:</strong> Does our completed worksheet clearly explain our reasoning and final proposal?</li>
+      </ul>
+      <p>These questions are intended to guide your group's discussion and decision-making.</p>
+      <h4>How your work will be evaluated</h4>
+      <p>Your instructor will explain how the group worksheet is graded. The emphasis is on completing each part and engaging seriously with the tradeoffs.</p>
+      <p><strong>Submission:</strong> One 1–2 page Word document per group, submitted through Canvas at the end of the classroom exercise.</p>
+      <p>If your course includes an individual reflection, your instructor will post its instructions and due date in Canvas.</p>
+    </div>
+
+    <h3 style="margin-top:16px;">Role briefs</h3>
+    <div class="brief-grid" id="roleBriefs"></div>
+
+    <div class="tilt"><span class="eyebrow2">Example</span><h3>An example of strong work</h3>
+      <h4 style="margin-top:4px">What we changed and why</h4>
+      <p class="hint">Illustrative example: numbers are fictional.</p>
+      <blockquote>"Our original route prioritized total population coverage and connections to major destinations. After the implementation challenge, we revised the route to reduce the number of stations. Our revised plan reaches approximately 1,300 residents instead of 1,500, but maintains connections to a health clinic and food assistance location. We retained a station in a lower-income neighborhood because removing it would have left residents with fewer alternatives for reaching essential services. Although our revised proposal serves fewer people overall, we believe it better balances limited resources, accessibility, and equity."</blockquote>
+      <p><strong>Why this is strong:</strong> The group identifies the decision, uses quantitative evidence, acknowledges what was lost, and explains why the tradeoff was justified.</p>
+    </div>
+
+    <div class="row"><button class="btn primary" id="briefDone">Continue to community needs</button></div>
+  </section>
+
+  <section id="step2" hidden>
+    <div class="grid">
+      <div id="mapSlot2"></div>
+      <div class="card soft">
+        <h2>Step 2 · Community needs and priorities</h2>
+        <div class="tilt small"><p><strong>Why this step matters.</strong> Before deciding where to provide public services, administrators must understand whom they serve and what different residents need.</p><p>Review the demographic and service-location information for your community. Consider where residents live, where essential services are located, and which residents may face greater barriers to reaching them.</p><p><strong>You're done when</strong> your group has selected up to two planning priorities and written a brief explanation connecting those priorities to evidence from the map or community profile.</p></div>
+        <div id="profile"></div>
+        <label class="field">Choose up to two priorities for your plan</label>
+        <div class="prio" id="prios"></div>
+        <label class="field" for="prioWhy">Why these priorities? What does your community need most?</label>
+        <textarea id="prioWhy" placeholder="A few sentences for your group plan."></textarea>
+        <div class="row"><button class="btn primary" id="toStep3" disabled>Start planning the route</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="stepPlan" hidden>
+    <div class="grid">
+      <div id="mapSlot"></div>
+      <aside id="panel" aria-live="polite"></aside>
+    </div>
+    <section class="card" style="margin-top:16px;" aria-labelledby="listTitle">
+      <h2 id="listTitle">Your route and the candidate stations</h2>
+      <div class="lists">
+        <div><h3>Your route, in order</h3><ol class="routelist" id="routelist"></ol><p class="hint" id="routeEmpty">No stations yet. Add one from the map or the list.</p></div>
+        <div><h3>Candidate stations</h3><p class="hint">Residents within a 10-minute walk of that station alone, and services within that walk.</p><div class="cands" id="cands"></div></div>
+      </div>
+    </section>
+  </section>
+
+  <section id="step6" hidden>
+    <div class="grid">
+      <div class="card">
+        <h2>Step 6 · Your group plan</h2>
+        <div class="tilt small"><p><strong>Why this step matters.</strong> Public administrators must communicate and justify their decisions. A good service plan should explain the proposal, its reasoning, and potential consequences.</p><p>Review your group's final route and prepare the summary for your worksheet.</p><p><strong>You're done when</strong> your group has documented its priorities, original plan, implementation challenge, revised plan, and justification, and has transferred the required information to the group worksheet.</p>
+          <p style="margin-top:8px"><strong>Final submission checklist.</strong> Before submitting, verify that your group can answer yes to each question:</p>
+          <ul><li>Did we identify our community and justify our planning priorities?</li><li>Did our final route comply with the rules and resource constraints?</li><li>Did we consider population coverage, equity, service access, and travel efficiency?</li><li>Did we explain the implementation challenge and our response?</li><li>Did we explain the tradeoffs involved in our decisions?</li><li>Is our worksheet complete and ready to submit?</li></ul>
+          <p>Once you've reviewed your responses, export your completed plan, and submit it through Canvas.</p></div>
+        <p class="hint">This is your group worksheet: copy or download it, check it against the checklist above, and submit it through Canvas.</p>
+        <label class="field" for="lessons">What did the tradeoffs and the shock reveal about public-service delivery?</label>
+        <textarea id="lessons" placeholder="Optional: a few sentences to start your individual reflections."></textarea>
+        <div class="row">
+          <button class="btn primary" id="copyDoc">Copy for Word</button>
+          <button class="btn" id="downloadDoc">Download as Word file</button>
+          <button class="btn" id="saveMap">Save map image</button>
+          <button class="btn" id="copyLink">Copy link to our plans</button>
+        </div>
+        <p class="status" id="exportStatus" role="status"></p>
+      </div>
+      <div class="card soft"><h3>Preview</h3><div class="summary-preview" id="preview"></div></div>
+    </div>
+  </section>
+
+  <details>
+    <summary>About this exercise and its data</summary>
+    <ul>
+      <li><strong>Streets and services:</strong> © OpenStreetMap contributors, Open Database License. Walking uses streets, stairways, and trails; the bus uses streets only and prefers arterials. Service locations include food banks and pantries, health clinics, and libraries and community centers mapped in OpenStreetMap; coverage is incomplete and should be checked against local directories.</li>
+      <li><strong>Population:</strong> American Community Survey 2020–2024 five-year estimates by census block group, prepared by Prof. Zhao: total population, people of color, and people below 200% of the poverty level ("lower income"). Residents are spread evenly along each block group's streets. Block-group estimates have wide margins of error. Where Census measures poverty for fewer than 80% of residents (mostly dorms), the poverty rate isn't shown.</li>
+      <li><strong>Street connectivity:</strong> street intersections per square mile, from the U.S. EPA Smart Location Database (2017–2019 data, on 2010 block groups), assigned to 2020 block groups by Prof. Zhao, so neighboring block groups can share a value. A common proxy for walkability, shown for context; it doesn't affect the scorecard.</li>
+      <li><strong>Walking and travel:</strong> a 10-minute walk is 800 meters along the street network on flat ground, and less on hills. Walking time on each street follows Tobler's hiking function on U.S. Geological Survey elevation data (1 arc-second, about 30 m), averaged over walking uphill and down; bridges count as level. Trip times assume an average bus speed of 18 km/h including stops.</li>
+      <li><strong>Candidate stations</strong> sit about every kilometer along each named arterial, at a cross street, chosen automatically. Instructors may replace them with their own list.</li>
+      <li><strong>Privacy.</strong> This page collects no data. Group names and notes stay in this browser tab and go only into the summary you copy or download.</li>
+      <li><strong>Accessibility.</strong> Every step works by keyboard. Stations can be added, removed, and reordered from the lists; the scorecard states every result in text.</li>
+      <li><strong>Built with:</strong> Prof. Alex Zhao, Evans School · <strong>Maintained by:</strong> Evans Digital · Version 1.0 (November 2026)</li>
+    </ul>
+  </details>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var NS = "http://www.w3.org/2000/svg";
+  window.COMMUNITY_DATA = window.COMMUNITY_DATA || {};
+
+  // ---- Configuration (placeholders to align with the instructor's worksheet) ---------------------------
+  var COMMUNITIES = [
+    { id: "north", name: "North of the Ship Canal", short: "Ballard to the University District" },
+    { id: "southeast", name: "Southeast Seattle", short: "Beacon Hill and the Rainier Valley" },
+    { id: "west", name: "West Seattle and Delridge", short: "Alki to Highland Park" },
+    { id: "northseattle", name: "North Seattle", short: "Bitter Lake, Northgate, and Lake City" }
+  ];
+  var ROLES = [
+    { id: "planner", name: "Transit planner", goal: "Design a practical transit route that efficiently connects residents to destinations.", watch: "Residents reached · trip time" },
+    { id: "equity", name: "Equity advocate", goal: "Ensure that the group's decisions consider residents who may face greater barriers to transportation and public services.", watch: "Lower-income and people-of-color reach" },
+    { id: "access", name: "Service-access coordinator", goal: "Connect residents with essential community services, including food assistance, health care, libraries, and community centers.", watch: "Services within a walk of a station" },
+    { id: "budget", name: "Budget officer", goal: "Ensure that the proposed service can operate within the available resources.", watch: "Stations used · route length" }
+  ];
+  var PRIORITIES = [
+    { id: "reach", label: "Reach the most residents", hint: "Serve dense areas where many people live." },
+    { id: "lowincome", label: "Serve lower-income residents", hint: "Reach people more likely to depend on transit." },
+    { id: "poc", label: "Close racial gaps in access", hint: "Reach neighborhoods where more residents are people of color." },
+    { id: "services", label: "Connect residents to services", hint: "Put food assistance, clinics, and libraries within a walk of a station." },
+    { id: "fast", label: "Keep the line fast and lean", hint: "Fewer stations and a shorter, more direct route." }
+  ];
+  var RULES = { maxSt: 6, minSt: 4, minGap: 400, maxGap: 2000, maxLen: 9000, maxDir: 2, speedKmh: 18 }; // directness cap loosened from 1.5x (12 Nov 2026): allows L- and U-shaped coverage routes, blocks zigzags
+  var SHOCKS = {
+    stations: { title: "Station cost overrun", text: function () { return "Construction bids came in high. The line can now have only 5 stations."; }, rules: { maxSt: 5 } },
+    length: { title: "Operating budget cut", text: function () { return "Service hours were cut. The route can be no longer than 6.5 km end to end."; }, rules: { maxLen: 6500 } },
+    mandate: { title: "Community meeting", text: function () { var t = mandateTract(); return "At a public meeting, residents " + (/^near /.test(t.place) ? "of the neighborhood " + t.place : "of " + t.place) + " (block group " + t.name + ", where " + pct(t.lowShare) + " live below 200% of the poverty level) said the plan skips them. The council now requires at least one station within a 10-minute walk of their neighborhood."; }, rules: {}, requireTract: true }
+  };
+  var CAT = { food: { label: "Food assistance", color: "var(--food)" }, health: { label: "Health clinics", color: "var(--health)" }, civic: { label: "Libraries and community centers", color: "var(--civic)" } };
+
+  // ---- State ---------------------------------------------------------------------------------------------
+  var st = { step: 1, maxStep: 1, comm: null, practice: false, members: {}, prios: [], why: "", r1: [], r2: [], shock: "stations", why2: "", addTo: "end", lessons: "" };
+  var D = null, M, E, T, S, NE, PATH, TOT, solo, soloDest;
+
+  function pct(v) { return Math.round(v * 100) + "%"; }
+  function num(v) { return Math.round(v).toLocaleString("en-US"); }
+  function km(m) { return (m / 1000).toFixed(1) + " km"; }
+  function esc(t) { return String(t || "").replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  // ---- Data loading ----------------------------------------------------------------------------------------
+  function loadCommunity(id, done) {
+    if (window.COMMUNITY_DATA[id]) return done();
+    var s = document.createElement("script"); s.src = "data-" + id + ".js";
+    s.onload = done; s.onerror = function () { alert("Could not load the data for this community."); };
+    document.head.appendChild(s);
+  }
+  function prep(id) {
+    D = window.COMMUNITY_DATA[id]; M = D.meta; E = D.edges; T = D.tracts; S = D.stops; NE = E.len.length;
+    PATH = {}; D.routes.forEach(function (r) { PATH[r[0] + "-" + r[1]] = { len: r[2], edges: r[3] }; PATH[r[1] + "-" + r[0]] = { len: r[2], edges: r[3] }; });
+    TOT = { pop: 0, poc: 0, low: 0, dest: { food: 0, health: 0, civic: 0 } };
+    T.forEach(function (t) {
+      t.area = t.rings.reduce(function (a, r) { return a + ringArea(r); }, 0);
+      t.density = t.pop / (t.area / 4046.86); t.pocShare = t.pop ? t.poc / t.pop : 0;
+      // group housing (dorms, care facilities): Census measures poverty for under 80% of residents, so the rate isn't shown
+      t.gq = t.povBase < 0.8 * t.pop; t.lowShare = t.povBase && !t.gq ? t.low / t.povBase : null; t.lowOfPop = t.pop ? t.low / t.pop : 0;
+      t.perM = t.streetLen ? t.pop / t.streetLen : 0; TOT.pop += t.pop; TOT.poc += t.poc; TOT.low += t.low;
+    });
+    D.dests.forEach(function (d) { TOT.dest[d.cat]++; });
+    solo = S.map(function (s, i) { return coverage([i]).pop; });
+    soloDest = S.map(function (s) { return s.dests.length; });
+    buildMap();
+  }
+  function ringArea(r) { var a = 0; for (var i = 0, j = r.length - 2; i < r.length; j = i, i += 2) a += (r[j] * r[i + 1] - r[i] * r[j + 1]); return Math.abs(a) / 2; }
+  // Block group named in the "community meeting" shock. North of the Ship Canal is fixed on central Ballard (decided
+  // 12 Nov 2026): its highest-poverty block groups are student housing near UW, where low incomes reflect enrollment.
+  // Elsewhere the default is the highest share below 200% of poverty among block groups of 800+ residents, skipping
+  // group housing. Set a community here to override it.
+  var MANDATE_AREA = { north: { geoid: "530330047023", place: "central Ballard" } };
+  function nearestPlace(t) { var r = t.rings[0], x = 0, y = 0, n = r.length / 2, best = null, bd = Infinity;
+    for (var i = 0; i < r.length; i += 2) { x += r[i]; y += r[i + 1]; } x /= n; y /= n;
+    (M.labels || []).forEach(function (l) { var d = Math.hypot(l[1] - x, l[2] - y); if (d < bd) { bd = d; best = l[0]; } });
+    return best ? "near " + best : "block group " + t.name; }
+  function highestPoverty() { var best = null;
+    T.forEach(function (t, i) { if (t.pop >= 800 && t.lowShare != null && (!best || t.lowShare > best.lowShare)) best = Object.assign({ idx: i }, t); });
+    return best; }
+  function mandateTract() {
+    var want = MANDATE_AREA[M.id], best = null;
+    if (want) T.forEach(function (t, i) { if (t.geoid === want.geoid) best = Object.assign({ idx: i, place: want.place }, t); });
+    if (!best) { best = highestPoverty(); best.place = nearestPlace(best); }
+    return best;
+  }
+
+  // ---- Math -----------------------------------------------------------------------------------------------
+  function coverage(sel) {
+    var a = new Float32Array(NE), b = new Float32Array(NE), dset = {};
+    sel.forEach(function (si) { S[si].cover.forEach(function (c) { if (c[1] > a[c[0]]) a[c[0]] = c[1]; if (c[2] > b[c[0]]) b[c[0]] = c[2]; }); S[si].dests.forEach(function (di) { dset[di] = 1; }); });
+    var pop = 0, poc = 0, low = 0, tractHit = {};
+    for (var k = 0; k < NE; k++) {
+      if (!a[k] && !b[k]) continue; var t = E.t[k]; if (t < 0) continue; tractHit[t] = 1; if (!E.k[k]) continue;
+      var people = Math.min(E.len[k], a[k] + b[k]) * T[t].perM; pop += people; poc += people * T[t].pocShare; low += people * T[t].lowOfPop;
+    }
+    var dest = { food: 0, health: 0, civic: 0 }; Object.keys(dset).forEach(function (di) { dest[D.dests[di].cat]++; });
+    return { a: a, b: b, pop: pop, poc: poc, low: low, rate: pop / TOT.pop, pocRate: poc / TOT.poc, whiteRate: (pop - poc) / (TOT.pop - TOT.poc),
+      lowRate: low / TOT.low, highRate: (pop - low) / (TOT.pop - TOT.low), dest: dest, dset: dset, tractHit: tractHit };
+  }
+  function rules() { var r = Object.assign({}, RULES); if (st.step >= 5) Object.assign(r, SHOCKS[st.shock].rules); return r; }
+  function pathBetween(a, b) { return PATH[a + "-" + b] || null; }
+  function straight(a, b) { return Math.hypot(S[a].xy[0] - S[b].xy[0], S[a].xy[1] - S[b].xy[1]); }
+  function routeInfo(route, R, needTract) {
+    var gaps = [], len = 0, missing = 0;
+    for (var i = 1; i < route.length; i++) { var p = pathBetween(route[i - 1], route[i]); if (p) { gaps.push(p.len); len += p.len; } else { gaps.push(null); missing++; } }
+    var ends = route.length > 1 ? straight(route[0], route[route.length - 1]) : 0, dir = route.length > 1 && ends > 0 && !missing ? len / ends : null;
+    var known = gaps.filter(function (g) { return g != null; });
+    var checks = [
+      { ok: route.length >= R.minSt && route.length <= R.maxSt, text: R.minSt + "–" + R.maxSt + " stations", now: route.length + " placed" },
+      { ok: route.length > 1 && !missing && known.every(function (g) { return g >= R.minGap && g <= R.maxGap; }), text: "Stations " + R.minGap + " m – " + (R.maxGap / 1000) + " km apart",
+        now: route.length < 2 ? "add stations" : missing ? missing + " gap(s) too far for a bus path" : "gaps " + km(Math.min.apply(null, known)) + "–" + km(Math.max.apply(null, known)) },
+      { ok: route.length > 1 && !missing && len <= R.maxLen, text: "Route " + km(R.maxLen) + " or shorter", now: route.length < 2 ? "–" : missing ? "incomplete" : km(len) },
+      { ok: dir != null && dir <= R.maxDir, text: "Direct: at most " + R.maxDir + "× the straight-line distance", now: dir == null ? "–" : dir.toFixed(2) + "×" }
+    ];
+    if (needTract) { var mt = mandateTract(), hit = coverage(route).tractHit[mt.idx]; checks.push({ ok: !!hit, text: "Serves " + mt.place + " (block group " + mt.name + ", council requirement)", now: hit ? "within a walk" : "not yet" }); }
+    return { gaps: gaps, len: len, missing: missing, dir: dir, checks: checks, valid: checks.every(function (c) { return c.ok; }), minutes: len / 1000 / R.speedKmh * 60 };
+  }
+
+  // ---- Steps ------------------------------------------------------------------------------------------------
+  var STEP_NAMES = ["Community & roles", "Needs & priorities", "Plan", "Shock", "Revise", "Group plan"];
+  // The briefing sits between steps 1 and 2 as step 1.5, so step numbers, saved links and checks stay as they were.
+  var STEP_TEXT = {
+    3: { why: "Public service decisions must balance community needs with practical limitations. Not every desirable route can be operated. Use the route summary information to compare transit plans.",
+      done: "your group has a feasible initial route, has reviewed its scorecard, and can explain why it selected this plan." },
+    4: { why: "Public agencies rarely implement policies under predictable conditions. Funding, infrastructure, staffing, and other constraints can change after planning begins. Review the new information before altering your route.",
+      done: "your group has identified which parts of the original plan are affected and has discussed at least one possible response." },
+    5: { why: "Good public administration requires adapting to new conditions while remaining attentive to the public's needs. Compare the consequences of revisions to overcome the obstacle presented to your group.",
+      done: "your group has a feasible revised route and can explain what it changed, why, and which residents or services are most affected." }
+  };
+  function stepTilt(n) { var t = STEP_TEXT[n]; return '<div class="tilt small"><p><strong>Why this step matters.</strong> ' + t.why + '</p><p><strong>You\u2019re done when</strong> ' + t.done + '</p>' + (n === 3 ? CHECK_TEXT : "") + '</div>'; }
+  var CHECK_TEXT = '<details><summary>How do you know you\u2019re on track?</summary><p>As you develop your initial service plan, consider the following questions:</p><ul>' +
+    '<li><strong>Community needs:</strong> Does our route address the priorities we identified for our community?</li>' +
+    '<li><strong>Resource constraints:</strong> Have we considered the available resources and practical limitations when selecting stations and designing our routes?</li>' +
+    '<li><strong>Population and service access:</strong> Have we reviewed the route summary information to understand which residents and services our route reaches?</li>' +
+    '<li><strong>Tradeoffs:</strong> Can we explain why we chose this route and what we may have sacrificed to prioritize certain needs?</li></ul></details>';
+  function renderSteps() {
+    var items = STEP_NAMES.map(function (n, i) { return { s: i + 1, label: (i + 1) + " · " + n }; });
+    items.splice(1, 0, { s: 1.5, label: "Briefing" });
+    $("steps").innerHTML = items.map(function (it) {
+      var s = it.s; return '<li><button type="button" data-step="' + s + '"' + (s === st.step ? ' aria-current="step"' : '') + (s > st.maxStep ? " disabled" : "") + ' class="' + (s < st.step ? "done" : "") + '">' + it.label + '</button></li>';
+    }).join("");
+  }
+  $("steps").addEventListener("click", function (e) { var b = e.target.closest("button[data-step]"); if (b && !b.disabled) go(+b.getAttribute("data-step")); });
+  function go(n) {
+    st.step = n; st.maxStep = Math.max(st.maxStep, n); renderSteps();
+    $("mapcard").hidden = n === 1 || n === 1.5 || n === 6;
+    $("stepBrief").hidden = n !== 1.5; if (n === 1.5) renderBrief();
+    $("step1").hidden = n !== 1; $("step2").hidden = n !== 2; $("stepPlan").hidden = !(n >= 3 && n <= 5); $("step6").hidden = n !== 6;
+    if (n === 2) { $("mapSlot2").appendChild($("mapcard")); renderProfile(); renderPrios(); }
+    if (n >= 3 && n <= 5) $("mapSlot").appendChild($("mapcard"));
+    if (n === 6) renderSummary();
+    if (n >= 2) render();
+    window.scrollTo({ top: document.querySelector(".topbar").offsetTop - 8, behavior: "smooth" });
+  }
+
+  // ---- Step 1 -------------------------------------------------------------------------------------------------
+  function renderComms() {
+    $("comms").innerHTML = COMMUNITIES.map(function (c) {
+      var d = window.COMMUNITY_DATA[c.id], stats = "";
+      if (d) { var pop = 0, poc = 0, low = 0, base = 0; d.tracts.forEach(function (t) { pop += t.pop; poc += t.poc; low += t.low; base += t.povBase; });
+        stats = '<dl><dt>Residents</dt><dd>' + num(pop) + '</dd><dt>People of color</dt><dd>' + pct(poc / pop) + '</dd><dt>Below 200% of poverty</dt><dd>' + pct(low / base) + '</dd><dt>Services mapped</dt><dd>' + d.dests.length + '</dd></dl>'; }
+      return '<button type="button" class="comm" data-c="' + c.id + '" aria-pressed="' + (st.comm === c.id) + '"><strong>' + c.name + '</strong><span>' + c.short + '</span>' + stats + '</button>';
+    }).join("");
+  }
+  $("comms").addEventListener("click", function (e) {
+    var b = e.target.closest(".comm"); if (!b) return; var id = b.getAttribute("data-c");
+    loadCommunity(id, function () { if (st.comm !== id) { st.r1 = []; st.r2 = []; st.maxStep = Math.min(st.maxStep, 2); } st.comm = id; prep(id); renderComms(); $("toStep2").disabled = false; renderSteps(); });
+  });
+  $("roles").innerHTML = ROLES.map(function (r) {
+    return '<div class="role"><h3>' + r.name + '</h3><p>' + r.goal + '</p><div class="watch">Watches: ' + r.watch + '</div><label class="field" for="m-' + r.id + '">Member name (optional)</label><input type="text" id="m-' + r.id + '" data-role="' + r.id + '"></div>';
+  }).join("");
+  $("roles").addEventListener("input", function (e) { var r = e.target.getAttribute("data-role"); if (r) st.members[r] = e.target.value; });
+  $("toStep2").addEventListener("click", function () { go(1.5); });
+  $("briefDone").addEventListener("click", function () { go(2); });
+  // role briefs: text by Prof. Zhao
+  var ROLE_BRIEF = {
+    planner: { resp: "Your responsibility is to design a practical transit route that efficiently connects residents to destinations.",
+      watch: "Pay attention to the total number of residents reached, route length, station placement, and estimated travel time. Consider whether the route provides useful connections rather than simply maximizing the number of stations.",
+      plan: "Explain how different routes affect coverage and travel efficiency. Identify unnecessary detours or gaps in the route.",
+      nego: "Be willing to accept a less direct route when it substantially improves access for underserved residents or essential services." },
+    equity: { resp: "Your responsibility is to ensure that the group's decisions consider residents who may face greater barriers to transportation and public services.",
+      watch: "Pay particular attention to the number and share of lower-income residents and residents of color reached by your route. Consider whether a proposal disproportionately benefits already well-served areas.",
+      plan: "Identify neighborhoods that could be overlooked if the group focuses only on total population coverage. Use the demographic map layers and scorecard to support your arguments.",
+      nego: "Recognize that equity is not simply maximizing one demographic measure. Consider how access to services, geographic isolation, and practical constraints influence the distribution of benefits." },
+    access: { resp: "Your responsibility is to connect residents with essential community services, including food assistance, health care, libraries, and community centers.",
+      watch: "Pay attention to whether residents can reasonably reach important services from the proposed bus stations.",
+      plan: "Identify stations and routes that improve access to useful destinations. Explain how different locations might affect residents' ability to obtain services.",
+      nego: "Be willing to prioritize service connections that benefit residents with greater needs, even if that means serving fewer individual facilities." },
+    budget: { resp: "Your responsibility is to ensure that the proposed service can operate within the available resources.",
+      watch: "Pay attention to the number of stations, route length, and any resource restrictions. A route that delivers substantial benefits but cannot be implemented is not an effective public service plan.",
+      plan: "Monitor resource use, identify potential inefficiencies, and help the group identify feasible alternatives.",
+      nego: "Recognize that minimizing costs is not the only goal. Additional resources may be justified when they provide meaningful improvements in accessibility or equity." }
+  };
+  function renderBrief() {
+    var M = COMMUNITIES.filter(function (c) { return c.id === st.comm; })[0];
+    $("briefFor").textContent = (M ? M.name + " · " : "") + ($("groupName").value || "Your group");
+    $("roleBriefs").innerHTML = ROLES.map(function (r) {
+      var who = st.members[r.id] ? " (" + esc(st.members[r.id]) + ")" : "";
+      var B = ROLE_BRIEF[r.id];
+      return '<div class="tilt small role-brief"><h4>' + r.name + who + '</h4><p>' + B.resp + '</p><p>' + B.watch + '</p><p><strong>During planning:</strong> ' + B.plan + '</p><p><strong>During negotiation:</strong> ' + B.nego + '</p></div>';
+    }).join("");
+  }
+  $("practice").addEventListener("change", function () { st.practice = this.checked; $("practiceBanner").hidden = !st.practice; });
+
+  // ---- Step 2 -------------------------------------------------------------------------------------------------
+  function renderProfile() {
+    var low = 0, base = 0; T.forEach(function (t) { low += t.low; base += t.povBase; });
+    var dense = T.slice().sort(function (a, b) { return b.density - a.density; })[0], mt = highestPoverty();
+    $("profile").innerHTML = '<h3>' + M.name + '</h3><p class="hint">' + M.short + '</p>' +
+      '<div class="kv"><span>Residents in the study area</span><strong>' + num(TOT.pop) + '</strong></div>' +
+      '<div class="kv"><span>People of color</span><strong>' + pct(TOT.poc / TOT.pop) + '</strong></div>' +
+      '<div class="kv"><span>Below 200% of the poverty level</span><strong>' + pct(low / base) + '</strong></div>' +
+      '<div class="kv"><span>Food assistance · clinics · libraries and centers</span><strong>' + TOT.dest.food + ' · ' + TOT.dest.health + ' · ' + TOT.dest.civic + '</strong></div>' +
+      '<div class="kv"><span>Densest block group</span><strong>' + dense.name + ' · ' + Math.round(dense.density) + '/acre</strong></div>' +
+      '<div class="kv"><span>Highest-poverty block group</span><strong>' + mt.name + ' · ' + pct(mt.lowShare) + '</strong></div>' +
+      '<p class="hint">Use the map layers to see where people live, where incomes are lower, and where services are.</p>';
+  }
+  function renderPrios() {
+    $("prios").innerHTML = PRIORITIES.map(function (p) {
+      var on = st.prios.indexOf(p.id) >= 0, full = st.prios.length >= 2;
+      return '<label class="' + (on ? "on" : "") + '"><input type="checkbox" value="' + p.id + '"' + (on ? " checked" : "") + (!on && full ? " disabled" : "") + '><span>' + p.label + '<small>' + p.hint + '</small></span></label>';
+    }).join("");
+    $("toStep3").disabled = st.prios.length === 0;
+  }
+  $("prios").addEventListener("change", function (e) { var v = e.target.value, at = st.prios.indexOf(v); if (e.target.checked && at < 0) st.prios.push(v); if (!e.target.checked && at >= 0) st.prios.splice(at, 1); renderPrios(); });
+  $("prioWhy").addEventListener("input", function () { st.why = this.value; });
+  $("toStep3").addEventListener("click", function () { go(3); });
+
+  // ---- Map ----------------------------------------------------------------------------------------------------
+  var mapcard = document.createElement("section"); mapcard.className = "card mapcard"; mapcard.id = "mapcard";
+  mapcard.innerHTML = '<h2 class="sr-only">Map</h2><div class="maptools"><div class="seg" role="radiogroup" aria-label="Map layer">' +
+    '<label><input type="radio" name="layer" value="none" checked><span>No layer</span></label><label><input type="radio" name="layer" value="density"><span>Density</span></label>' +
+    '<label><input type="radio" name="layer" value="poc"><span>People of color</span></label><label><input type="radio" name="layer" value="low"><span>Lower income</span></label><label><input type="radio" name="layer" value="idens"><span>Street connectivity</span></label></div>' +
+    '<div class="zoom"><label class="toggle" style="font-size:13px;margin-right:6px;"><input type="checkbox" id="showAll"> Show all candidates</label><label class="toggle" style="font-size:13px;margin-right:6px;"><input type="checkbox" id="showDests" checked> Services</label><button type="button" id="zin" aria-label="Zoom in">+</button><button type="button" id="zout" aria-label="Zoom out">−</button><button type="button" id="zreset" style="width:auto;padding:0 8px;font-size:13px;">Reset</button></div></div>' +
+    '<div class="mapwrap"><svg id="map" role="group" aria-label="Map. Candidate stations are buttons; Tab moves between them and Enter adds or removes a station."></svg><div class="svcbar" id="svcbar" aria-live="polite"></div></div><div class="maplegend" id="legend"></div><div class="tooltip" id="tip"></div>';
+  mapcard.hidden = true; document.body.appendChild(mapcard);
+  var svg = mapcard.querySelector("#map"), view, W, H, layer = "none", showDests = true;
+  var gTracts, gBase, coverEdge, coverFill, routeCase, routeLine, routeBad, gLabels, gDests, gStops, tractEls, stopEls, labelEls, destEls;
+  function el(name, attrs) { var e = document.createElementNS(NS, name); for (var k in attrs) e.setAttribute(k, attrs[k]); return e; }
+  function polyD(g) { var d = "M" + g[0] + "," + g[1]; for (var i = 2; i < g.length; i += 2) d += "L" + g[i] + "," + g[i + 1]; return d; }
+  function buildMap() { svcCorner = null;
+    W = M.width; H = M.height; view = { x: 0, y: 0, w: W, h: H }; svg.style.aspectRatio = W + " / " + H; svg.innerHTML = "";
+    // tall communities (e.g., Southeast Seattle) are capped at most of the screen height and centered
+    svg.style.maxWidth = H > W ? "calc(78vh * " + (W / H).toFixed(3) + ")" : ""; svg.style.margin = H > W ? "0 auto" : "";
+    // hatch for areas whose poverty rate isn’t measured (mostly dorms)
+    var defs = el("defs", {}), pat = el("pattern", { id: "naHatch", width: 70, height: 70, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" });
+    pat.appendChild(el("rect", { width: 70, height: 70, fill: "#ece9e2" })); pat.appendChild(el("rect", { width: 24, height: 70, fill: "#b9b4a9" })); defs.appendChild(pat); svg.appendChild(defs);
+    gTracts = el("g", {}); gBase = el("g", {}); var gCover = el("g", {}), gRoute = el("g", {}); gLabels = el("g", {}); gDests = el("g", {}); gStops = el("g", {});
+    [gTracts, gBase, gCover, gRoute, gLabels, gDests, gStops].forEach(function (g) { svg.appendChild(g); });
+    tractEls = T.map(function (t, i) { var p = el("path", { d: t.rings.map(function (r) { return polyD(r) + "Z"; }).join(""), fill: "transparent", "data-t": i }); gTracts.appendChild(p); return p; });
+    var baseD = ["", "", ""]; for (var k = 0; k < NE; k++) baseD[E.k[k]] += polyD(E.g[k]);
+    gBase.appendChild(el("path", { d: baseD[0], fill: "none", stroke: "var(--street)", "stroke-width": 1, "stroke-dasharray": "3 3", "vector-effect": "non-scaling-stroke" }));
+    gBase.appendChild(el("path", { d: baseD[1], fill: "none", stroke: "var(--street)", "stroke-width": 1, "vector-effect": "non-scaling-stroke" }));
+    gBase.appendChild(el("path", { d: baseD[2], fill: "none", stroke: "var(--arterial)", "stroke-width": 1.8, "vector-effect": "non-scaling-stroke" }));
+    coverEdge = el("path", { d: "", fill: "none", stroke: "var(--edge)", "stroke-width": 6, "stroke-linecap": "round", "stroke-linejoin": "round", "vector-effect": "non-scaling-stroke", opacity: 0.55 });
+    coverFill = el("path", { d: "", fill: "none", stroke: "var(--cover)", "stroke-width": 4, "stroke-linecap": "round", "stroke-linejoin": "round", "vector-effect": "non-scaling-stroke" });
+    gCover.appendChild(coverEdge); gCover.appendChild(coverFill);
+    routeCase = el("path", { d: "", fill: "none", stroke: "#fff", "stroke-width": 9, "stroke-linecap": "round", "stroke-linejoin": "round", "vector-effect": "non-scaling-stroke" });
+    routeLine = el("path", { d: "", fill: "none", stroke: "var(--route)", "stroke-width": 5, "stroke-linecap": "round", "stroke-linejoin": "round", "vector-effect": "non-scaling-stroke" });
+    routeBad = el("path", { d: "", fill: "none", stroke: "var(--warn)", "stroke-width": 3, "stroke-dasharray": "6 5", "vector-effect": "non-scaling-stroke" });
+    gRoute.appendChild(routeCase); gRoute.appendChild(routeLine); gRoute.appendChild(routeBad);
+    labelEls = M.labels.map(function (L) { var t = el("text", { x: L[1], y: L[2], "text-anchor": "middle", fill: "#6a6964", "font-weight": 600, style: "paint-order:stroke;stroke:#fbfaf7;letter-spacing:.02em" }); t.textContent = L[0]; gLabels.appendChild(t); return t; });
+    destEls = D.dests.map(function (d, i) { var g = el("g", { "data-d": i }); gDests.appendChild(g); return g; });
+    stopEls = S.map(function (s, i) {
+      var g = el("g", { class: "stop", tabindex: 0, role: "button", "data-s": i });
+      g.appendChild(el("circle", { class: "hit", cx: s.xy[0], cy: s.xy[1], r: 1, fill: "transparent" }));
+      g.appendChild(el("circle", { class: "ring", cx: s.xy[0], cy: s.xy[1], r: 1, fill: "#fff", stroke: "var(--route)", "stroke-width": 2, "vector-effect": "non-scaling-stroke" }));
+      g.appendChild(el("text", { x: s.xy[0], y: s.xy[1], "text-anchor": "middle", "dominant-baseline": "central", fill: "#fff", "font-weight": 700 }));
+      // token: services within a 10-minute walk that the line doesn't reach yet, as "+N"; size and shade rise with N
+      var b = el("g", { class: "badge", "aria-hidden": "true" });
+      b.appendChild(el("rect", { class: "halo", rx: 1, fill: "#fff" })); // white halo, then a thin dark outline, to lift it off the map
+      b.appendChild(el("rect", { class: "tok", rx: 1, stroke: "#1f2430", "stroke-width": 1, "vector-effect": "non-scaling-stroke" }));
+      b.appendChild(el("text", { "text-anchor": "middle", "dominant-baseline": "central", "font-weight": 700 }));
+      b.appendChild(el("g", { class: "types" })); // one small mark per type of service the stop would add
+      g.appendChild(b);
+      gStops.appendChild(g); return g;
+    });
+    renderLayer(); applyView();
+  }
+  function mpp() { return view.w / (svg.getBoundingClientRect().width || 800); }
+  function destShape(d, u, reached) {
+    var x = d.xy[0], y = d.xy[1], s = 5.5 * u, fill = reached ? CAT[d.cat].color : "#fff", stroke = 'stroke="var(--edge)" stroke-width="1.6" vector-effect="non-scaling-stroke"';
+    if (d.cat === "food") return '<circle cx="' + x + '" cy="' + y + '" r="' + s + '" fill="' + fill + '" ' + stroke + '/>';
+    if (d.cat === "health") return '<rect x="' + (x - s) + '" y="' + (y - s) + '" width="' + 2 * s + '" height="' + 2 * s + '" fill="' + fill + '" ' + stroke + '/>';
+    return '<polygon points="' + x + ',' + (y - s * 1.2) + ' ' + (x + s * 1.1) + ',' + (y + s * 0.9) + ' ' + (x - s * 1.1) + ',' + (y + s * 0.9) + '" fill="' + fill + '" ' + stroke + '/>';
+  }
+  var lastCov = null, fresh = [];
+  // three tiers: +1, +2-3, +4 or more
+  var TOK = [null, { fill: "#d5dae3", ink: "#2f3644", h: 14, fs: 10 }, { fill: "#7d889c", ink: "#fff", h: 16, fs: 11 }, { fill: "#2f3644", ink: "#fff", h: 18, fs: 12.5 }];
+  function tier(n) { return n >= 4 ? 3 : n >= 2 ? 2 : n ? 1 : 0; }
+  // services scoreboard: within a walk of the line (or, before a line exists, what the community has)
+  var svcCollapsed = false, svcRoute = [], hlCat = null, hlPinned = false, svcCorner = null;
+  // the box goes in the corner of the full map view that hides the fewest candidate stops (top-left wins ties);
+  // chosen once per community and on resize, so it doesn't move while a line is being built
+  function placeSvcBar() {
+    var bar = $("svcbar"), wrap = bar.parentNode; ["top", "bottom", "left", "right"].forEach(function (k) { bar.style[k] = ""; });
+    if (window.innerWidth <= 700 || !S) return;
+    svg.style.marginLeft = svg.style.marginRight = H > W ? "auto" : "";
+    var wr = wrap.getBoundingClientRect(), sr = svg.getBoundingClientRect(), bw = bar.offsetWidth, bh = bar.offsetHeight, m = 10, pad = 14;
+    if (sr.width < 50 || sr.height < 50) return; // map not visible yet; try again on the next render
+    // tall maps leave space at the sides: if it fits, align the map left and put the box beside it, covering nothing
+    bar.classList.remove("beside"); bar.style.width = ""; svg.style.marginLeft = svg.style.marginRight = H > W ? "auto" : "";
+    var room = wr.width - sr.width - 2 * m; // free width beside the map once it is aligned left
+    if (H > W && room >= 190) {
+      svg.style.marginLeft = "0"; svg.style.marginRight = "auto"; sr = svg.getBoundingClientRect(); bar.style.width = Math.min(bw, room) + "px";
+      bar.classList.add("beside"); bar.style.left = (sr.right - wr.left + m) + "px"; bar.style.top = (sr.top - wr.top + m) + "px"; svcCorner = "beside"; return; }
+    var ox = sr.left - wr.left, oy = sr.top - wr.top;
+    var corners = { tl: [ox + m, oy + m], tr: [ox + sr.width - bw - m, oy + m], bl: [ox + m, oy + sr.height - bh - m], br: [ox + sr.width - bw - m, oy + sr.height - bh - m] };
+    var best = "tl", bestN = Infinity;
+    ["tl", "tr", "bl", "br"].forEach(function (k) { var c = corners[k], n = 0;
+      S.forEach(function (st) { var px = ox + st.xy[0] / W * sr.width, py = oy + st.xy[1] / H * sr.height;
+        if (px > c[0] - pad && px < c[0] + bw + pad && py > c[1] - pad && py < c[1] + bh + pad) n++; });
+      if (n < bestN) { bestN = n; best = k; } });
+    svcCorner = best;
+    var left = corners[best][0], top = corners[best][1];
+    bar.style.left = Math.max(0, left) + "px";
+    if (best[0] === "t") bar.style.top = Math.max(0, top) + "px"; else { bar.style.top = "auto"; bar.style.bottom = (wr.height - (oy + sr.height) + m) + "px"; } }
+  window.addEventListener("resize", function () { svcCorner = null; if (lastCov) renderSvcBar(lastCov, svcRoute); });
+  function setHl(cat) { hlCat = cat; applyView();
+    $("svcbar").querySelectorAll("button.svc").forEach(function (b) { b.classList.toggle("on", b.dataset.cat === hlCat); b.setAttribute("aria-pressed", hlPinned && b.dataset.cat === hlCat ? "true" : "false"); }); }
+  function renderSvcBar(c, route) { svcRoute = route;
+    var has = route.length > 0, tot = 0, got = 0, rows = Object.keys(CAT).map(function (k) {
+      tot += TOT.dest[k]; got += c.dest[k];
+      var name = { food: "Food assistance", health: "Clinics", civic: "Libraries &amp; centers" }[k];
+      return '<button type="button" class="svc' + (hlCat === k ? " on" : "") + '" data-cat="' + k + '" aria-pressed="' + (hlPinned && hlCat === k) + '" aria-label="' + name.replace("&amp;", "and") + ': show where these are and which stops add them"><span><i class="lg ' + k + '"></i>' + name + '</span><span>' + (has ? '<b>' + c.dest[k] + '</b>&nbsp;of ' + TOT.dest[k] : '<b>' + TOT.dest[k] + '</b>') + '</span></button>'; }).join("");
+    var bar = $("svcbar"); bar.classList.toggle("collapsed", svcCollapsed);
+    bar.innerHTML = '<div class="svc-head"><span>' + (has ? "Services your line reaches" : "Services in this community") + '</span><button type="button" id="svcToggle" aria-expanded="' + !svcCollapsed + '">' + (svcCollapsed ? "Show" : "Hide") + '</button></div>' + rows +
+      (has ? '<div class="svc-total"><span>Total</span><span>' + got + ' of ' + tot + '</span></div>' : "") +
+      '<div class="svc-key">' + tokenLegend() + '<span>Point at a service type to find it; click to keep it on</span><span>Zoom in to see all locations</span></div>';
+    $("svcToggle").onclick = function () { svcCollapsed = !svcCollapsed; renderSvcBar(lastCov, svcRoute); };
+    if (!svcCorner) placeSvcBar();
+    bar.querySelectorAll("button.svc").forEach(function (b) { var k = b.dataset.cat;
+      var on = function () { if (!hlPinned) setHl(k); }, off = function () { if (!hlPinned) setHl(null); };
+      b.onmouseenter = on; b.onmouseleave = off; b.onfocus = on; b.onblur = off;
+      b.onclick = function () { if (hlPinned && hlCat === k) { hlPinned = false; setHl(null); } else { hlPinned = true; setHl(k); } }; }); }
+  function tokenLegend() {
+    return '<span><i class="lg tok t1">+1</i><i class="lg tok t2" style="margin-left:3px">+2</i><i class="lg tok t3" style="margin-left:3px">+4</i></span><span>Services a stop would add · faded = out of range</span>'; }
+  function applyView() {
+    if (!view) return; svg.setAttribute("viewBox", view.x + " " + view.y + " " + view.w + " " + view.h);
+    var u = mpp();
+    stopEls.forEach(function (g, i) { var on = g.getAttribute("data-on") === "1"; g.querySelector(".hit").setAttribute("r", 14 * u); g.querySelector(".ring").setAttribute("r", (on ? 9 : 7) * u); g.querySelector("text").setAttribute("font-size", 10.5 * u);
+      var b = g.querySelector(".badge"), n = (fresh[i] || []).length, T = TOK[tier(n)]; if (!T) return;
+      var h = T.h * u, w = (n >= 10 ? 2.1 : 1.55) * h, far = g.getAttribute("data-far") === "1", bx = far ? S[i].xy[0] : S[i].xy[0] + 8 * u + w / 2, by = far ? S[i].xy[1] : S[i].xy[1] - 8 * u, r = b.querySelector(".tok"), hl = b.querySelector(".halo"), t = b.querySelector("text"), p = 2 * u;
+      hl.setAttribute("x", bx - w / 2 - p); hl.setAttribute("y", by - h / 2 - p); hl.setAttribute("width", w + 2 * p); hl.setAttribute("height", h + 2 * p); hl.setAttribute("rx", 5 * u);
+      r.setAttribute("x", bx - w / 2); r.setAttribute("y", by - h / 2); r.setAttribute("width", w); r.setAttribute("height", h); r.setAttribute("rx", 3.5 * u); r.setAttribute("fill", T.fill);
+      t.setAttribute("x", bx); t.setAttribute("y", by); t.setAttribute("font-size", T.fs * u); t.setAttribute("fill", T.ink);
+      var cats = ["food", "health", "civic"].filter(function (k) { return fresh[i].some(function (di) { return D.dests[di].cat === k; }); });
+      var sz = 3.9 * u, gap = 10.5 * u, ty = by + h / 2 + p + 5.5 * u, tx0 = bx - (cats.length - 1) * gap / 2, mk = 'stroke="var(--edge)" stroke-width="1" vector-effect="non-scaling-stroke"';
+      b.querySelector(".types").innerHTML = '<rect x="' + (tx0 - 6 * u) + '" y="' + (ty - 5.4 * u) + '" width="' + ((cats.length - 1) * gap + 12 * u) + '" height="' + 10.8 * u + '" rx="' + 5.4 * u + '" fill="#fff" fill-opacity="0.9"/>' +
+        cats.map(function (k, j) { var x = tx0 + j * gap, f = CAT[k].color;
+          if (k === "food") return '<circle cx="' + x + '" cy="' + ty + '" r="' + sz + '" fill="' + f + '" ' + mk + '/>';
+          if (k === "health") return '<rect x="' + (x - sz) + '" y="' + (ty - sz) + '" width="' + 2 * sz + '" height="' + 2 * sz + '" fill="' + f + '" ' + mk + '/>';
+          return '<polygon points="' + x + ',' + (ty - sz * 1.25) + ' ' + (x + sz * 1.15) + ',' + (ty + sz * 0.95) + ' ' + (x - sz * 1.15) + ',' + (ty + sz * 0.95) + '" fill="' + f + '" ' + mk + '/>'; }).join("");
+      var match = hlCat && fresh[i].some(function (di) { return D.dests[di].cat === hlCat; });
+      b.style.opacity = hlCat ? (match ? (far ? 0.9 : 1) : 0.12) : (far ? 0.5 : ""); });
+    labelEls.forEach(function (t) { t.setAttribute("font-size", 12.5 * u); t.style.strokeWidth = (4 * u) + "px"; });
+    gDests.style.display = showDests ? "" : "none";
+    var zoomed = view.w <= W * 0.55; // zoomed in far enough for service icons to have room
+    destEls.forEach(function (g, i) { var show = zoomed ? !hlCat || D.dests[i].cat === hlCat : hlCat && D.dests[i].cat === hlCat;
+      g.innerHTML = show ? destShape(D.dests[i], u, lastCov && lastCov.dset[i]) : ""; });
+  }
+  function zoomAt(f, cx, cy) {
+    var nw = Math.min(W, Math.max(W / 8, view.w * f)), nh = nw * H / W; if (cx == null) { cx = view.x + view.w / 2; cy = view.y + view.h / 2; }
+    view.x = cx - (cx - view.x) * nw / view.w; view.y = cy - (cy - view.y) * nh / view.h; view.w = nw; view.h = nh;
+    view.x = Math.max(0, Math.min(W - view.w, view.x)); view.y = Math.max(0, Math.min(H - view.h, view.y)); applyView();
+  }
+  mapcard.querySelector("#zin").onclick = function () { zoomAt(0.7); };
+  mapcard.querySelector("#zout").onclick = function () { zoomAt(1 / 0.7); };
+  mapcard.querySelector("#zreset").onclick = function () { view = { x: 0, y: 0, w: W, h: H }; applyView(); };
+  mapcard.querySelector("#showDests").onchange = function () { showDests = this.checked; applyView(); };
+  mapcard.querySelector("#showAll").onchange = function () { showAllCands = this.checked; render(); };
+  function svgPt(e) { var r = svg.getBoundingClientRect(); return [view.x + (e.clientX - r.left) / r.width * view.w, view.y + (e.clientY - r.top) / r.height * view.h]; }
+  svg.addEventListener("wheel", function (e) { e.preventDefault(); var p = svgPt(e), dy = e.deltaY * (e.deltaMode === 1 ? 33 : e.deltaMode === 2 ? 400 : 1);
+    zoomAt(Math.min(1.12, Math.max(0.89, Math.exp(dy * 0.0012))), p[0], p[1]); }, { passive: false }); // about 11% per wheel notch
+  var drag = null;
+  svg.addEventListener("pointerdown", function (e) { if (e.target.closest(".stop")) return; drag = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y }; svg.setPointerCapture(e.pointerId); svg.classList.add("dragging"); });
+  svg.addEventListener("pointermove", function (e) {
+    if (drag) { var r = svg.getBoundingClientRect(); view.x = Math.max(0, Math.min(W - view.w, drag.vx - (e.clientX - drag.x) / r.width * view.w)); view.y = Math.max(0, Math.min(H - view.h, drag.vy - (e.clientY - drag.y) / r.height * view.h)); applyView(); return; }
+    hover(e);
+  });
+  svg.addEventListener("pointerup", function () { drag = null; svg.classList.remove("dragging"); });
+  window.addEventListener("resize", applyView);
+
+  var RAMP = ["#f1ecf8", "#ddd1ef", "#c5b4e3", "#9a83c4", "#6f55a3"];
+  var LAYERS = {
+    density: { label: "Residents per acre", val: function (t) { return t.density; }, fmt: function (v) { return v.toFixed(0); } },
+    poc: { label: "Share people of color", val: function (t) { return t.pocShare; }, fmt: function (v) { return Math.round(v * 100) + "%"; } },
+    low: { label: "Share below 200% of poverty", val: function (t) { return t.lowShare; }, fmt: function (v) { return Math.round(v * 100) + "%"; }, na: "Mostly dorms or group housing (not measured)" },
+    idens: { label: "Street connectivity: intersections per sq. mile (EPA)", val: function (t) { return t.idens || null; }, fmt: function (v) { return v.toFixed(0); } }
+  };
+  function renderLayer() {
+    var L = LAYERS[layer], h = '<span><i class="lg route"></i>Bus line</span><span><i class="lg st"></i>Station</span><span><i class="lg end"></i>End of line</span><span><i class="lg cover"></i>10-minute walk</span><span><i class="lg cand"></i>Candidate</span>' +
+      '';
+    if (!L) { tractEls.forEach(function (p) { p.setAttribute("fill", "transparent"); }); $("legend").innerHTML = h; return; }
+    var vals = T.map(L.val), s = vals.filter(function (v) { return v != null; }).sort(function (a, b) { return a - b; }), br = [0.2, 0.4, 0.6, 0.8].map(function (q) { return s[Math.floor(q * (s.length - 1))]; });
+    tractEls.forEach(function (p, i) { var v = vals[i], b = 0; if (v == null) { p.setAttribute("fill", "url(#naHatch)"); p.setAttribute("fill-opacity", 0.9); return; } while (b < 4 && v > br[b]) b++; p.setAttribute("fill", RAMP[b]); p.setAttribute("fill-opacity", 0.75); });
+    var hasNa = vals.some(function (v) { return v == null; });
+    $("legend").innerHTML = h + '<span>' + L.label + ': ' + L.fmt(s[0]) + '<span class="ramp" aria-hidden="true">' + RAMP.map(function (c) { return '<i style="background:' + c + '"></i>'; }).join("") + '</span>' + L.fmt(s[s.length - 1]) + '</span>' +
+      (hasNa && L.na ? '<span><i class="lg na"></i>' + L.na + '</span>' : "") + (layer === "idens" ? '<span class="hint">More intersections mean shorter, more direct walks: a common proxy for walkability. Doesn’t reflect hills or sidewalks.</span>' : "");
+  }
+  mapcard.querySelectorAll("input[name=layer]").forEach(function (r) { r.addEventListener("change", function () { layer = r.value; renderLayer(); }); });
+
+  var glCache = {};
+  function gLen(k) { if (glCache[k] != null) return glCache[k]; var g = E.g[k], t = 0; for (var i = 2; i < g.length; i += 2) t += Math.hypot(g[i] - g[i - 2], g[i + 1] - g[i - 1]); return (glCache[k] = t); }
+  function cutFrom(g, dist, fromEnd) {
+    var pts = []; for (var i = 0; i < g.length; i += 2) pts.push([g[i], g[i + 1]]); if (fromEnd) pts.reverse();
+    var acc = 0, out = [pts[0]];
+    for (i = 1; i < pts.length; i++) { var seg = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+      if (acc + seg >= dist) { var f = seg ? (dist - acc) / seg : 0; out.push([pts[i - 1][0] + f * (pts[i][0] - pts[i - 1][0]), pts[i - 1][1] + f * (pts[i][1] - pts[i - 1][1])]); break; }
+      acc += seg; out.push(pts[i]); }
+    return "M" + out.map(function (p) { return p[0].toFixed(0) + "," + p[1].toFixed(0); }).join("L");
+  }
+  function drawCoverage(c) {
+    var d = ""; for (var k = 0; k < NE; k++) { var a = c.a[k], b = c.b[k]; if (!a && !b) continue; var len = E.len[k];
+      if (a + b >= len) { d += polyD(E.g[k]); continue; } if (a) d += cutFrom(E.g[k], a / len * gLen(k), false); if (b) d += cutFrom(E.g[k], b / len * gLen(k), true); }
+    coverEdge.setAttribute("d", d); coverFill.setAttribute("d", d);
+  }
+  function drawRoute(route) {
+    var d = "", bad = ""; for (var i = 1; i < route.length; i++) { var p = pathBetween(route[i - 1], route[i]);
+      if (p) p.edges.forEach(function (k) { d += polyD(E.g[k]); }); else { var A = S[route[i - 1]].xy, B = S[route[i]].xy; bad += "M" + A[0] + "," + A[1] + "L" + B[0] + "," + B[1]; } }
+    routeCase.setAttribute("d", d); routeLine.setAttribute("d", d); routeBad.setAttribute("d", bad);
+  }
+
+  // ---- Planning panel -----------------------------------------------------------------------------------------
+  function cur() { return st.step >= 5 ? st.r2 : st.r1; }
+  // Candidates that could be the next stop: 400 m - 2 km by bus from the end being added to, and within the length
+  // limit. null = show every candidate (no stations yet, or "Show all candidates"). Locked steps show only the line.
+  var showAllCands = false;
+  function nextOptions(route, R, len) {
+    if (showAllCands || (editable() && !route.length) || st.step < 3) return null;
+    var ok = new Set(); if (!editable() || route.length >= R.maxSt) return ok;
+    var end = st.addTo === "start" ? route[0] : route[route.length - 1];
+    S.forEach(function (x, i) { if (route.indexOf(i) >= 0) return; var p = pathBetween(end, i);
+      if (p && p.len >= R.minGap && p.len <= R.maxGap && (len || 0) + p.len <= R.maxLen) ok.add(i); });
+    return ok; }
+  function newServices(i, c) { return S[i].dests.filter(function (di) { return !c.dset[di]; }).length; }
+  function serviceMix(i) { var n = { food: 0, health: 0, civic: 0 }; S[i].dests.forEach(function (di) { n[D.dests[di].cat]++; });
+    return [[n.food, "food assistance"], [n.health, n.health === 1 ? "clinic" : "clinics"], [n.civic, n.civic === 1 ? "library or center" : "libraries or centers"]].filter(function (x) { return x[0]; }).map(function (x) { return x[0] + " " + x[1]; }).join(", "); }
+  function editable() { return st.step === 3 || st.step === 5; }
+  function render() {
+    if (!D) return;
+    var route = st.step >= 3 ? cur() : [], R = rules(), info = routeInfo(route, R, st.step >= 5 && SHOCKS[st.shock].requireTract), c = coverage(route);
+    lastCov = c; drawCoverage(c); drawRoute(route); var opts = nextOptions(route, R, info.len); renderSvcBar(c, route);
+    stopEls.forEach(function (g, i) {
+      var pos = route.indexOf(i), on = pos >= 0, end = on && (pos === 0 || pos === route.length - 1) && route.length > 1, ring = g.querySelector(".ring"), txt = g.querySelector("text");
+      // off-range candidates: no circle, not clickable; a faded token at the spot still shows where value lies
+      var far = !on && opts && !opts.has(i), hasTok = !on && S[i].dests.some(function (di) { return !c.dset[di]; });
+      g.style.display = far && !hasTok ? "none" : ""; g.setAttribute("data-far", far ? "1" : "0");
+      g.style.pointerEvents = far ? "none" : ""; g.setAttribute("tabindex", far ? "-1" : "0"); if (far) g.setAttribute("aria-hidden", "true"); else g.removeAttribute("aria-hidden");
+      g.querySelector(".ring").style.display = far ? "none" : "";
+      g.setAttribute("data-on", on ? "1" : "0"); ring.setAttribute("fill", end ? "var(--gold)" : on ? "var(--route)" : "#fff"); ring.setAttribute("stroke", end ? "var(--edge)" : "var(--route)");
+      txt.textContent = on ? String(pos + 1) : ""; txt.setAttribute("fill", end ? "var(--edge)" : "#fff");
+      var add = on ? [] : S[i].dests.filter(function (di) { return !c.dset[di]; }), b = g.querySelector(".badge"); fresh[i] = add;
+      b.style.display = add.length ? "" : "none"; b.querySelector("text").textContent = "+" + add.length;
+      g.setAttribute("aria-label", S[i].name + (on ? ", station " + (pos + 1) : ", candidate") + ". About " + num(solo[i]) + " residents and " + soloDest[i] + " services within a 10-minute walk" + (on || !soloDest[i] ? "." : ", " + add.length + " not yet reached by your line."));
+    });
+    applyView();
+    if (st.step >= 3 && st.step <= 5) { renderPanel(c, info, R); renderLists(route, info, R, opts); }
+  }
+  function checksHtml(info) { return '<ul class="checks">' + info.checks.map(function (k) { return '<li class="' + (k.ok ? "ok" : "no") + '"><span class="ic" aria-hidden="true">' + (k.ok ? "✓" : "✗") + '</span><span>' + k.text + ' <small>(' + k.now + ')</small><span class="sr-only">' + (k.ok ? " met" : " not met") + '</span></span></li>'; }).join("") + '</ul>'; }
+  function scoreHtml(c, info, R, route) {
+    function bar(v, color) { return '<div class="bar"><div style="width:' + Math.min(100, v * 100) + '%;background:' + color + '"></div></div>'; }
+    var ok = route.length > 1 && !info.missing;
+    return '<div class="score">' +
+      '<section><h3>Transit planner</h3><div class="kv"><span>Residents within a 10-minute walk</span><strong>' + num(c.pop) + ' (' + pct(c.rate) + ')</strong></div><div class="kv"><span>End-to-end trip</span><strong>' + (ok ? Math.round(info.minutes) + " min" : "–") + '</strong></div></section>' +
+      '<section><h3>Equity advocate</h3><div class="kv"><span>Lower-income residents reached</span><strong>' + pct(c.lowRate) + '</strong></div>' + bar(c.lowRate, "var(--route)") +
+      '<div class="kv"><span>Higher-income residents reached</span><strong>' + pct(c.highRate) + '</strong></div>' + bar(c.highRate, "#9d9a91") +
+      '<div class="kv"><span>People of color reached</span><strong>' + pct(c.pocRate) + '</strong></div>' + bar(c.pocRate, "var(--route)") +
+      '<div class="kv"><span>White residents reached</span><strong>' + pct(c.whiteRate) + '</strong></div>' + bar(c.whiteRate, "#9d9a91") + '</section>' +
+      '<section><h3>Service-access coordinator</h3>' + Object.keys(CAT).map(function (k) { return '<div class="kv"><span>' + CAT[k].label + '</span><strong>' + c.dest[k] + ' of ' + TOT.dest[k] + '</strong></div>'; }).join("") + '</section>' +
+      '<section><h3>Budget officer</h3><div class="kv"><span>Stations used</span><strong>' + route.length + ' of ' + R.maxSt + '</strong></div><div class="kv"><span>Route length</span><strong>' + (ok ? km(info.len) : "–") + ' of ' + km(R.maxLen) + '</strong></div></section></div>';
+  }
+  function renderPanel(c, info, R) {
+    var route = cur(), h = '<div class="card soft">';
+    if (st.step === 3 || st.step === 5) {
+      h += '<h2>' + (st.step === 3 ? "Step 3 · Plan your line" : "Step 5 · Revise your line") + '</h2>' + stepTilt(st.step);
+      if (st.step === 5) h += '<div class="shock"><strong>' + SHOCKS[st.shock].title + '.</strong> ' + SHOCKS[st.shock].text() + '</div>';
+      h += '<p class="hint" style="margin-top:6px;">Click candidate stations in the order the bus visits them. Priorities: ' + st.prios.map(function (p) { return PRIORITIES.filter(function (x) { return x.id === p; })[0].label.toLowerCase(); }).join(" and ") + '.</p>' +
+        '<div class="row" style="margin-top:4px;"><span class="hint">Add new stations to the</span><span class="seg2" role="radiogroup" aria-label="Add new stations to"><label><input type="radio" name="addTo" value="start"' + (st.addTo === "start" ? " checked" : "") + '><span>start</span></label><label><input type="radio" name="addTo" value="end"' + (st.addTo === "end" ? " checked" : "") + '><span>end</span></label></span></div>' +
+        checksHtml(info) + scoreHtml(c, info, R, route);
+      if (st.step === 5) h += '<label class="field" for="why2">What did you change, and why?</label><textarea id="why2">' + esc(st.why2) + '</textarea>';
+      h += '<div class="row">' + (st.step === 3 ? '<button class="btn primary" id="lockBtn"' + (info.valid ? "" : " disabled") + '>Lock in plan</button><button class="btn" id="clearBtn">Clear</button>'
+        : '<button class="btn primary" id="finishBtn"' + (info.valid ? "" : " disabled") + '>Finish and write up</button>') + '</div>' + (info.valid ? "" : '<p class="hint" style="margin-top:6px;">Meet every rule to continue.</p>');
+    } else {
+      h += '<h2>Step 4 · An implementation challenge</h2>' + stepTilt(4) + '<p>Your plan is locked in. Before it can open, something changes.</p>' +
+        '<label for="shockSel" class="field">Instructor picks the challenge:</label><select id="shockSel">' + Object.keys(SHOCKS).map(function (k) { return '<option value="' + k + '"' + (k === st.shock ? " selected" : "") + '>' + SHOCKS[k].title + '</option>'; }).join("") + '<option value="random">Surprise us</option></select>' +
+        '<div class="row"><button class="btn primary" id="shockBtn">Reveal the challenge</button></div>' + scoreHtml(c, info, R, route);
+    }
+    $("panel").innerHTML = h + '</div>';
+  }
+  function renderLists(route, info, R, opts) {
+    var can = editable(); $("routeEmpty").hidden = route.length > 0;
+    $("routelist").innerHTML = route.map(function (si, i) {
+      var gh = ""; if (i > 0) { var g = info.gaps[i - 1], bad = g == null || g < R.minGap || g > R.maxGap; gh = '<span class="gap' + (bad ? " bad" : "") + '">' + (g == null ? "Too far apart (stations must be within 2 km)" : km(g) + " from station " + i + (g < R.minGap ? " · too close" : g > R.maxGap ? " · too far" : "")) + '</span>'; }
+      return '<li><span>' + S[si].name + '</span><span class="ctl">' + (can ? '<button class="btn small" data-mv="' + i + '" data-d="-1"' + (i === 0 ? " disabled" : "") + ' aria-label="Move ' + S[si].name + ' earlier">↑</button><button class="btn small" data-mv="' + i + '" data-d="1"' + (i === route.length - 1 ? " disabled" : "") + ' aria-label="Move ' + S[si].name + ' later">↓</button><button class="btn small" data-rm="' + si + '" aria-label="Remove ' + S[si].name + '">✕</button>' : '') + '</span>' + gh + '</li>';
+    }).join("");
+    var order = S.map(function (s, i) { return i; }).sort(function (a, b) { return S[a].name.localeCompare(S[b].name); }), full = route.length >= R.maxSt;
+    if (opts) order = order.filter(function (i) { return route.indexOf(i) >= 0 || opts.has(i); });
+    var note = !opts ? "" : full ? "Your line has the most stations allowed. Remove one to see others." :
+      opts.size ? "Showing the " + opts.size + " stations that could come next: 400 m–2 km from your line’s " + (st.addTo === "start" ? "start" : "end") + ". Switch start/end, or tick “Show all candidates,” to see others." :
+      "No candidate fits 400 m–2 km from your line’s " + (st.addTo === "start" ? "start" : "end") + " within the length limit. Switch start/end or remove a station.";
+    $("cands").innerHTML = (note ? '<p class="hint" style="padding:8px 10px;margin:0">' + note + '</p>' : "") + order.map(function (i) { var on = route.indexOf(i) >= 0;
+      return '<div><span>' + S[i].name + '</span><small>' + num(solo[i]) + ' residents · ' + soloDest[i] + ' services</small>' + (on ? '<button class="btn small" data-rm="' + i + '"' + (can ? "" : " disabled") + '>Remove</button>' : '<button class="btn small" data-add="' + i + '"' + (can && !full ? "" : " disabled") + ' aria-label="Add ' + S[i].name + '">Add</button>') + '</div>'; }).join("");
+  }
+  function add(i) { var r = cur(); if (!editable() || r.indexOf(i) >= 0 || r.length >= rules().maxSt) return; if (st.addTo === "start") r.unshift(i); else r.push(i); render(); }
+  function remove(i) { var r = cur(), at = r.indexOf(i); if (!editable() || at < 0) return; r.splice(at, 1); render(); }
+  svg.addEventListener("click", function (e) { var g = e.target.closest(".stop"); if (!g || !editable()) return; var i = +g.getAttribute("data-s"); if (cur().indexOf(i) >= 0) remove(i); else add(i); });
+  svg.addEventListener("keydown", function (e) { if (e.key !== "Enter" && e.key !== " ") return; var g = e.target.closest(".stop"); if (!g || !editable()) return; e.preventDefault(); var i = +g.getAttribute("data-s"); if (cur().indexOf(i) >= 0) remove(i); else add(i); g.focus(); });
+  document.querySelector(".lists").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b || b.disabled) return;
+    if (b.hasAttribute("data-add")) add(+b.getAttribute("data-add")); else if (b.hasAttribute("data-rm")) remove(+b.getAttribute("data-rm"));
+    else if (b.hasAttribute("data-mv")) { var r = cur(), i = +b.getAttribute("data-mv"), j = i + +b.getAttribute("data-d"), t = r[i]; r[i] = r[j]; r[j] = t; render(); }
+  });
+  $("panel").addEventListener("change", function (e) { if (e.target.name === "addTo") { st.addTo = e.target.value; render(); } });
+  $("panel").addEventListener("input", function (e) { if (e.target.id === "why2") st.why2 = e.target.value; });
+  $("panel").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    if (b.id === "clearBtn") { st.r1 = []; render(); }
+    else if (b.id === "lockBtn") go(4);
+    else if (b.id === "shockBtn") { var v = $("shockSel").value; if (v === "random") { var ks = Object.keys(SHOCKS); v = ks[Math.floor(Math.random() * ks.length)]; } st.shock = v; st.r2 = st.r1.slice(); go(5); }
+    else if (b.id === "finishBtn") go(6);
+  });
+
+  var tip = mapcard.querySelector("#tip");
+  function hover(e) {
+    var t = e.target, g = t.closest && t.closest(".stop"), dg = t.closest && t.closest("[data-d]"), r = mapcard.getBoundingClientRect(), html = "";
+    if (g) { var i = +g.getAttribute("data-s"); var onL = cur().indexOf(i) >= 0, fr = lastCov ? newServices(i, lastCov) : soloDest[i];
+      html = "<strong>" + S[i].name + "</strong><br>About " + num(solo[i]) + " residents within a 10-minute walk<br>" + (soloDest[i] ? soloDest[i] + " services: " + serviceMix(i) + (onL ? "" : "<br>" + (fr ? fr + " not yet reached by your line" : "All already reached by your line")) : "No services within a walk"); }
+    else if (dg) { var d = D.dests[+dg.getAttribute("data-d")]; html = "<strong>" + esc(d.name) + "</strong><br>" + CAT[d.cat].label + (lastCov && lastCov.dset[+dg.getAttribute("data-d")] ? "<br>Within a walk of a station" : ""); }
+    else if (layer !== "none" && t.getAttribute && t.getAttribute("data-t") != null) { var tr = T[+t.getAttribute("data-t")]; html = "<strong>Block group " + tr.name + "</strong><br>" + num(tr.pop) + " residents · " + tr.density.toFixed(0) + " per acre<br>" + pct(tr.pocShare) + " people of color · " + (tr.gq ? "poverty not measured for most residents (dorms or group housing)" : pct(tr.lowShare) + " below 200% of poverty") +
+      (tr.idens ? "<br>Street connectivity: " + num(tr.idens) + " intersections per sq. mi." : ""); }
+    if (!html) { tip.classList.remove("show"); return; }
+    tip.innerHTML = html; tip.classList.add("show"); tip.style.left = Math.min(e.clientX - r.left + 12, r.width - 280) + "px"; tip.style.top = (e.clientY - r.top + 12) + "px";
+  }
+  svg.addEventListener("pointerleave", function () { tip.classList.remove("show"); });
+
+  // ---- Step 6: summary and export --------------------------------------------------------------------------------------
+  function summaryHtml() {
+    var c1 = coverage(st.r1), c2 = coverage(st.r2), R1 = RULES, R2 = Object.assign({}, RULES, SHOCKS[st.shock].rules);
+    var i1 = routeInfo(st.r1, R1), i2 = routeInfo(st.r2, R2, SHOCKS[st.shock].requireTract);
+    function stations(r) { return "<ol>" + r.map(function (i) { return "<li>" + esc(S[i].name) + "</li>"; }).join("") + "</ol>"; }
+    function row(l, a, b) { return "<tr><td>" + l + "</td><td>" + a + "</td><td>" + b + "</td></tr>"; }
+    var members = ROLES.map(function (r) { return "<li><strong>" + r.name + ":</strong> " + (esc(st.members[r.id]) || "<em>[name]</em>") + "</li>"; }).join("");
+    var cell = 'style="border:1px solid #999;padding:4px 8px;text-align:left"';
+    return (st.practice ? '<p><strong>PRACTICE RUN: not for submission</strong></p>' : '') +
+      "<h1>Public Service Delivery Exercise: Group plan</h1>" +
+      "<p><strong>Group:</strong> " + (esc($("groupName").value) || "<em>[group]</em>") + " · <strong>Section:</strong> " + (esc($("section").value) || "<em>[section]</em>") + " · <strong>Community:</strong> " + esc(M.name) + " (" + esc(M.short) + ")</p>" +
+      "<h2>Members and roles</h2><ul>" + members + "</ul>" +
+      "<h2>Community needs and priorities</h2><p><strong>Priorities:</strong> " + st.prios.map(function (p) { return PRIORITIES.filter(function (x) { return x.id === p; })[0].label; }).join("; ") + "</p><p>" + (esc(st.why) || "<em>[Why these priorities?]</em>") + "</p>" +
+      "<h2>Original plan</h2>" + stations(st.r1) + "<p>Route length " + km(i1.len) + ", end-to-end trip about " + Math.round(i1.minutes) + " minutes.</p>" +
+      "<h2>Implementation challenge: " + SHOCKS[st.shock].title + "</h2><p>" + esc(SHOCKS[st.shock].text()) + "</p>" +
+      "<h2>Revised plan</h2>" + stations(st.r2) + "<p>Route length " + km(i2.len) + ", end-to-end trip about " + Math.round(i2.minutes) + " minutes.</p><p><strong>What we changed and why:</strong> " + (esc(st.why2) || "<em>[explain]</em>") + "</p>" +
+      "<h2>Who the plans reach</h2><table style=\"border-collapse:collapse\"><thead><tr><th " + cell + ">Measure</th><th " + cell + ">Original</th><th " + cell + ">Revised</th></tr></thead><tbody>" +
+      [["Stations", st.r1.length, st.r2.length], ["Residents within a 10-minute walk", num(c1.pop) + " (" + pct(c1.rate) + ")", num(c2.pop) + " (" + pct(c2.rate) + ")"],
+       ["Lower-income residents reached", pct(c1.lowRate), pct(c2.lowRate)], ["Higher-income residents reached", pct(c1.highRate), pct(c2.highRate)],
+       ["People of color reached", pct(c1.pocRate), pct(c2.pocRate)], ["White residents reached", pct(c1.whiteRate), pct(c2.whiteRate)],
+       ["Food assistance within a walk", c1.dest.food + " of " + TOT.dest.food, c2.dest.food + " of " + TOT.dest.food], ["Health clinics within a walk", c1.dest.health + " of " + TOT.dest.health, c2.dest.health + " of " + TOT.dest.health],
+       ["Libraries and centers within a walk", c1.dest.civic + " of " + TOT.dest.civic, c2.dest.civic + " of " + TOT.dest.civic], ["Route length", km(i1.len), km(i2.len)]]
+        .map(function (r) { return "<tr><td " + cell + ">" + r[0] + "</td><td " + cell + ">" + r[1] + "</td><td " + cell + ">" + r[2] + "</td></tr>"; }).join("") + "</tbody></table>" +
+      (st.lessons ? "<h2>What the tradeoffs revealed</h2><p>" + esc(st.lessons) + "</p>" : "") +
+      "<p style=\"font-size:11px;color:#666\">Generated " + new Date().toLocaleDateString("en-US") + " with the Evans School Public Service Delivery Exercise. Data: OpenStreetMap contributors; ACS 2020\u20132024 block groups prepared by Prof. Zhao; USGS elevation.</p>";
+  }
+  function renderSummary() { $("preview").innerHTML = summaryHtml(); }
+  $("lessons").addEventListener("input", function () { st.lessons = this.value; renderSummary(); });
+  function flash(msg) { $("exportStatus").textContent = msg; }
+  $("copyDoc").addEventListener("click", function () {
+    var html = summaryHtml(), text = $("preview").innerText;
+    if (navigator.clipboard && window.ClipboardItem && window.isSecureContext) {
+      navigator.clipboard.write([new ClipboardItem({ "text/html": new Blob([html], { type: "text/html" }), "text/plain": new Blob([text], { type: "text/plain" }) })])
+        .then(function () { flash("Copied. Paste into your group's Word document."); }, fallback);
+    } else fallback();
+    function fallback() {
+      var box = document.createElement("div"); box.contentEditable = "true"; box.style.position = "fixed"; box.style.left = "-9999px"; box.innerHTML = html; document.body.appendChild(box);
+      var range = document.createRange(); range.selectNodeContents(box); var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+      try { document.execCommand("copy"); flash("Copied. Paste into your group's Word document."); } catch (err) { flash("Copy failed; use Download as Word file instead."); }
+      sel.removeAllRanges(); box.remove();
+    }
+  });
+  function download(name, blob) { var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
+  function fileBase() { return ("transit-plan-" + ($("groupName").value || "group") + "-" + M.id).replace(/[^a-z0-9-]+/gi, "-").toLowerCase(); }
+  $("downloadDoc").addEventListener("click", function () {
+    var doc = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'><title>Group plan</title></head><body style=\"font-family:Calibri,Arial,sans-serif\">" + summaryHtml() + "</body></html>";
+    download(fileBase() + ".doc", new Blob(["﻿", doc], { type: "application/msword" })); flash("Downloaded. Open it in Word, then add your map image.");
+  });
+  $("saveMap").addEventListener("click", function () {
+    var css = getComputedStyle(document.documentElement), clone = svg.cloneNode(true);
+    clone.setAttribute("viewBox", "0 0 " + W + " " + H); clone.setAttribute("xmlns", NS);
+    var str = new XMLSerializer().serializeToString(clone).replace(/var\(--([a-z0-9-]+)\)/g, function (m, n) { return css.getPropertyValue("--" + n).trim() || "#999"; });
+    var img = new Image(), scale = 1600 / W, cw = 1600, ch = Math.round(H * scale) + 60;
+    img.onload = function () {
+      var cv = document.createElement("canvas"); cv.width = cw; cv.height = ch; var x = cv.getContext("2d");
+      x.fillStyle = "#fbfaf7"; x.fillRect(0, 0, cw, ch); x.drawImage(img, 0, 60, cw, ch - 60);
+      x.fillStyle = "#1b1b1a"; x.font = "bold 26px sans-serif"; x.fillText((st.practice ? "PRACTICE · " : "") + M.name + " · " + ($("groupName").value || "Group plan") + " · revised route", 20, 38);
+      cv.toBlob(function (b) { download(fileBase() + "-map.png", b); flash("Map image saved. Insert it into your Word document."); });
+    };
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(str);
+  });
+  $("copyLink").addEventListener("click", function () {
+    var url = location.href.split("#")[0] + "#c=" + st.comm + "&p=" + st.prios.join(".") + "&r1=" + st.r1.join(".") + "&shock=" + st.shock + "&r2=" + st.r2.join(".") + (st.practice ? "&practice=1" : "");
+    history.replaceState(null, "", url);
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(url).then(function () { flash("Link copied. It reopens your plans (not your written notes)."); }, function () { flash(url); }); else flash(url);
+  });
+
+  // ---- Start, or reopen from a link -----------------------------------------------------------------------------------
+  function preloadAll(done) { var n = COMMUNITIES.length; COMMUNITIES.forEach(function (c) { var s = document.createElement("script"); s.src = "data-" + c.id + ".js"; s.onload = s.onerror = function () { if (--n === 0) done(); }; document.head.appendChild(s); }); }
+  preloadAll(function () {
+    renderComms(); renderSteps();
+    var h = location.hash.slice(1), q = {}; h.split("&").forEach(function (kv) { var p = kv.split("="); if (p[0]) q[p[0]] = p[1] || ""; });
+    if (q.c && window.COMMUNITY_DATA[q.c]) {
+      st.comm = q.c; prep(q.c); renderComms(); $("toStep2").disabled = false;
+      var parse = function (s) { return (s || "").split(".").filter(Boolean).map(Number).filter(function (i) { return i >= 0 && i < S.length; }); };
+      st.prios = (q.p || "").split(".").filter(function (p) { return PRIORITIES.some(function (x) { return x.id === p; }); });
+      st.r1 = parse(q.r1); st.shock = SHOCKS[q.shock] ? q.shock : "stations"; st.r2 = parse(q.r2); st.practice = q.practice === "1"; $("practice").checked = st.practice; $("practiceBanner").hidden = !st.practice;
+      st.maxStep = q.r2 ? 6 : q.r1 ? 3 : 2; go(q.r2 ? 6 : q.r1 ? 3 : 2);
+    } else go(1);
+  });
+})();
+</script>
+</body>
+</html>

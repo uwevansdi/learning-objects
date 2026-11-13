@@ -26,7 +26,7 @@
 3. Precomputes each station's 800 m walking area, the services inside it, and bus paths between station pairs within 2.6 km. Pairs farther apart can't be consecutive stops under the 2 km rule. Bus paths use streets only, with local streets weighted 1.6× so routes prefer arterials.
 4. Spreads each tract's residents along its residential streets.
 
-**Output format** is the same as the original transit draft (`../../transit-access/build/README.md`), plus:
+**Output format** is the same as the original transit draft (`../../pubpol101/transit-access/build/README.md`), plus:
 - `dests` (category, name, position);
 - each station's `dests` list;
 - `meta.labels` for neighborhood names.
