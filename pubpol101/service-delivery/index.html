@@ -38,6 +38,15 @@
   .slot li { margin: 2px 0; font-style: italic; }
   .slot.small { padding: 6px 10px; font-size: 13px; }
   .slot.small ul { font-size: 13px; }
+  /* TILT sections (purpose, task, criteria): text by Prof. Zhao */
+  .tilt { border-left: 4px solid var(--accent); background: var(--surface-2); border-radius: 8px; padding: 12px 16px; margin: 12px 0; }
+  .tilt h3 { margin: 0 0 6px; } .tilt h4 { margin: 12px 0 4px; font-size: 15px; }
+  .tilt p { margin: 6px 0; } .tilt ul, .tilt ol { margin: 6px 0; padding-left: 22px; } .tilt li { margin: 4px 0; }
+  .tilt .eyebrow2 { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+  .tilt.small { padding: 8px 12px; font-size: 14px; } .tilt.small p { margin: 4px 0; }
+  .tilt details summary { cursor: pointer; font-weight: 600; color: var(--accent); margin-top: 4px; }
+  .tilt blockquote { margin: 8px 0; padding: 8px 12px; background: var(--surface); border-radius: 6px; font-style: italic; }
+  .role-brief h4 { margin: 0 0 4px; } .role-brief p { margin: 4px 0; font-size: 14px; }
   .brief-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0 14px; }
   .practice-banner { background: var(--accent); color: #fff; border-radius: 8px; padding: 8px 14px; font-weight: 700; margin: 10px 0; }
 
@@ -194,7 +203,7 @@
   <p class="eyebrow">Geography, Capacity, and Public-Service Delivery</p>
   <h1>Public Service Delivery Exercise: plan transit for your community</h1>
   <p class="lede">Your group is a planning team for one Seattle community. With limited resources, design a new bus line: decide what your community needs most, choose stations along a route the bus can actually run, and see who can walk to it and which services they can reach. Partway through, an implementation challenge will force you to revise. At the end, copy your plan into your group's Word document.</p>
-  <div class="proto" role="note"><strong>Draft for discussion with Prof. Zhao.</strong> Streets and service locations come from OpenStreetMap; population, race, and income come from census block groups prepared by Prof. Zhao. Community notes, roles, rules, and shocks are placeholders to align with the instructor's worksheet and community profiles.</div>
+  <div class="proto" role="note"><strong>Draft for discussion with Prof. Zhao.</strong> Streets and service locations come from OpenStreetMap; population, race, and income come from census block groups prepared by Prof. Zhao. Purpose, task, criteria and role briefs are Prof. Zhao's. Community notes are still placeholders for his community profiles.</div>
   <div class="practice-banner" id="practiceBanner" hidden>Practice run · Plans made in practice mode are marked "Practice" and are not for submission.</div>
 
   <div class="topbar">
@@ -219,43 +228,71 @@
   <section id="stepBrief" class="card" aria-labelledby="briefTitle" hidden>
     <h2 id="briefTitle">Before you start: why, what, and how you'll know it's good</h2>
     <p class="hint" id="briefFor"></p>
-    <div class="proto" role="note"><strong>For Prof. Zhao:</strong> this page follows the TILT framework (Transparency in Learning and Teaching). Students read it before planning. Replace each dashed box with your own text; the questions inside are prompts for you, not student-facing copy.</div>
-
-    <div class="slot"><span class="slot-tag">Instructor writes · Purpose</span><h3>Why we're doing this</h3>
+    <div class="tilt"><span class="eyebrow2">Purpose</span><h3>Why we're doing this</h3>
+      <p>Public services are not distributed equally across communities. Where people live, what resources governments have available, and how public administrators make decisions all influence whether residents can access government services.</p>
+      <p>This exercise builds on our discussions of administrative capacity, geographic inequality, and public service delivery. In particular, Professor Allard's <em>Out of Reach</em> illustrates why the geographic relationship between communities and public services matters for understanding inequality.</p>
+      <p>Today, you will take the perspective of a public planning team responsible for designing a new bus route in a Seattle community. Your challenge is to decide how to serve residents with different needs while working with limited resources.</p>
+      <p>By completing this exercise, you will practice skills used in public administration and policy analysis:</p>
       <ul>
-        <li>Why this exercise, in this week of the course? How does it connect to the readings (Allard, <em>Out of Reach</em>) and lecture?</li>
-        <li>Which skills will students practice? (Name them in terms students could list on a résumé.)</li>
-        <li>What knowledge should they come away with?</li>
-        <li>How might these skills matter beyond this course, in work, civic life, or their communities?</li>
+        <li><strong>Analyzing evidence:</strong> Using maps and demographic information to identify community needs.</li>
+        <li><strong>Evaluating policy tradeoffs:</strong> Comparing competing goals, including efficiency, equity, and accessibility.</li>
+        <li><strong>Allocating limited resources:</strong> Developing a feasible service plan under budget and infrastructure constraints.</li>
+        <li><strong>Collaborative decision-making:</strong> Negotiating among competing priorities and explaining your choices.</li>
+        <li><strong>Adapting to implementation challenges:</strong> Revising a policy decision when circumstances change.</li>
       </ul>
+      <p>By the end, you should be able to explain why implementing a public service is more complicated than deciding that the service should exist.</p>
+      <p>These skills reflect real-world decisions made by government agencies, nonprofit organizations, and our communities.</p>
     </div>
 
-    <div class="slot"><span class="slot-tag">Instructor writes · Task</span><h3>What you'll do, and how</h3>
-      <ul>
-        <li>What happens in each remaining step, and roughly how many minutes each should take in the 50-minute session?</li>
-        <li>How should the group work together and make decisions? What should each role do and when?</li>
-        <li>What is hard about this task on purpose (few stations, route rules, competing roles, the implementation challenge), and why is that difficulty part of the learning?</li>
-        <li>How much should students know about the implementation challenge in advance?</li>
-        <li>What should students avoid (common mistakes or shortcuts)?</li>
-      </ul>
+    <div class="tilt"><span class="eyebrow2">Task</span><h3>What you'll do, and how</h3>
+      <p>You are part of a team tasked with designing a new bus line for one Seattle community. Your goal is to develop a feasible plan that considers the different needs of the residents who depend on public transit while working with limited resources.</p>
+      <p>You will complete the following steps over 60 minutes:</p>
+      <ol>
+        <li><strong>Community and roles (5 minutes).</strong> Review your assigned community and role. Each member should understand their responsibilities before the group begins planning.</li>
+        <li><strong>Needs and priorities (5 minutes).</strong> Examine the map and community information. Identify up to two priorities that will guide your decisions.</li>
+        <li><strong>Develop your service plan (15 minutes).</strong> Select bus stations and construct a route that follows the available street network and meets the resource constraints. Each group member should explain how the plan performs according to their assigned responsibilities.</li>
+        <li><strong>Implementation challenge (5 minutes).</strong> Your team will receive new information that affects its ability to carry out the original plan. Review the challenge and identify which aspects of your proposal are affected.</li>
+        <li><strong>Revise your plan (12 minutes).</strong> Decide how to respond to the new conditions. Compare your revised plan to your original proposal and explain what changed, who benefits, and who might be disadvantaged.</li>
+        <li><strong>Finalize, export and submit (8 minutes).</strong> Complete your group worksheet using your final plan and the reasoning behind your decisions. Make sure the worksheet identifies each element of this exercise. Export your completed work and submit to Canvas.</li>
+        <li><strong>Class debrief (10 minutes).</strong> We will discuss what the exercise reveals about administrative discretion, resource constraints, geography, and equity in public service delivery.</li>
+      </ol>
+      <h4>Working together</h4>
+      <p>Each group member brings an important perspective, but your final proposal must be a collective decision.</p>
+      <p>Listen to the concerns of each role, compare the available evidence, and negotiate when priorities conflict. You do not need unanimous enthusiasm for every decision, but everyone should understand and be able to explain the group's reasoning.</p>
+      <h4>What makes this difficult?</h4>
+      <p>You cannot maximize every goal simultaneously. A route that reaches more residents may be longer, more expensive, or less effective at connecting underserved neighborhoods to essential services.</p>
+      <p>The implementation challenge will introduce an additional constraint that you cannot fully anticipate. This is intentional as public administrators often adapt policies to changing conditions.</p>
+      <p>There is no single correct route. Your task is to develop and defend a reasonable plan.</p>
+      <p>Avoid choosing stations solely to maximize one score, ignoring resource constraints, or assuming that all residents have the same transportation needs.</p>
+      <h4>What happens afterward?</h4>
+      <p>Following the group activity exercise during lecture time, each student will complete an individual reflection connecting your group's decisions to course concepts, including administrative capacity, discretion, equity, and public service delivery.</p>
     </div>
 
-    <div class="slot"><span class="slot-tag">Instructor writes · Criteria</span><h3>How you'll know you're on track</h3>
+    <div class="tilt"><span class="eyebrow2">Criteria</span><h3>How you'll know you're on track</h3>
+      <p>The purpose of this exercise is to practice making public service delivery decisions under realistic administrative constraints. There is no single correct solution, and your group is not expected to develop a fully feasible service plan within the allotted time.</p>
+      <p>As you work through the exercise, keep the following questions in mind:</p>
       <ul>
-        <li>What does a strong group plan look like? What does a weak one look like?</li>
-        <li>What can students check during the session to know they're on track?</li>
-        <li>How is the group plan graded (5%), and how does it feed the individual reflection (10%, due Feb 14)? Completion, rubric, or both?</li>
-        <li>Is there a checklist or rubric students can use before they submit?</li>
+        <li><strong>Community needs:</strong> Have we identified our community's most important service-delivery challenges and supported our choices with evidence?</li>
+        <li><strong>Feasibility:</strong> Have we made a reasonable effort to develop a plan that accounts for available resources and constraints?</li>
+        <li><strong>Tradeoffs:</strong> Can we explain how our choices affect coverage, equitable access, service availability, and travel time?</li>
+        <li><strong>Adaptation:</strong> Have we responded to the implementation challenge and explained why we changed or retained our decisions?</li>
+        <li><strong>Communication:</strong> Does our completed worksheet clearly explain our reasoning and final proposal?</li>
       </ul>
+      <p>These questions are intended to guide your group's discussion and decision-making.</p>
+      <h4>How your work will be evaluated</h4>
+      <p>The group worksheet is worth 5% of your course grade. Your group plan is graded primarily on completion and substantive engagement.</p>
+      <p><strong>Submission:</strong> One 1–2 page Word document per group, submitted through Canvas at the end of the classroom exercise.</p>
+      <p>Following the exercise, you will also complete an individual reflection worth 10%, due February 14. Instructions will be posted to Canvas.</p>
     </div>
 
     <h3 style="margin-top:16px;">Role briefs</h3>
     <div class="brief-grid" id="roleBriefs"></div>
 
-    <div class="slot"><span class="slot-tag">Instructor writes · Optional</span><h3>An example of strong work</h3>
-      <ul>
-        <li>A short annotated sample, such as a strong "what we changed and why" paragraph for a made-up community, with notes on what makes it strong.</li>
-      </ul>
+    <div class="tilt"><span class="eyebrow2">Example</span><h3>An example of strong work</h3>
+      <h4 style="margin-top:4px">What we changed and why</h4>
+      <p class="hint">Illustrative example: numbers are fictional.</p>
+      <blockquote>"Our original route prioritized total population coverage and connections to major destinations. After the implementation challenge, we revised the route to reduce the number of stations. Our revised plan reaches approximately 1,300 residents instead of 1,500, but maintains connections to a health clinic and food assistance location. We retained a station in a lower-income neighborhood because removing it would have left residents with fewer alternatives for reaching essential services. Although our revised proposal serves fewer people overall, we believe it better balances limited resources, accessibility, and equity."</blockquote>
+      <p><strong>Why this is strong:</strong> The group identifies the decision, uses quantitative evidence, acknowledges what was lost, and explains why the tradeoff was justified.</p>
     </div>
 
     <div class="row"><button class="btn primary" id="briefDone">Continue to community needs</button></div>
@@ -266,7 +303,7 @@
       <div id="mapSlot2"></div>
       <div class="card soft">
         <h2>Step 2 · Community needs and priorities</h2>
-        <div class="slot small"><span class="slot-tag">Instructor writes · This step</span><ul><li>Why this step: what it practices and why it matters.</li><li>You're done when: what students should have before moving on.</li></ul></div>
+        <div class="tilt small"><p><strong>Why this step matters.</strong> Before deciding where to provide public services, administrators must understand whom they serve and what different residents need.</p><p>Review the demographic and service-location information for your community. Consider where residents live, where essential services are located, and which residents may face greater barriers to reaching them.</p><p><strong>You're done when</strong> your group has selected up to two planning priorities and written a brief explanation connecting those priorities to evidence from the map or community profile.</p></div>
         <div id="profile"></div>
         <label class="field">Choose up to two priorities for your plan</label>
         <div class="prio" id="prios"></div>
@@ -295,8 +332,10 @@
     <div class="grid">
       <div class="card">
         <h2>Step 6 · Your group plan</h2>
-        <div class="slot small"><span class="slot-tag">Instructor writes · This step</span><ul><li>Why this step: what it practices and why it matters.</li><li>You're done when: what students should have before moving on.</li></ul></div>
-        <div class="slot small"><span class="slot-tag">Instructor writes · Criteria</span><ul><li>A short self-check students use before copying the plan: the criteria from the briefing, as yes/no questions.</li></ul></div>
+        <div class="tilt small"><p><strong>Why this step matters.</strong> Public administrators must communicate and justify their decisions. A good service plan should explain the proposal, its reasoning, and potential consequences.</p><p>Review your group's final route and prepare the summary for your worksheet.</p><p><strong>You're done when</strong> your group has documented its priorities, original plan, implementation challenge, revised plan, and justification, and has transferred the required information to the group worksheet.</p>
+          <p style="margin-top:8px"><strong>Final submission checklist.</strong> Before submitting, verify that your group can answer yes to each question:</p>
+          <ul><li>Did we identify our community and justify our planning priorities?</li><li>Did our final route comply with the rules and resource constraints?</li><li>Did we consider population coverage, equity, service access, and travel efficiency?</li><li>Did we explain the implementation challenge and our response?</li><li>Did we explain the tradeoffs involved in our decisions?</li><li>Is our worksheet complete and ready to submit?</li></ul>
+          <p>Once you've reviewed your responses, export your completed plan, and submit it through Canvas.</p></div>
         <p class="hint">This summary is ready to paste into your group's Word document. Add anything your worksheet asks for that isn't here.</p>
         <label class="field" for="lessons">What did the tradeoffs and the shock reveal about public-service delivery?</label>
         <textarea id="lessons" placeholder="Optional: a few sentences to start your individual reflections."></textarea>
@@ -342,10 +381,10 @@
     { id: "northseattle", name: "North Seattle", short: "Bitter Lake, Northgate, and Lake City" }
   ];
   var ROLES = [
-    { id: "planner", name: "Transit planner", goal: "Reach as many residents as possible with a fast, direct line.", watch: "Residents reached · trip time" },
-    { id: "equity", name: "Equity advocate", goal: "Make sure residents with the fewest options are served.", watch: "Lower-income and people-of-color reach" },
-    { id: "access", name: "Service-access coordinator", goal: "Connect residents to food, health care, and civic services.", watch: "Services within a walk of a station" },
-    { id: "budget", name: "Budget officer", goal: "Stay within resources and plan for what happens if they shrink.", watch: "Stations used · route length" }
+    { id: "planner", name: "Transit planner", goal: "Design a practical transit route that efficiently connects residents to destinations.", watch: "Residents reached · trip time" },
+    { id: "equity", name: "Equity advocate", goal: "Ensure that the group's decisions consider residents who may face greater barriers to transportation and public services.", watch: "Lower-income and people-of-color reach" },
+    { id: "access", name: "Service-access coordinator", goal: "Connect residents with essential community services, including food assistance, health care, libraries, and community centers.", watch: "Services within a walk of a station" },
+    { id: "budget", name: "Budget officer", goal: "Ensure that the proposed service can operate within the available resources.", watch: "Stations used · route length" }
   ];
   var PRIORITIES = [
     { id: "reach", label: "Reach the most residents", hint: "Serve dense areas where many people live." },
@@ -449,8 +488,20 @@
   // ---- Steps ------------------------------------------------------------------------------------------------
   var STEP_NAMES = ["Community & roles", "Needs & priorities", "Plan", "Shock", "Revise", "Group plan"];
   // The briefing sits between steps 1 and 2 as step 1.5, so step numbers, saved links and checks stay as they were.
-  var STEP_SLOT = '<div class="slot small"><span class="slot-tag">Instructor writes · This step</span><ul><li>Why this step: what it practices and why it matters.</li><li>You&rsquo;re done when: what students should have before moving on.</li></ul></div>';
-  var CHECK_SLOT = '<div class="slot small"><span class="slot-tag">Instructor writes · Criteria</span><ul><li>On-track questions students can ask themselves while planning (not scored).</li></ul></div>';
+  var STEP_TEXT = {
+    3: { why: "Public service decisions must balance community needs with practical limitations. Not every desirable route can be operated. Use the route summary information to compare transit plans.",
+      done: "your group has a feasible initial route, has reviewed its scorecard, and can explain why it selected this plan." },
+    4: { why: "Public agencies rarely implement policies under predictable conditions. Funding, infrastructure, staffing, and other constraints can change after planning begins. Review the new information before altering your route.",
+      done: "your group has identified which parts of the original plan are affected and has discussed at least one possible response." },
+    5: { why: "Good public administration requires adapting to new conditions while remaining attentive to the public's needs. Compare the consequences of revisions to overcome the obstacle presented to your group.",
+      done: "your group has a feasible revised route and can explain what it changed, why, and which residents or services are most affected." }
+  };
+  function stepTilt(n) { var t = STEP_TEXT[n]; return '<div class="tilt small"><p><strong>Why this step matters.</strong> ' + t.why + '</p><p><strong>You\u2019re done when</strong> ' + t.done + '</p>' + (n === 3 ? CHECK_TEXT : "") + '</div>'; }
+  var CHECK_TEXT = '<details><summary>How do you know you\u2019re on track?</summary><p>As you develop your initial service plan, consider the following questions:</p><ul>' +
+    '<li><strong>Community needs:</strong> Does our route address the priorities we identified for our community?</li>' +
+    '<li><strong>Resource constraints:</strong> Have we considered the available resources and practical limitations when selecting stations and designing our routes?</li>' +
+    '<li><strong>Population and service access:</strong> Have we reviewed the route summary information to understand which residents and services our route reaches?</li>' +
+    '<li><strong>Tradeoffs:</strong> Can we explain why we chose this route and what we may have sacrificed to prioritize certain needs?</li></ul></details>';
   function renderSteps() {
     var items = STEP_NAMES.map(function (n, i) { return { s: i + 1, label: (i + 1) + " · " + n }; });
     items.splice(1, 0, { s: 1.5, label: "Briefing" });
@@ -490,12 +541,32 @@
   $("roles").addEventListener("input", function (e) { var r = e.target.getAttribute("data-role"); if (r) st.members[r] = e.target.value; });
   $("toStep2").addEventListener("click", function () { go(1.5); });
   $("briefDone").addEventListener("click", function () { go(2); });
+  // role briefs: text by Prof. Zhao
+  var ROLE_BRIEF = {
+    planner: { resp: "Your responsibility is to design a practical transit route that efficiently connects residents to destinations.",
+      watch: "Pay attention to the total number of residents reached, route length, station placement, and estimated travel time. Consider whether the route provides useful connections rather than simply maximizing the number of stations.",
+      plan: "Explain how different routes affect coverage and travel efficiency. Identify unnecessary detours or gaps in the route.",
+      nego: "Be willing to accept a less direct route when it substantially improves access for underserved residents or essential services." },
+    equity: { resp: "Your responsibility is to ensure that the group's decisions consider residents who may face greater barriers to transportation and public services.",
+      watch: "Pay particular attention to the number and share of lower-income residents and residents of color reached by your route. Consider whether a proposal disproportionately benefits already well-served areas.",
+      plan: "Identify neighborhoods that could be overlooked if the group focuses only on total population coverage. Use the demographic map layers and scorecard to support your arguments.",
+      nego: "Recognize that equity is not simply maximizing one demographic measure. Consider how access to services, geographic isolation, and practical constraints influence the distribution of benefits." },
+    access: { resp: "Your responsibility is to connect residents with essential community services, including food assistance, health care, libraries, and community centers.",
+      watch: "Pay attention to whether residents can reasonably reach important services from the proposed bus stations.",
+      plan: "Identify stations and routes that improve access to useful destinations. Explain how different locations might affect residents' ability to obtain services.",
+      nego: "Be willing to prioritize service connections that benefit residents with greater needs, even if that means serving fewer individual facilities." },
+    budget: { resp: "Your responsibility is to ensure that the proposed service can operate within the available resources.",
+      watch: "Pay attention to the number of stations, route length, and any resource restrictions. A route that delivers substantial benefits but cannot be implemented is not an effective public service plan.",
+      plan: "Monitor resource use, identify potential inefficiencies, and help the group identify feasible alternatives.",
+      nego: "Recognize that minimizing costs is not the only goal. Additional resources may be justified when they provide meaningful improvements in accessibility or equity." }
+  };
   function renderBrief() {
     var M = COMMUNITIES.filter(function (c) { return c.id === st.comm; })[0];
     $("briefFor").textContent = (M ? M.name + " · " : "") + ($("groupName").value || "Your group");
     $("roleBriefs").innerHTML = ROLES.map(function (r) {
       var who = st.members[r.id] ? " (" + esc(st.members[r.id]) + ")" : "";
-      return '<div class="slot small"><span class="slot-tag">Instructor writes · Role brief</span><h4>' + r.name + who + '</h4><ul><li>What this role argues for, and which numbers to bring to the group.</li><li>When to speak up, and what to concede.</li></ul></div>';
+      var B = ROLE_BRIEF[r.id];
+      return '<div class="tilt small role-brief"><h4>' + r.name + who + '</h4><p>' + B.resp + '</p><p>' + B.watch + '</p><p><strong>During planning:</strong> ' + B.plan + '</p><p><strong>During negotiation:</strong> ' + B.nego + '</p></div>';
     }).join("");
   }
   $("practice").addEventListener("change", function () { st.practice = this.checked; $("practiceBanner").hidden = !st.practice; });
@@ -772,7 +843,7 @@
   function renderPanel(c, info, R) {
     var route = cur(), h = '<div class="card soft">';
     if (st.step === 3 || st.step === 5) {
-      h += '<h2>' + (st.step === 3 ? "Step 3 · Plan your line" : "Step 5 · Revise your line") + '</h2>' + STEP_SLOT + (st.step === 3 ? CHECK_SLOT : "");
+      h += '<h2>' + (st.step === 3 ? "Step 3 · Plan your line" : "Step 5 · Revise your line") + '</h2>' + stepTilt(st.step);
       if (st.step === 5) h += '<div class="shock"><strong>' + SHOCKS[st.shock].title + '.</strong> ' + SHOCKS[st.shock].text() + '</div>';
       h += '<p class="hint" style="margin-top:6px;">Click candidate stations in the order the bus visits them. Priorities: ' + st.prios.map(function (p) { return PRIORITIES.filter(function (x) { return x.id === p; })[0].label.toLowerCase(); }).join(" and ") + '.</p>' +
         '<div class="row" style="margin-top:4px;"><span class="hint">Add new stations to the</span><span class="seg2" role="radiogroup" aria-label="Add new stations to"><label><input type="radio" name="addTo" value="start"' + (st.addTo === "start" ? " checked" : "") + '><span>start</span></label><label><input type="radio" name="addTo" value="end"' + (st.addTo === "end" ? " checked" : "") + '><span>end</span></label></span></div>' +
@@ -781,7 +852,7 @@
       h += '<div class="row">' + (st.step === 3 ? '<button class="btn primary" id="lockBtn"' + (info.valid ? "" : " disabled") + '>Lock in plan</button><button class="btn" id="clearBtn">Clear</button>'
         : '<button class="btn primary" id="finishBtn"' + (info.valid ? "" : " disabled") + '>Finish and write up</button>') + '</div>' + (info.valid ? "" : '<p class="hint" style="margin-top:6px;">Meet every rule to continue.</p>');
     } else {
-      h += '<h2>Step 4 · An implementation challenge</h2>' + STEP_SLOT + '<p>Your plan is locked in. Before it can open, something changes.</p>' +
+      h += '<h2>Step 4 · An implementation challenge</h2>' + stepTilt(4) + '<p>Your plan is locked in. Before it can open, something changes.</p>' +
         '<label for="shockSel" class="field">Instructor picks the challenge:</label><select id="shockSel">' + Object.keys(SHOCKS).map(function (k) { return '<option value="' + k + '"' + (k === st.shock ? " selected" : "") + '>' + SHOCKS[k].title + '</option>'; }).join("") + '<option value="random">Surprise us</option></select>' +
         '<div class="row"><button class="btn primary" id="shockBtn">Reveal the challenge</button></div>' + scoreHtml(c, info, R, route);
     }
