@@ -190,20 +190,16 @@
   details ul { padding-left: 20px; } details li { margin-bottom: 4px; }
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
   [hidden] { display: none !important; }
-  .watermark { position: fixed; inset: 0; z-index: 50; pointer-events: none; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-  .watermark span { font-family: var(--font-head, sans-serif); font-weight: 800; font-size: clamp(90px, 18vw, 240px); letter-spacing: .08em; color: rgba(138, 75, 0, 0.08); transform: rotate(-28deg); white-space: nowrap; user-select: none; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 <link rel="stylesheet" href="../../assets/brand.css">
 </head>
 <body>
-<div class="watermark" aria-hidden="true"><span>DRAFT</span></div>
 <header class="brandbar"><div class="brandbar-inner"><img class="sig-h" src="../../assets/evans-signature-horizontal.png" alt="Evans School of Public Policy and Governance, University of Washington" width="1156" height="200"><span class="unit">PUBPOL 101 · Week 6</span></div></header>
 <main class="wrap">
   <p class="eyebrow">Geography, Capacity, and Public-Service Delivery</p>
   <h1>Public Service Delivery Exercise: plan transit for your community</h1>
   <p class="lede">Your group is a planning team for one Seattle community. With limited resources, design a new bus line: decide what your community needs most, choose stations along a route the bus can actually run, and see who can walk to it and which services they can reach. Partway through, an implementation challenge will force you to revise. At the end, copy your plan into your group's Word document.</p>
-  <div class="proto" role="note"><strong>Draft for discussion with Prof. Zhao.</strong> Streets and service locations come from OpenStreetMap; population, race, and income come from census block groups prepared by Prof. Zhao. Purpose, task, criteria and role briefs are Prof. Zhao's.</div>
   <div class="practice-banner" id="practiceBanner" hidden>Practice run · Plans made in practice mode are marked "Practice" and are not for submission.</div>
 
   <div class="topbar">
@@ -352,7 +348,7 @@
   </section>
 
   <details>
-    <summary>About this draft and its data</summary>
+    <summary>About this exercise and its data</summary>
     <ul>
       <li><strong>Streets and services:</strong> © OpenStreetMap contributors, Open Database License. Walking uses streets, stairways, and trails; the bus uses streets only and prefers arterials. Service locations include food banks and pantries, health clinics, and libraries and community centers mapped in OpenStreetMap; coverage is incomplete and should be checked against local directories.</li>
       <li><strong>Population:</strong> American Community Survey 2020–2024 five-year estimates by census block group, prepared by Prof. Zhao: total population, people of color, and people below 200% of the poverty level ("lower income"). Residents are spread evenly along each block group's streets. Block-group estimates have wide margins of error. Where Census measures poverty for fewer than 80% of residents (mostly dorms), the poverty rate isn't shown.</li>
@@ -361,7 +357,7 @@
       <li><strong>Candidate stations</strong> sit about every kilometer along each named arterial, at a cross street, chosen automatically. Prof. Zhao may replace them with his own list.</li>
       <li><strong>Privacy.</strong> This page collects no data. Group names and notes stay in this browser tab and go only into the summary you copy or download.</li>
       <li><strong>Accessibility.</strong> Every step works by keyboard. Stations can be added, removed, and reordered from the lists; the scorecard states every result in text.</li>
-      <li><strong>Built with:</strong> Prof. Alex Zhao, PUBPOL 101 · <strong>Maintained by:</strong> Evans Digital · Draft 0.1</li>
+      <li><strong>Built with:</strong> Prof. Alex Zhao, PUBPOL 101 · <strong>Maintained by:</strong> Evans Digital · Version 1.0 (November 2026)</li>
     </ul>
   </details>
 </main>
@@ -927,7 +923,7 @@
        ["Libraries and centers within a walk", c1.dest.civic + " of " + TOT.dest.civic, c2.dest.civic + " of " + TOT.dest.civic], ["Route length", km(i1.len), km(i2.len)]]
         .map(function (r) { return "<tr><td " + cell + ">" + r[0] + "</td><td " + cell + ">" + r[1] + "</td><td " + cell + ">" + r[2] + "</td></tr>"; }).join("") + "</tbody></table>" +
       (st.lessons ? "<h2>What the tradeoffs revealed</h2><p>" + esc(st.lessons) + "</p>" : "") +
-      "<p style=\"font-size:11px;color:#666\">Generated " + new Date().toLocaleDateString("en-US") + " with the Evans School transit planning tool (draft). Data: OpenStreetMap contributors; City of Seattle Racial and Social Equity Composite Index.</p>";
+      "<p style=\"font-size:11px;color:#666\">Generated " + new Date().toLocaleDateString("en-US") + " with the Evans School Public Service Delivery Exercise. Data: OpenStreetMap contributors; ACS 202020132024 block groups prepared by Prof. Zhao; USGS elevation.</p>";
   }
   function renderSummary() { $("preview").innerHTML = summaryHtml(); }
   $("lessons").addEventListener("input", function () { st.lessons = this.value; renderSummary(); });
